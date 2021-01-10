@@ -1,143 +1,153 @@
 package com.example.voicemodulation;
-import android.app.Activity;
-import android.media.AudioFormat;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.Arrays;
-import java.io.*;
 
-public class ModulateLogic
-{
-    private static int PLAYBACK_SAMPLE_RATE;
+import android.media.AudioFormat;
+
+import com.example.voicemodulation.audio.util.Convert;
+import com.example.voicemodulation.audio.util.Generate;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+//TODO remove redundancy ->  all time domain modulations
+//TODO test performance -> manipulate all then write all VS manipulate one and write one
+//TODO rename class to reflect only time domain operations
+//TODO move class into a package named to reflect all types of modulations
+//TODO test
+public class ModulateLogic {
     private static final int RECORDER_CHANNELS_OUT = AudioFormat.CHANNEL_OUT_MONO;
+    private static int PLAYBACK_SAMPLE_RATE;
     private static int SELECTED_AUDIO_ENCODING;
     private static String CREATION_NAME;
-    private FileOutputStream  out;
+    private FileOutputStream out;
     private byte[] track;
-    public Activity activity;
-    ModulateLogic(Activity _activity, int _PLAYBACK_SAMPLE_RATE,int _SELECTED_AUDIO_ENCODING,String _SELECTED_FILE_NAME)
-    {
-        this.SELECTED_AUDIO_ENCODING=_SELECTED_AUDIO_ENCODING;
-        this.PLAYBACK_SAMPLE_RATE=_PLAYBACK_SAMPLE_RATE;
-        this.CREATION_NAME=_SELECTED_FILE_NAME;
-        this.activity=_activity;
+
+    ModulateLogic(int _PLAYBACK_SAMPLE_RATE, int _SELECTED_AUDIO_ENCODING, String _SELECTED_FILE_NAME) {
+        this.SELECTED_AUDIO_ENCODING = _SELECTED_AUDIO_ENCODING;
+        this.PLAYBACK_SAMPLE_RATE = _PLAYBACK_SAMPLE_RATE;
+        this.CREATION_NAME = _SELECTED_FILE_NAME;
+
     }
-    public void setFileOutputStream(String filePath)
-    {
+
+    public void setFileOutputStream(String filePath) {
         try {
             this.out = new FileOutputStream(filePath);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
-    public int mixEquation(int a, int b)
-    {
-        int y=a+b/2;
-        return y;
-    }
-    public float[] getFloatsFromBytes(byte[] track)
-    {
-        float[] floats = new float[track.length];
-        for (int i=4;i<track.length;i+=4)
-        {
-            byte[] bytes;
-            bytes= Arrays.copyOfRange(track,i-4,i);
-            floats[i]= ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+
+    public void closeFileOutputStream(short[] data) {
+        byte[] bytes = Convert.getBytesFromShorts(data);
+        try {
+            out.write(bytes, 0, bytes.length);
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return floats;
-    }
-    public int[] getBitsFromBytes(byte[] track)
-    {
-        int size =track.length;
-        int[] bits = new int[size];
-        for (int i=0; i<size; i++)
-        {
-            bits[i]=track[i];
-        }
-        return bits;
     }
 
-    public byte[] getBytesFromBits(int[] bits)
-    {
-        int size = bits.length;
-        byte[] bytes=new byte[size];
-        for (int i =0; i<size;i++)
-        {
-            bytes[i]=(byte)bits[i];
-        }
-        return bytes;
-    }
-    public byte[] getBytesFromTrack() throws IOException {
+    public byte[] getBytesFromTrack() {
         File file = new File(CREATION_NAME);
-        track = new byte[(int) file.length()];
+        byte[] track = new byte[(int) file.length()];
         FileInputStream in;
-        try
-        {
+        try {
             in = new FileInputStream(file);
             in.read(track);
             in.close();
-        }
-        catch (FileNotFoundException e)
-        {
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return track;
     }
 
-    public byte[] getBytesFromFloats(float[] floats)
-    {
-        int size = floats.length;
-        byte[] bytes = new byte[size];
-        for (int i=0; i<size; i++)
-        {
-            byte[] buffer;
-            buffer=ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putFloat(floats[i]).array();
-            for (int j=0; j<buffer.length;j++)
-            {
-                bytes[i] = buffer[j];
-            }
-        }
-        return bytes;
-    }
-    public void makeBackwardsCreation() throws IOException {
+    public short[] getAudioData() {
         setFileOutputStream("/sdcard/Music/test.pcm");
-        byte[] frontwards_bytes=getBytesFromTrack();
-        float[] frontwards=getFloatsFromBytes(frontwards_bytes);
-        float[] backwards = new float[frontwards.length];
-        int size=frontwards.length;
-        for (int i=0;i<size;i++)
-        {
-            backwards[i] = frontwards[size-i-1];
+        byte[] bytes = getBytesFromTrack();
+        short[] shorts = Convert.getShortsFromBytes(bytes);
+        return shorts;
+    }
+
+    public void makeBackwardsCreation() {
+        short[] frontwards = getAudioData();
+        short[] backwards = new short[frontwards.length];
+        int size = frontwards.length;
+        for (int i = 0; i < size; i++) {
+            backwards[i] = frontwards[size - i - 1];
         }
-        byte[] backwards_bytes=getBytesFromFloats(backwards);
-        out.write(backwards_bytes,0,backwards.length);
+        closeFileOutputStream(backwards);
+    }
+
+    public void makePhaserCreation(int frequency) {
+        short[] carrier_wave = getAudioData();
+        double[] modulation_wave = Generate.sine(1, frequency, carrier_wave.length);
+        short[] result = new short[carrier_wave.length];
+        for (int i = 0; i < carrier_wave.length; i++) {
+            result[i] = (short) (carrier_wave[i] * modulation_wave[i]);
+        }
+        closeFileOutputStream(result);
+    }
+
+    public void makeRoboticCreation() throws IOException {
+        setFileOutputStream("//sdcard/Music/test.pcm");
+        byte[] bytes = getBytesFromTrack();
+        byte[] one_sample_delay = new byte[bytes.length];
+        for (int i = 0; i < bytes.length; i += 32) {
+            one_sample_delay[i] = track[i];
+            one_sample_delay[i + 1] = track[i + 1];
+        }
+        out.write(one_sample_delay, 0, one_sample_delay.length);
         out.close();
     }
-    public void makeEchoCreation() throws IOException {
-        int[] echo;
-        setFileOutputStream("/sdcard/Music/test.pcm");
-        byte[] bytes=getBytesFromTrack();
-        int[] track=getBitsFromBytes(bytes);
-        echo = new int[track.length];
-        int size=track.length;
-        int offset = size/3;
-        int count=0;
-        for (int i=0; i<size; i++)
-        {
-            count+=1;
-            if (count<offset)
-            {
-                echo[i]=track[i];
-            }
-            if (count>offset)
-            {
-                int mix = mixEquation(track[i],track[i-offset]);
-                echo[i]=mix;
+
+    public void makeEchoCreation(int delay, int num_signals) {
+        short[] carrier_wave = getAudioData();
+        short[] result = new short[carrier_wave.length];
+        for (int i = 0; i < carrier_wave.length; i++) {
+            try {
+                double echo_sample = 0;
+                for (int signal = 0; signal < num_signals + 1; signal++) {
+                    echo_sample += .1 * carrier_wave[(int) (i - delay * Math.pow(delay, signal))];
+                }
+                result[i] = (short) echo_sample;
+            } catch (IndexOutOfBoundsException e) {
+                result[i] = (short) (.1 * carrier_wave[i]);
             }
         }
-        byte[] echo_bytes=getBytesFromBits(echo);
-        out.write(echo_bytes,0,echo.length);
-        out.close();
+        closeFileOutputStream(result);
+    }
+
+    public void makeFlangerCreation(int min, int max, int frequency) {
+        short[] carrier_wave = getAudioData();
+        short[] result = new short[carrier_wave.length];
+        for (int i = 0; i < carrier_wave.length; i++) {
+            try {
+                double flanger_sample = .1 * carrier_wave[i] + carrier_wave[i - (int) ((max - min) * (.5 * Math.sin(frequency * i) + .5) + min)];
+                System.out.println(flanger_sample);
+                result[i] = (short) flanger_sample;
+            } catch (IndexOutOfBoundsException e) {
+                result[i] = (short) (.1 * carrier_wave[i]);
+            }
+
+        }
+        closeFileOutputStream(result);
+    }
+
+    public void makeSquaredCreation() {
+        short[] carrier_wave = getAudioData();
+        short[] result = new short[carrier_wave.length];
+        for (int i = 0; i < carrier_wave.length; i++) {
+            if (carrier_wave[i] > 0) {
+                result[i] = (short) Math.sqrt(carrier_wave[i]);
+            }
+            if (carrier_wave[i] < 0) {
+                result[i] = (short) (-1 * Math.sqrt(Math.abs(carrier_wave[i])));
+            }
+        }
+        closeFileOutputStream(result);
     }
 }

@@ -6,69 +6,114 @@
     android:layout_height="match_parent"
     android:background="#131313"
     tools:context=".ModulateActivity">
-
-    <com.jjoe64.graphview.GraphView
-        android:id="@+id/modulation_graph"
-        android:layout_width="405dp"
-        android:layout_height="375dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ScrollView
-        android:layout_width="413dp"
-        android:layout_height="353dp"
-        android:layout_marginTop="8dp"
-        android:background="#605B5B"
+    <!--TODO redo vector creation for echo and backwards. Make them src compact and set background as the background
+        TODO organize vectors, backgrounds, and layer list xml objects -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginBottom="5dp"
+        android:background="#717070"
+        android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/modulation_graph">
+        app:layout_constraintTop_toTopOf="parent">
 
-        <TableLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="232dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:visibility="visible">
 
-            <TableRow
+            <ImageButton
+                android:id="@+id/button"
+                android:layout_width="105dp"
+                android:layout_height="105dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginRight="20dp"
+                android:background="@drawable/echo_modulate"
+                android:contentDescription="TODO"
+                android:onClick="onClick" />
+
+            <ImageButton
+                android:id="@+id/backwards"
+                android:layout_width="105dp"
+                android:layout_height="105dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginLeft="20dp"
+                android:background="@drawable/backwards_modulate"
+                android:contentDescription="TODO"
+                android:onClick="onClick" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="193dp"
+            android:gravity="center">
+
+            <ImageButton
+                android:id="@+id/one_sample_delay"
+                android:layout_width="105dp"
+                android:layout_height="105dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginRight="20dp"
+                android:background="@drawable/modulate_background"
+                android:onClick="onClick"
+                android:src="@drawable/ic_robot_svgrepo_com" />
+
+            <ImageButton
+                android:id="@+id/phaser"
+                android:layout_width="105dp"
+                android:layout_height="105dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginLeft="20dp"
+                android:onClick="onClick"
+                app:srcCompat="@android:drawable/btn_star_big_on" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="193dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/flanger"
+                android:layout_width="105dp"
+                android:layout_height="105dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginRight="20dp"
+                android:onClick="onClick"
+                app:srcCompat="@android:drawable/btn_star_big_on" />
+
+            <ImageButton
+                android:id="@+id/squared"
+                android:layout_width="105dp"
+                android:layout_height="105dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginLeft="20dp"
+                android:onClick="onClick"
+                app:srcCompat="@android:drawable/btn_star_big_on" />
+        </LinearLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" >
-
-                <Space
-                    android:layout_width="49dp"
-                    android:layout_height="match_parent" />
-
-                <ImageButton
-                    android:id="@+id/backwards"
-                    android:layout_width="105dp"
-                    android:layout_height="105dp"
-                    android:onClick="onClick"
-                    app:srcCompat="@drawable/abc_vector_test" />
-
-                <Space
-                    android:layout_width="80dp"
-                    android:layout_height="match_parent" />
-
-                <ImageButton
-                    android:id="@+id/button"
-                    android:layout_width="105dp"
-                    android:layout_height="105dp"
-                    android:onClick="onClick"
-                    app:srcCompat="@android:drawable/ic_lock_silent_mode_off" />
-
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-        </TableLayout>
-    </ScrollView>
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

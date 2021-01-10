@@ -1,46 +1,77 @@
 package com.example.voicemodulation;
-import androidx.appcompat.app.AppCompatActivity;
-import android.media.AudioFormat;
+
 import android.os.Bundle;
 import android.view.View;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.voicemodulation.audio.AudioFile;
+import com.example.voicemodulation.audio.RecordLogic;
+
 import java.io.IOException;
 
 public class ModulateActivity extends AppCompatActivity implements View.OnClickListener {
-    private static int PLAYBACK_SAMPLE_RATE;
-    private static int SELECTED_AUDIO_ENCODING;
     private ModulateLogic modulate;
-    private String SELECTED_FILE_NAME;
     private RecordLogic player;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_modulate);
-        PLAYBACK_SAMPLE_RATE=getIntent().getIntExtra("SELECTED_PLAYBACK_RATE",44100);
-        SELECTED_AUDIO_ENCODING=getIntent().getIntExtra("SELECTED_AUDIO_ENCODING", AudioFormat.ENCODING_PCM_16BIT);
-        SELECTED_FILE_NAME=getIntent().getStringExtra("FILE_NAME");
-        modulate = new ModulateLogic(this,PLAYBACK_SAMPLE_RATE,SELECTED_AUDIO_ENCODING,SELECTED_FILE_NAME);
-        player = new RecordLogic(this);
-        player.setFilePath("/sdcard/Music/test.pcm");
-        player.setPlayBackRate(PLAYBACK_SAMPLE_RATE);
-        player.setAudioEncoding(SELECTED_AUDIO_ENCODING);
+        AudioFile creation = getIntent().getParcelableExtra("AudioFile");
+        modulate = new ModulateLogic(creation.getPlaybackRate(), creation.getBitDepth(), creation.getFilePath());
+        creation.setFilePath("/sdcard/Music/test.pcm");
+        player = new RecordLogic();
+        player.setFileObject(creation);
     }
+
     @Override
-    public void onClick(View view)
-    {
-        switch (view.getId())
-        {
+    public void onClick(View view) {
+        switch (view.getId()) {
             case R.id.backwards:
                 try {
                     modulate.makeBackwardsCreation();
                     player.play_recording();
-                    //modulate.doSomething("/sdcard/Music/gucci.pcm");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 break;
             case R.id.button:
                 try {
-                    modulate.makeEchoCreation();
+                    modulate.makeEchoCreation(10, 4);
+                    player.play_recording();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case R.id.one_sample_delay:
+                try {
+                    modulate.makeRoboticCreation();
+                    ;
+                    player.play_recording();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case R.id.phaser:
+                try {
+                    modulate.makePhaserCreation(20);
+                    player.play_recording();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case R.id.flanger:
+                try {
+                    modulate.makeFlangerCreation(100, 50, 20);
+                    player.play_recording();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case R.id.squared:
+                try {
+                    modulate.makeSquaredCreation();
                     player.play_recording();
                 } catch (IOException e) {
                     e.printStackTrace();

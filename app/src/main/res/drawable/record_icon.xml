@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-    <shape android:shape="oval">
-        <solid android:color="#e42828"/>
-        <stroke android:color="#4B4B4B" android:width="10dp"/>
-        <!-- Set the same value for both width and height to get a circular shape -->
-        <size android:width="100dp" android:height="100dp"/>
-    </shape>
-</item>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/record_and_pause_background"></item>
+    <item android:gravity="center">
+        <shape android:shape="oval">
+            <solid android:color="#FF0000" />
+            <size
+                android:width="15dp"
+                android:height="15dp" />
+        </shape>
+    </item>
 
-</selector>
+</layer-list>

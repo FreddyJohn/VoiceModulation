@@ -1,17 +1,15 @@
 <resources>
     <string name="app_name">VoiceModulation</string>
-    <string name="start_recording">record</string>
-    <string name="stop_recording">modulate</string>
-    <string name="settings_and_record">Record</string>
     <string name="sample_rate">Sample Rate</string>
     <string name="playback_rate">PlayBack Rate</string>
     <string name="encoding">Encoding</string>
     <string name="format">Format</string>
-    <string name="selected_format">selected:</string>
-    <string name="selected_sample_rate">Hz</string>
-    <string name="selected_encoding">Bit</string>
-    <string name="selected_playback_rate">Hz</string>
-    <string name="freq_modulation">freq modulate</string>
+    <string name="selected_format">.wav</string>
+    <string name="selected_sample_rate">48000 F/s</string>
+    <string name="selected_encoding">16Bit</string>
+    <string name="selected_playback_rate">48000 F/s</string>
+    <string name="num_channels">Channels</string>
+    <string name="selected_num_channels">Mono</string>
 
 
 </resources>
