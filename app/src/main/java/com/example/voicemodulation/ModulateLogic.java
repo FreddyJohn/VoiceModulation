@@ -111,7 +111,7 @@ public class ModulateLogic {
             try {
                 double echo_sample = 0;
                 for (int signal = 0; signal < num_signals + 1; signal++) {
-                    echo_sample += .1 * carrier_wave[(int) (i - delay * Math.pow(delay, signal))];
+                    echo_sample += .1 * carrier_wave[(int) (i - Math.pow(delay, signal))];
                 }
                 result[i] = (short) echo_sample;
             } catch (IndexOutOfBoundsException e) {
@@ -149,5 +149,16 @@ public class ModulateLogic {
             }
         }
         closeFileOutputStream(result);
+    }
+    public void makeAMCreation(float amplitude) {
+        short[] carrier_wave = getAudioData();
+        short[] result = new short[carrier_wave.length];
+        for (int i = 0; i < carrier_wave.length; i++) {
+            result[i] = (short) (amplitude*carrier_wave[i]);
+        }
+        closeFileOutputStream(result);
+    }
+    public void makeSRCreation() {
+        //TODO make sample and playback rate not final in AudioFile
     }
 }

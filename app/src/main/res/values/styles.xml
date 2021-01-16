@@ -22,5 +22,12 @@
         <item name="android:layout_height">90dp</item>
         <item name="android:rotation">270</item>
         <item name="android:thumb">@drawable/seekbar_thumb</item>
+        <!--<item name="android:tickMark">@drawable/seekbar_tickmark</item>-->
     </style>
+    <declare-styleable name="SeekBarStyle" parent="Widget.AppCompat.SeekBar.Discrete">
+        <attr name="android:layout_width">100dp</attr>
+        <attr name="android:layout_height">90dp</attr>
+        <attr name="android:rotation">270</attr>
+        <attr name="android:thumb">@drawable/seekbar_thumb</attr>
+    </declare-styleable>
 </resources>

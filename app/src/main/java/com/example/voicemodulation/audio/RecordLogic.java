@@ -9,7 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PipedWriter;
 import java.io.RandomAccessFile;
-
+//TODO implement play pause this should be VERY easy with RAM usage
 public class RecordLogic {
     private static final int AUDIO_SOURCE = MediaRecorder.AudioSource.MIC;
     private AudioRecord recorder;

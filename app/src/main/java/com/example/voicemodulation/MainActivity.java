@@ -2,6 +2,7 @@ package com.example.voicemodulation;
 
 import android.content.Intent;
 import android.media.AudioFormat;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
@@ -9,12 +10,13 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.AudioFile;
-import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.graph.GraphLogic;
+import com.example.voicemodulation.audio.RecordLogic;
 
 import java.io.IOException;
 import java.io.PipedReader;
@@ -32,7 +34,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     int SELECTED_NUM_CHANNELS;
     private PipedWriter jay;
     private PipedReader silentBob;
-    private SeekBar sample_rate, encoding, format, playback_rate, num_channels;
+    private SeekBar sample_rate, encoding, format, playback_rate, num_channels,test;
     private TextView change_rate, change_encoding, change_format, change_playback_rate, change_num_channels;
     private String SELECTED_FILE_NAME = "/sdcard/Music/creation_test.pcm";
     private String display_selected_encoding, display_selected_format, display_num_channels;
@@ -41,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean has_recorded = false;
     private AudioFile creation;
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,8 +75,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         play_button.setVisibility(View.INVISIBLE);
         stop_button.setVisibility(View.INVISIBLE);
         pause_button.setVisibility(View.INVISIBLE);
+        //ParamLogic paramLogic = new ParamLogic(); //(this, null);
+        //com.example.voicemodulation.widgets.test t = new test(this,null);
+        //t.setAttr(this);
+        //paramLogic.getParams()
         LinearLayout display = findViewById(R.id.display);
+        LinearLayout controls = findViewById(R.id.record_params);
+        //int balls = 0;
+
+        //paramLogic.setParams(this,"balls",1,42,1,controls,balls,0);
+        //System.out.println(balls);
         display.addView(graph);
+        //controls.addView(t);
+        //test = new SeekBar(this);
+        //display.addView(test);
+
         //btnDelete.setEnabled(true);
         //btnRecord.setImageResource(R.drawable.ic_pause_circle_filled);
 
@@ -282,5 +298,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
     }
+
+
 
 }

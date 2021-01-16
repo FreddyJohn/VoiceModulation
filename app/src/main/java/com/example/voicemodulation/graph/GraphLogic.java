@@ -81,8 +81,7 @@ public class GraphLogic extends View {
         int inset = 0;
         mFrame = new Rect(inset, inset, width - inset, height - inset);
         mExtraCanvas.drawLine(0, view_height / 2, view_width, view_height / 2, x_coordinate_axis);
-        //mExtraCanvas.drawLine(graph_pos,0,graph_pos,view_height,paint);
-        //mExtraCanvas.scale(1,1);
+
 
     }
 

@@ -19,23 +19,15 @@
         android:layout_marginRight="10dp"
         android:layout_marginBottom="10dp"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout2"
+        app:layout_constraintBottom_toTopOf="@+id/controls"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0">
-        <!--
-        <com.example.voicemodulation.graph.GraphLogic
-            android:id="@+id/graph"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-        -->
-
-    </LinearLayout>
+        app:layout_constraintVertical_bias="1.0"/>
 
     <LinearLayout
-        android:id="@+id/linearLayout2"
+        android:id="@+id/controls"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
@@ -49,10 +41,12 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <HorizontalScrollView
+            android:id="@+id/record_params_scroll"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
             <LinearLayout
+                android:id="@+id/record_params"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
@@ -61,8 +55,6 @@
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginLeft="16dp"
                     android:background="@drawable/seekbar_border"
                     android:gravity="center"
                     android:orientation="vertical">
@@ -76,7 +68,7 @@
                         style="@style/SeekBarStyle"
                         android:max="2"
                         android:progress="2"
-                        app:tickMark="@drawable/seekbar_tickmark" />
+                        app:tickMark="@drawable/seekbar_tickmark"/>
 
                     <TextView
                         android:id="@+id/selected_format"
@@ -107,6 +99,7 @@
                         android:id="@+id/selected_num_channels"
                         style="@style/DynamicSeekBarTitle"
                         android:text="@string/selected_num_channels" />
+
                 </LinearLayout>
 
                 <LinearLayout
