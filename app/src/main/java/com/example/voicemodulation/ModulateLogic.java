@@ -21,25 +21,26 @@ public class ModulateLogic {
     private static int PLAYBACK_SAMPLE_RATE;
     private static int SELECTED_AUDIO_ENCODING;
     private static String CREATION_NAME;
-    private FileOutputStream out;
+    private static FileOutputStream out;
     private byte[] track;
 
-    ModulateLogic(int _PLAYBACK_SAMPLE_RATE, int _SELECTED_AUDIO_ENCODING, String _SELECTED_FILE_NAME) {
+    public ModulateLogic(){}
+    public ModulateLogic(int _PLAYBACK_SAMPLE_RATE, int _SELECTED_AUDIO_ENCODING, String _SELECTED_FILE_NAME) {
         this.SELECTED_AUDIO_ENCODING = _SELECTED_AUDIO_ENCODING;
         this.PLAYBACK_SAMPLE_RATE = _PLAYBACK_SAMPLE_RATE;
         this.CREATION_NAME = _SELECTED_FILE_NAME;
 
     }
 
-    public void setFileOutputStream(String filePath) {
+    public static void setFileOutputStream(String filePath) {
         try {
-            this.out = new FileOutputStream(filePath);
+            ModulateLogic.out = new FileOutputStream(filePath);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    public void closeFileOutputStream(short[] data) {
+    public static void closeFileOutputStream(short[] data) {
         byte[] bytes = Convert.getBytesFromShorts(data);
         try {
             out.write(bytes, 0, bytes.length);
@@ -49,7 +50,7 @@ public class ModulateLogic {
         }
     }
 
-    public byte[] getBytesFromTrack() {
+    public static byte[] getBytesFromTrack() {
         File file = new File(CREATION_NAME);
         byte[] track = new byte[(int) file.length()];
         FileInputStream in;
@@ -65,7 +66,7 @@ public class ModulateLogic {
         return track;
     }
 
-    public short[] getAudioData() {
+    public static short[] getAudioData() {
         setFileOutputStream("/sdcard/Music/test.pcm");
         byte[] bytes = getBytesFromTrack();
         short[] shorts = Convert.getShortsFromBytes(bytes);
@@ -92,6 +93,7 @@ public class ModulateLogic {
         closeFileOutputStream(result);
     }
 
+
     public void makeRoboticCreation() throws IOException {
         setFileOutputStream("//sdcard/Music/test.pcm");
         byte[] bytes = getBytesFromTrack();
@@ -104,7 +106,7 @@ public class ModulateLogic {
         out.close();
     }
 
-    public void makeEchoCreation(int delay, int num_signals) {
+    public static void makeEchoCreation(int num_signals,int delay) {
         short[] carrier_wave = getAudioData();
         short[] result = new short[carrier_wave.length];
         for (int i = 0; i < carrier_wave.length; i++) {
@@ -119,6 +121,9 @@ public class ModulateLogic {
             }
         }
         closeFileOutputStream(result);
+    }
+    public interface Echo{
+        void makeEcho(int num_signals,int delay);
     }
 
     public void makeFlangerCreation(int min, int max, int frequency) {

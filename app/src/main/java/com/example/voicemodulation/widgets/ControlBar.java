@@ -14,13 +14,11 @@ import androidx.annotation.Nullable;
 
 import com.example.voicemodulation.R;
 
-public class StyledSeekBar extends androidx.appcompat.widget.AppCompatSeekBar {
-    public StyledSeekBar(@NonNull Context context, @Nullable AttributeSet attrs) {
+public class ControlBar extends androidx.appcompat.widget.AppCompatSeekBar {
+    public ControlBar(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         setProgress(5);
         setRotation(270);
-        //setMax(10);
-        setBackgroundColor(Color.BLACK);
         Drawable t = context.getDrawable(R.drawable.seekbar_thumb);
         setThumb(t);
     }

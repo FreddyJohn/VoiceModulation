@@ -12,19 +12,20 @@ import androidx.annotation.Nullable;
 import com.example.voicemodulation.R;
 
 
-public class ParamLogic extends LinearLayout {
+public class Controller extends LinearLayout {
     private TextView status;
     private TextView title;
-    private StyledSeekBar param;
-    public ParamLogic(Context context, @Nullable AttributeSet attrs) {
+    private ControlBar param;
+    public Controller(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        param = new StyledSeekBar(context,null);
+        param = new ControlBar(context,null);
         title = new TextView(context);
         title.setTextAppearance(R.style.StaticSeekBarTitle);
-        title.setText("balls");
+        title.setText("title");
         status = new TextView(context);
         status.setTextAppearance(R.style.DynamicSeekBarTitle);
-        status.setText("big ones");
+        status.setText("status");
+        param.setMax(5);
         addView(title);
         addView(param);
         addView(status);
@@ -35,7 +36,7 @@ public class ParamLogic extends LinearLayout {
         param.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            status.setText(param.getProgress()+"balls");
+            status.setText(param.getProgress()+"big ones");
         }
 
         @Override
@@ -48,8 +49,6 @@ public class ParamLogic extends LinearLayout {
 
         }
     });
-
-
 }
     public void setParam(String _title, int max)
     {
@@ -59,5 +58,12 @@ public class ParamLogic extends LinearLayout {
     public int getProgress()
     {
         return param.getProgress();
+    }
+
+    @Override
+    protected void onMeasure(int width, int height) {
+        int wrap = LayoutParams.WRAP_CONTENT;
+        setMeasuredDimension(wrap, wrap);
+        super.onMeasure(wrap, wrap);
     }
 }

@@ -9,7 +9,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.voicemodulation.audio.AudioFile;
-import com.example.voicemodulation.widgets.ParamLogic;
+import com.example.voicemodulation.widgets.Controller;
 import com.example.voicemodulation.audio.RecordLogic;
 
 
@@ -24,7 +24,7 @@ public class ModulateActivity extends AppCompatActivity implements View.OnClickL
     private ModulateLogic modulate;
     private RecordLogic player;
     private LinearLayout params;
-    private ParamLogic param;
+    private Controller param;
     //private test t;
 
     @Override
@@ -34,8 +34,8 @@ public class ModulateActivity extends AppCompatActivity implements View.OnClickL
         AudioFile creation = getIntent().getParcelableExtra("AudioFile");
         modulate = new ModulateLogic(creation.getPlaybackRate(), creation.getBitDepth(), creation.getFilePath());
         creation.setFilePath("/sdcard/Music/test.pcm");
-        param = new ParamLogic(this,null); //(this, null);
-        params = findViewById(R.id.param);
+        param = new Controller(this,null); //(this, null);
+        params = findViewById(R.id.n_parameters);
         player = new RecordLogic();
         player.setFileObject(creation);
     }
@@ -54,10 +54,13 @@ public class ModulateActivity extends AppCompatActivity implements View.OnClickL
                 }
                 break;
             case R.id.echo:
+                ModulateLogic.Echo echo = (int num_signals,int delay) -> ModulateLogic.makeEchoCreation(num_signals,delay);
+
+                /*
                     params.removeAllViews();
-                    ParamLogic d = new ParamLogic(this,null);
+                    Controller d = new Controller(this,null);
                     d.setParam("Delay",10);
-                    ParamLogic ns = new ParamLogic(this,null);
+                    Controller ns = new Controller(this,null);
                     ns.setParam("Signals",10);
                     params.addView(d);
                     params.addView(ns);
@@ -67,11 +70,13 @@ public class ModulateActivity extends AppCompatActivity implements View.OnClickL
                     //    delay= d.getProgress();
                      //   num_signals = ns.getProgress();
                     //}
-                    modulate.makeEchoCreation(delay, num_signals);
+
+                 */
+                    //modulate.makeEchoCreation(delay, num_signals);
                     //player.play_recording();
                 break;
             case R.id.one_sample_delay:
-                ParamLogic a = new ParamLogic(this,null);
+                Controller a = new Controller(this,null);
                 params.addView(a);
                 /*
                 try {
