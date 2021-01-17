@@ -3,14 +3,18 @@ package com.example.voicemodulation;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.widgets.Controller;
 import com.example.voicemodulation.audio.RecordLogic;
+import com.example.voicemodulation.widgets.nControls;
 
 
 import java.io.IOException;
@@ -24,20 +28,18 @@ public class ModulateActivity extends AppCompatActivity implements View.OnClickL
     private ModulateLogic modulate;
     private RecordLogic player;
     private LinearLayout params;
-    private Controller param;
-    //private test t;
+    private AudioFile creation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_modulate);
-        AudioFile creation = getIntent().getParcelableExtra("AudioFile");
+        creation = getIntent().getParcelableExtra("AudioFile");
         modulate = new ModulateLogic(creation.getPlaybackRate(), creation.getBitDepth(), creation.getFilePath());
-        creation.setFilePath("/sdcard/Music/test.pcm");
-        param = new Controller(this,null); //(this, null);
+        //creation.setFilePath("/sdcard/Music/test.pcm");
         params = findViewById(R.id.n_parameters);
         player = new RecordLogic();
-        player.setFileObject(creation);
+        //player.setFileObject(creation);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -54,26 +56,12 @@ public class ModulateActivity extends AppCompatActivity implements View.OnClickL
                 }
                 break;
             case R.id.echo:
-                ModulateLogic.Echo echo = (int num_signals,int delay) -> ModulateLogic.makeEchoCreation(num_signals,delay);
 
-                /*
-                    params.removeAllViews();
-                    Controller d = new Controller(this,null);
-                    d.setParam("Delay",10);
-                    Controller ns = new Controller(this,null);
-                    ns.setParam("Signals",10);
-                    params.addView(d);
-                    params.addView(ns);
-                    int delay=d.getProgress();
-                    int num_signals =d.getProgress();
-                    //while (d.getStatus()==false && ns.getStatus()==false){
-                    //    delay= d.getProgress();
-                     //   num_signals = ns.getProgress();
-                    //}
+                String[] titles = new String[] {"Signals","Delay"};
+                int[] maxes = new int[] {10,10};
+                ModulateLogic.Parameters echo = (int[] params) -> ModulateLogic.makeEchoCreation(params);
+                displayFragment(titles,maxes,echo);
 
-                 */
-                    //modulate.makeEchoCreation(delay, num_signals);
-                    //player.play_recording();
                 break;
             case R.id.one_sample_delay:
                 Controller a = new Controller(this,null);
@@ -91,12 +79,19 @@ public class ModulateActivity extends AppCompatActivity implements View.OnClickL
                  */
                 break;
             case R.id.phaser:
+                String[] phaser_titles = new String[] {"Frequency"};
+                int[] phaser_maxes = new int[] {40};
+                ModulateLogic.Parameters phaser = (int[] params) -> ModulateLogic.makePhaserCreation(params);
+                displayFragment(phaser_titles,phaser_maxes,phaser);
+                /*
                 try {
                     modulate.makePhaserCreation(20);
                     player.play_recording();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
+                 */
                 break;
             case R.id.flanger:
                 try {
@@ -121,6 +116,26 @@ public class ModulateActivity extends AppCompatActivity implements View.OnClickL
                     e.printStackTrace();
                 }
 
+        }
+    }
+    public nControls displayFragment(String[] titles, int[] maxes, ModulateLogic.Parameters echo) {
+        nControls controls = nControls.newInstance(titles,maxes,echo,creation);
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager
+                .beginTransaction();
+        fragmentTransaction.add(R.id.god_mode,
+                controls).addToBackStack(null).commit();
+
+        return controls;
+    }
+    public void closeFragment() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        nControls simpleFragment = (nControls) fragmentManager
+                .findFragmentById(R.id.god_mode);
+        if (simpleFragment != null) {
+            FragmentTransaction fragmentTransaction =
+                    fragmentManager.beginTransaction();
+            fragmentTransaction.remove(simpleFragment).commit();
         }
     }
 }

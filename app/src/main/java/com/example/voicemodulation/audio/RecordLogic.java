@@ -96,7 +96,6 @@ public class RecordLogic {
     }
 
     public void play_recording() throws IOException {
-        System.out.println("YOU HAVE PRESSED PLAY. NOW I PLAY THIS FILE: " + file_path);
         AudioCon.IO io = new AudioCon.IO(file_path);
         byte[] byteData;
         File file;
@@ -106,6 +105,8 @@ public class RecordLogic {
             RandomAccessFile in = io.getReadObject();
             in.read(byteData);
             in.close();
+            System.out.println("YOU HAVE PRESSED PLAY. NOW I PLAY THIS FILE: " + file_path);
+            System.out.println("FILE LENGTH IS: "+file.length());
             int intSize = android.media.AudioTrack.getMinBufferSize(
                     file_data.getPlaybackRate(), file_data.getNumChannelsOut(), file_data.getBitDepth());
             AudioTrack at = new AudioTrack(

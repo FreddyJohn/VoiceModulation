@@ -121,79 +121,15 @@
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
 
-        <LinearLayout
-            android:id="@+id/controls"
+        <FrameLayout
+            android:id="@+id/god_mode"
+            android:name="com.example.voicemodulation.widgets.nControls"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginStart="20dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginRight="20dp"
-            android:layout_marginBottom="20dp"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent">
-
-            <HorizontalScrollView
-                android:id="@+id/record_params_scroll"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
-                    android:id="@+id/n_parameters"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:orientation="horizontal"></LinearLayout>
-            </HorizontalScrollView>
-
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="20dp" />
-
-            <FrameLayout
-                android:id="@+id/record_controls"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <ImageButton
-                    android:id="@+id/stop_recording"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-
-                    android:layout_gravity="center|left"
-                    android:layout_marginStart="50dp"
-                    android:layout_marginLeft="50dp"
-                    android:background="@drawable/stop_icon"
-                    android:contentDescription="TODO"
-                    android:onClick="onClick" />
-
-                <ImageButton
-                    android:id="@+id/pause_recording"
-                    android:layout_width="47dp"
-                    android:layout_height="44dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/pause_icon"
-                    android:contentDescription="TODO"
-                    android:cropToPadding="false"
-                    android:onClick="onClick" />
-
-                <ImageButton
-                    android:id="@+id/play_recording"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-
-                    android:layout_gravity="center|right|center_horizontal"
-                    android:layout_marginEnd="50dp"
-                    android:layout_marginRight="50dp"
-                    android:adjustViewBounds="true"
-                    android:background="@drawable/play_icon"
-                    android:contentDescription="TODO"
-                    android:onClick="onClick" />
-            </FrameLayout>
-        </LinearLayout>
-
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:layout="@layout/user_controls" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

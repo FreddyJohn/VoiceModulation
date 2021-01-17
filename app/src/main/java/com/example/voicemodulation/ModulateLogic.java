@@ -1,6 +1,8 @@
 package com.example.voicemodulation;
 
 import android.media.AudioFormat;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.example.voicemodulation.audio.util.Convert;
 import com.example.voicemodulation.audio.util.Generate;
@@ -29,9 +31,10 @@ public class ModulateLogic {
         this.SELECTED_AUDIO_ENCODING = _SELECTED_AUDIO_ENCODING;
         this.PLAYBACK_SAMPLE_RATE = _PLAYBACK_SAMPLE_RATE;
         this.CREATION_NAME = _SELECTED_FILE_NAME;
-
     }
-
+    public interface Parameters{
+        void setParameters(int[] parameters);
+    }
     public static void setFileOutputStream(String filePath) {
         try {
             ModulateLogic.out = new FileOutputStream(filePath);
@@ -83,7 +86,8 @@ public class ModulateLogic {
         closeFileOutputStream(backwards);
     }
 
-    public void makePhaserCreation(int frequency) {
+    public static void makePhaserCreation(int[] params) {
+        int frequency = params[0];
         short[] carrier_wave = getAudioData();
         double[] modulation_wave = Generate.sine(1, frequency, carrier_wave.length);
         short[] result = new short[carrier_wave.length];
@@ -95,7 +99,7 @@ public class ModulateLogic {
 
 
     public void makeRoboticCreation() throws IOException {
-        setFileOutputStream("//sdcard/Music/test.pcm");
+        setFileOutputStream("/sdcard/Music/test.pcm");
         byte[] bytes = getBytesFromTrack();
         byte[] one_sample_delay = new byte[bytes.length];
         for (int i = 0; i < bytes.length; i += 32) {
@@ -106,7 +110,9 @@ public class ModulateLogic {
         out.close();
     }
 
-    public static void makeEchoCreation(int num_signals,int delay) {
+    public static void makeEchoCreation(int[] params) {
+        int num_signals = params[0];
+        int delay = params[1];
         short[] carrier_wave = getAudioData();
         short[] result = new short[carrier_wave.length];
         for (int i = 0; i < carrier_wave.length; i++) {
@@ -121,9 +127,6 @@ public class ModulateLogic {
             }
         }
         closeFileOutputStream(result);
-    }
-    public interface Echo{
-        void makeEcho(int num_signals,int delay);
     }
 
     public void makeFlangerCreation(int min, int max, int frequency) {
@@ -167,3 +170,4 @@ public class ModulateLogic {
         //TODO make sample and playback rate not final in AudioFile
     }
 }
+

@@ -61,7 +61,7 @@
                 android:onClick="onClick" />
 
             <ImageButton
-                android:id="@+id/play_recording"
+                android:id="@+id/play"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
 
