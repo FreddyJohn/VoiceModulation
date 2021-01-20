@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private RecordLogic record;
     private boolean has_recorded = false;
     private AudioFile creation;
+    private Boolean file_state=true;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -256,13 +257,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.start_recording:
+
                 SELECTED_SAMPLE_RATE = sample_rate.getProgress() * seeker_multiplier;
                 encodingSeeker(encoding.getProgress());
                 SELECTED_PLAYBACK_RATE = playback_rate.getProgress() * seeker_multiplier;
                 creation = new AudioFile(SELECTED_SAMPLE_RATE, SELECTED_PLAYBACK_RATE,
                         SELECTED_AUDIO_ENCODING, SELECTED_NUM_CHANNELS, AudioFormat.CHANNEL_IN_MONO);
                 creation.setFilePath(SELECTED_FILE_NAME);
-                record.setFileObject(creation);
+                record.setFileObject(creation,file_state);
                 record.setRecordingState(false);
                 record.startRecording();
                 graph.setGraphState(true, silentBob);
@@ -281,6 +283,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 break;
             case R.id.pause_recording:
+                file_state=false;
                 record.setRecordingState(true);
                 System.out.println("YOU PRESSED PAUSE");
                 pause_button.setVisibility(View.INVISIBLE);

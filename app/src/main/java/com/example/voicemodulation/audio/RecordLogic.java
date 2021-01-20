@@ -9,9 +9,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PipedWriter;
 import java.io.RandomAccessFile;
-//TODO implement play pause this should be VERY easy with RAM usage
+//TODO fix implementation of play/pause on every call to setFileObject there's call to AudioCon.getWriteObject
+//TODO ^ this sets file length to zero for no reason.
 public class RecordLogic {
-    private static final int AUDIO_SOURCE = MediaRecorder.AudioSource.MIC;
+    private static int AUDIO_SOURCE = MediaRecorder.AudioSource.MIC;
     private AudioRecord recorder;
     private AudioCon.IO io;
     private RandomAccessFile out;
@@ -32,14 +33,23 @@ public class RecordLogic {
     public void setPipedWriter(PipedWriter jay) {
         this.jay = jay;
     }
-
-    public void setFileObject(AudioFile creation) {
+    public void setFileData(AudioFile file)
+    {
+        this.file_data = file;
+        this.file_path = file.getFilePath();
+    }
+    public void setFileObject(AudioFile creation,Boolean file_state) {
         this.file_data = creation;
         this.file_path = creation.getFilePath();
         this.io = new AudioCon.IO(file_path);
         System.out.println("THE FILE NAME IS: " + file_path);
-        this.out = io.getWriteObject(true);
+        this.out = io.getWriteObject(file_state);
+    }
 
+    public void setRecordingState(boolean state) {
+        this.isPaused = state;
+        this.out = io.getWriteObject(false);
+        stopRecording();
     }
 
     public void startRecording() {
@@ -67,20 +77,14 @@ public class RecordLogic {
         }
     }
 
-    public void setRecordingState(boolean state) {
-        this.isPaused = state;
-        this.out = io.getWriteObject(false);
-        stopRecording();
-    }
-
     public void writeAudioDataToFile() {
         byte[] sData = new byte[buffer_size]; //java style vs C declaration?
-        io.setSeekToPointer(out, 0);
+        //io.setSeekToPointer(out, 0);
         while (isPaused == false && isRecording) {
             recorder.read(sData, 0, buffer_size);
             try {
                 out.write(sData, 0, buffer_size);
-                System.out.println(sData[sData.length - 1]);
+                //System.out.println(sData[sData.length - 1]);
                 jay.write(sData[sData.length - 1]);
                 jay.flush();
             } catch (IOException e) {

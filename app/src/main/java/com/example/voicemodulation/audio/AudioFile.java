@@ -6,6 +6,7 @@ import android.os.Parcelable;
 
 public final class AudioFile implements Parcelable {
     @SuppressWarnings("unused")
+    //TODO test crash on tracfone https://docs.oracle.com/javase/tutorial/java/javaOO/nested.html#serialization
     public static final Parcelable.Creator<AudioFile> CREATOR = new Parcelable.Creator<AudioFile>() {
         @Override
         public AudioFile createFromParcel(Parcel in) {

@@ -1,4 +1,4 @@
-package com.example.voicemodulation.widgets;
+package com.example.voicemodulation.controls;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;

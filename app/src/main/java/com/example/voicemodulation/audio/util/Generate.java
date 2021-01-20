@@ -1,11 +1,12 @@
 package com.example.voicemodulation.audio.util;
 
 public class Generate {
-    public static double[] sine(double a, double f, int l) {
-        double[] t = linspace(0, 50, l);
-        double[] y = new double[l];
-        for (int i = 0; i < t.length; i++) {
-            y[i] = a * Math.sin(f * t[i]);
+    public static double[] sin(double a, double f, int samples,int fps) {
+        int time = samples/fps;
+        double[] t = linspace(0, time, samples);
+        double[] y = new double[samples];
+        for (int x = 0; x < t.length; x++) {
+            y[x] = a * Math.sin(f * t[x]);
         }
         return y;
     }

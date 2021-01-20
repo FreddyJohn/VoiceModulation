@@ -1,12 +1,7 @@
 package com.example.voicemodulation;
-
 import android.media.AudioFormat;
-import android.os.Parcel;
-import android.os.Parcelable;
-
 import com.example.voicemodulation.audio.util.Convert;
 import com.example.voicemodulation.audio.util.Generate;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -16,8 +11,6 @@ import java.io.IOException;
 //TODO remove redundancy ->  all time domain modulations
 //TODO test performance -> manipulate all then write all VS manipulate one and write one
 //TODO rename class to reflect only time domain operations
-//TODO move class into a package named to reflect all types of modulations
-//TODO test
 public class ModulateLogic {
     private static final int RECORDER_CHANNELS_OUT = AudioFormat.CHANNEL_OUT_MONO;
     private static int PLAYBACK_SAMPLE_RATE;
@@ -25,24 +18,24 @@ public class ModulateLogic {
     private static String CREATION_NAME;
     private static FileOutputStream out;
     private byte[] track;
+    private static int[] params;
 
-    public ModulateLogic(){}
+    public ModulateLogic(int[] _params, String s, int play_back_rate){
+        params=_params;
+        CREATION_NAME = s;
+        PLAYBACK_SAMPLE_RATE = play_back_rate;}
     public ModulateLogic(int _PLAYBACK_SAMPLE_RATE, int _SELECTED_AUDIO_ENCODING, String _SELECTED_FILE_NAME) {
         this.SELECTED_AUDIO_ENCODING = _SELECTED_AUDIO_ENCODING;
         this.PLAYBACK_SAMPLE_RATE = _PLAYBACK_SAMPLE_RATE;
         this.CREATION_NAME = _SELECTED_FILE_NAME;
     }
-    public interface Parameters{
-        void setParameters(int[] parameters);
-    }
     public static void setFileOutputStream(String filePath) {
         try {
-            ModulateLogic.out = new FileOutputStream(filePath);
+            out = new FileOutputStream(filePath);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
-
     public static void closeFileOutputStream(short[] data) {
         byte[] bytes = Convert.getBytesFromShorts(data);
         try {
@@ -76,20 +69,21 @@ public class ModulateLogic {
         return shorts;
     }
 
-    public void makeBackwardsCreation() {
+    public static void makeBackwardsCreation() {
+        int volume = params[0];
         short[] frontwards = getAudioData();
         short[] backwards = new short[frontwards.length];
         int size = frontwards.length;
         for (int i = 0; i < size; i++) {
-            backwards[i] = frontwards[size - i - 1];
+            backwards[i] = (short) (volume*frontwards[size - i - 1]);
         }
         closeFileOutputStream(backwards);
     }
 
-    public static void makePhaserCreation(int[] params) {
+    public static void makePhaserCreation() {
         int frequency = params[0];
         short[] carrier_wave = getAudioData();
-        double[] modulation_wave = Generate.sine(1, frequency, carrier_wave.length);
+        double[] modulation_wave = Generate.sin(1, frequency, carrier_wave.length,PLAYBACK_SAMPLE_RATE);
         short[] result = new short[carrier_wave.length];
         for (int i = 0; i < carrier_wave.length; i++) {
             result[i] = (short) (carrier_wave[i] * modulation_wave[i]);
@@ -99,10 +93,11 @@ public class ModulateLogic {
 
 
     public void makeRoboticCreation() throws IOException {
+        int skip = params[0];
         setFileOutputStream("/sdcard/Music/test.pcm");
         byte[] bytes = getBytesFromTrack();
         byte[] one_sample_delay = new byte[bytes.length];
-        for (int i = 0; i < bytes.length; i += 32) {
+        for (int i = 0; i < bytes.length; i += skip) {
             one_sample_delay[i] = track[i];
             one_sample_delay[i + 1] = track[i + 1];
         }
@@ -110,7 +105,7 @@ public class ModulateLogic {
         out.close();
     }
 
-    public static void makeEchoCreation(int[] params) {
+    public static void makeEchoCreation() {
         int num_signals = params[0];
         int delay = params[1];
         short[] carrier_wave = getAudioData();
@@ -129,13 +124,16 @@ public class ModulateLogic {
         closeFileOutputStream(result);
     }
 
-    public void makeFlangerCreation(int min, int max, int frequency) {
+    public static void makeFlangerCreation() {
+        int min = params[0];
+        int max = params[1];
+        int frequency = params[2];
         short[] carrier_wave = getAudioData();
         short[] result = new short[carrier_wave.length];
         for (int i = 0; i < carrier_wave.length; i++) {
             try {
                 double flanger_sample = .1 * carrier_wave[i] + carrier_wave[i - (int) ((max - min) * (.5 * Math.sin(frequency * i) + .5) + min)];
-                System.out.println(flanger_sample);
+                //System.out.println(flanger_sample);
                 result[i] = (short) flanger_sample;
             } catch (IndexOutOfBoundsException e) {
                 result[i] = (short) (.1 * carrier_wave[i]);
@@ -158,7 +156,8 @@ public class ModulateLogic {
         }
         closeFileOutputStream(result);
     }
-    public void makeAMCreation(float amplitude) {
+    public void makeAMCreation() {
+        int amplitude = params[0];
         short[] carrier_wave = getAudioData();
         short[] result = new short[carrier_wave.length];
         for (int i = 0; i < carrier_wave.length; i++) {

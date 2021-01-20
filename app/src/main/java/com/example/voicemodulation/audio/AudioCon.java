@@ -29,6 +29,14 @@ public class AudioCon {
                     e.printStackTrace();
                 }
             }
+            if (!new_file)
+            {
+                try {
+                    writeObject.seek(writeObject.length());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
             return writeObject;
         }
 
