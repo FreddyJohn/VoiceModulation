@@ -1,6 +1,7 @@
 package com.example.voicemodulation.controls;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -17,8 +18,9 @@ import com.example.voicemodulation.R;
 public class ControlBar extends androidx.appcompat.widget.AppCompatSeekBar {
     public ControlBar(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        setProgress(5);
+        setProgress(2);
         setRotation(270);
+        setProgressTintList(ColorStateList.valueOf(Color.WHITE));
         Drawable t = context.getDrawable(R.drawable.seekbar_thumb);
         setThumb(t);
     }

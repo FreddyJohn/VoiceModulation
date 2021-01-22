@@ -21,10 +21,12 @@ public class NControls extends Fragment {
     private ImageButton play_button;
     public NControls(){
     }
-    public static NControls newInstance(String[] title,int[] maxes, AudioFile creation, String method,String file) {
+    public static NControls newInstance(String[] title,int[] maxes,double scale, String[] quantity_type, AudioFile creation, String method,String file) {
         NControls controls = new NControls();
         Bundle args = new Bundle();
         args.putString("filepath",file);
+        args.putDouble("scale",scale);
+        args.putStringArray("quantities",quantity_type);
         args.putString("method",method);
         args.putParcelable("file",creation);
         args.putStringArray("titles",title);
@@ -35,13 +37,14 @@ public class NControls extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup _container, Bundle savedInstanceState) {
         Bundle args = getArguments();
         String method = args.getString("method");
+        String[] quantities = args.getStringArray("quantities");
+        double scale = args.getDouble("scale");
         AudioFile file = args.getParcelable("file");
         String filePath = args.getString("filepath");
         int[] maxes = args.getIntArray("maxes");
         String[] titles = args.getStringArray("titles");
         final View rootView = inflater.inflate(R.layout.user_controls, _container, false);
         LinearLayout controls_view = rootView.findViewById(R.id.n_parameters);
-        //LinearLayout controls_view = getActivity().findViewById(R.id.n_parameters);
         play_button = getActivity().findViewById(R.id.play);
         controllers = new LinkedList<>();
         for (int control = 0; control <titles.length ; control++) {

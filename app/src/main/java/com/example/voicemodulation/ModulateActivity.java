@@ -5,18 +5,14 @@ import android.view.View;
 import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.example.voicemodulation.audio.AudioFile;
-import com.example.voicemodulation.controls.Controller;
 import com.example.voicemodulation.controls.NControls;
 
 //TODO add threads for every modulation so UI does not stall
-//TODO change to whatever mode that prevents user from flipping screen
-//TODO add double tap or some implementation to clear, remove, and create new recording
-//for example I have to add and create onClick of i modulation then remove and destroy listeners and n views.
+
 public class ModulateActivity extends AppCompatActivity implements View.OnClickListener {
     private boolean isFragmentDisplayed = false;
     private LinearLayout params;
@@ -35,48 +31,47 @@ public class ModulateActivity extends AppCompatActivity implements View.OnClickL
             case R.id.backwards:
                 String[] backwards_titles = new String[] {"Volume"};
                 int[] backwards_maxes = new int[] {10};
-                if (!isFragmentDisplayed) {
-                    displayFragment(backwards_titles,backwards_maxes,"makeBackwardsCreation");
-                } else {
-                    closeFragment();
-                }
+                double scale = .01;
+                closeFragment();
+                displayFragment(backwards_titles,backwards_maxes,scale,null,"makeBackwardsCreation");
                 break;
             case R.id.echo:
                 String[] echo_titles = new String[] {"Signals","Delay"};
                 int[] echo_maxes = new int[] {10,10};
-                if (!isFragmentDisplayed) {
-                    displayFragment(echo_titles,echo_maxes,"makeEchoCreation");
-                } else {
-                    closeFragment();
-                }
-
+                closeFragment();
+                displayFragment(echo_titles,echo_maxes,1,null,"makeEchoCreation");
                 break;
-            case R.id.one_sample_delay:
-                String[] robotic_titles = new String[] {"n Samples"};
-                int[] robotic_maxes = new int[] {30};
-                if (!isFragmentDisplayed) {
-                    displayFragment(robotic_titles,robotic_maxes,"makeRoboticCreation");
-                } else {
-                    closeFragment();
-                }
+            case R.id.quantize:
+                String[] robotic_titles = new String[] {"Quantization"};
+                int[] robotic_maxes = new int[] {10};
+                closeFragment();
+                displayFragment(robotic_titles,robotic_maxes,1000,null,"makeQuantizedCreation");
                 break;
             case R.id.phaser:
                 String[] phaser_titles = new String[] {"Frequency"};
-                int[] phaser_maxes = new int[] {100};
-                if (!isFragmentDisplayed) {
-                    displayFragment(phaser_titles,phaser_maxes,"makePhaserCreation");
-                } else {
-                    closeFragment();
-                }
+                int[] phaser_maxes = new int[] {10};
+                closeFragment();
+                displayFragment(phaser_titles,phaser_maxes,50,new String[]{"Hz"},"makePhaserCreation");
+                break;
+
+            case R.id.phaser_triangle:
+                String[] alien_titles = new String[] {"Frequency"};
+                int[] alien_maxes= new int[] {10};
+                closeFragment();
+                displayFragment(alien_titles,alien_maxes,50,new String[]{"Hz"},"makeAlienCreation");
+                break;
+            case R.id.phaser_saw:
+
+                String[] saw_titles = new String[] {"Frequency"};
+                int[] saw_maxes = new int[] {300};
+                closeFragment();
+                displayFragment(saw_titles,saw_maxes,50, new String[]{"Hz"},"makeRoboticCreation");
                 break;
             case R.id.flanger:
                 String[] flanger_titles = new String[] {"Min","Max","Frequency"};
                 int[] flanger_maxes = new int[] {100,100,100};
-                if (!isFragmentDisplayed) {
-                    displayFragment(flanger_titles,flanger_maxes,"makeFlangerCreation");
-                } else {
-                    closeFragment();
-                }
+                closeFragment();
+                displayFragment(flanger_titles,flanger_maxes,50, new String[]{null,null,"Hz"},"makeFlangerCreation");
                 break;
             case R.id.squared:
                // try {
@@ -87,8 +82,8 @@ public class ModulateActivity extends AppCompatActivity implements View.OnClickL
              //   }
                 break; }
     }
-    public NControls displayFragment(String[] titles,int[] maxes, String method) {
-            NControls controls = NControls.newInstance(titles,maxes,creation,method,file);
+    public NControls displayFragment(String[] titles,int[] maxes,double scale, String[] quantity_type, String method) {
+            NControls controls = NControls.newInstance(titles,maxes,scale,quantity_type,creation,method,file);
             FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager
                     .beginTransaction();

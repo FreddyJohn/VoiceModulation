@@ -90,19 +90,41 @@ public class ModulateLogic {
         }
         closeFileOutputStream(result);
     }
-
-
-    public void makeRoboticCreation() throws IOException {
-        int skip = params[0];
-        setFileOutputStream("/sdcard/Music/test.pcm");
-        byte[] bytes = getBytesFromTrack();
-        byte[] one_sample_delay = new byte[bytes.length];
-        for (int i = 0; i < bytes.length; i += skip) {
-            one_sample_delay[i] = track[i];
-            one_sample_delay[i + 1] = track[i + 1];
+    public static void makeAlienCreation() {
+        int frequency = params[0];
+        short[] carrier_wave = getAudioData();
+        double[] modulation_wave = Generate.triangle(1, frequency, carrier_wave.length,PLAYBACK_SAMPLE_RATE);
+        short[] result = new short[carrier_wave.length];
+        for (int i = 0; i < carrier_wave.length; i++) {
+            result[i] = (short) (carrier_wave[i] * modulation_wave[i]);
         }
-        out.write(one_sample_delay, 0, one_sample_delay.length);
-        out.close();
+        closeFileOutputStream(result);
+    }
+    public static void makeRoboticCreation() {
+        int frequency = params[0];
+        short[] carrier_wave = getAudioData();
+        double[] modulation_wave = Generate.saw(1, frequency, carrier_wave.length,PLAYBACK_SAMPLE_RATE);
+        short[] result = new short[carrier_wave.length];
+        for (int i = 0; i < carrier_wave.length; i++) {
+            result[i] = (short) (carrier_wave[i] * modulation_wave[i]);
+        }
+        closeFileOutputStream(result);
+    }
+
+
+    public static void makeQuantizedCreation() {
+        int C = params[0];
+        short[] carrier_wave = getAudioData();
+        short[] result = new short[carrier_wave.length];
+        for (int i=0; i<carrier_wave.length; i++) {
+            short x = carrier_wave[i];
+            if (x>0 || x<0) {
+                double sample = .1*((x/Math.abs(x))*C*Math.floor((Math.abs(x)/C)+.5));
+                result[i]= (short) sample; }
+            else {
+                result[i]=x; }
+        }
+        closeFileOutputStream(result);
     }
 
     public static void makeEchoCreation() {

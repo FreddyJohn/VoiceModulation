@@ -272,6 +272,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 stop_button.setVisibility(View.VISIBLE);
                 record_button.setVisibility(View.INVISIBLE);
                 pause_button.setVisibility(View.VISIBLE);
+                num_channels.setEnabled(false);
+                format.setEnabled(false);
+                encoding.setEnabled(false);
                 System.out.println("YOU PRESSED RECORD");
 
                 break;

@@ -10,7 +10,36 @@ public class Generate {
         }
         return y;
     }
-
+    public static double[] triangle(int a, int p, int samples, int fps)
+    {
+        int time = samples/fps;
+        double[] t = linspace(0, time, samples);
+        double[] y = new double[samples];
+        for (int x = 0; x < t.length; x++) {
+            y[x]= ((2*a)/Math.PI) * Math.asin(Math.sin((2*Math.PI*x)/p));
+        }
+        return y;
+    }
+    public static double[] saw(int a, int p, int samples, int fps)
+    {
+        int time = samples/fps;
+        double[] t = linspace(0, time, samples);
+        double[] y = new double[samples];
+        for (int x = 0; x < t.length; x++) {
+            y[x]= -((2*a)/Math.PI) * Math.atan(1/Math.tan((2*Math.PI*x)/p));
+        }
+        return y;
+    }
+    public static double[] square(int a, int f, int samples, int fps)
+    {
+        int time = samples/fps;
+        double[] t = linspace(0, time, samples);
+        double[] y = new double[samples];
+        for (int x = 0; x < t.length; x++) {
+            y[x]= a*Math.signum(Math.sin(2*Math.PI*f*x));
+        }
+        return y;
+    }
     public static double[] linspace(double min, double max, int points) {
         double[] d = new double[points];
         for (int i = 0; i < points; i++) {
@@ -18,7 +47,6 @@ public class Generate {
         }
         return d;
     }
-
     public static int mixEquation(int a, int b, int range) {
         int y;
         if (a <= 0 || b <= 0) {

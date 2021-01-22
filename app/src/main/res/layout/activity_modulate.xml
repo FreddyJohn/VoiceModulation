@@ -8,178 +8,221 @@
     tools:context=".ModulateActivity">
     <!--TODO redo vector creation for echo and backwards. Make them src compact and set background as the background
         TODO organize vectors, backgrounds, and layer list xml objects -->
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="#717070"
-        android:orientation="vertical"
+
+    <FrameLayout
+        android:id="@+id/record_controls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.39">
+        app:layout_constraintStart_toStartOf="parent">
 
-        <androidx.core.widget.NestedScrollView
+        <ImageButton
+            android:id="@+id/stop_recording"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+
+            android:layout_gravity="center|left"
+            android:layout_marginStart="50dp"
+            android:layout_marginLeft="50dp"
+            android:background="@drawable/stop_icon"
+            android:contentDescription="TODO"
+            android:onClick="onClick" />
+
+        <ImageButton
+            android:id="@+id/pause_recording"
+            android:layout_width="47dp"
+            android:layout_height="44dp"
+            android:layout_gravity="center"
+            android:background="@drawable/pause_icon"
+            android:contentDescription="TODO"
+            android:cropToPadding="false"
+            android:onClick="onClick" />
+
+        <ImageButton
+            android:id="@+id/play"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+
+            android:layout_gravity="center|right|center_horizontal"
+            android:layout_marginEnd="50dp"
+            android:layout_marginRight="50dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/play_icon"
+            android:contentDescription="TODO"
+            android:onClick="onClick" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/god_mode"
+        android:name="com.example.voicemodulation.widgets.nControls"
+        app:layout_constraintBottom_toTopOf="@+id/record_controls"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/nestedScrollView"
+        tools:layout="@layout/user_controls"
+        android:layout_height="120dp"
+        android:layout_width="wrap_content">
+
+    </FrameLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="164dp"
+        android:background="#392929"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toTopOf="@+id/record_controls"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="314dp"
-            android:fillViewport="true">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:visibility="visible">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="horizontal"
-                    android:visibility="visible">
+                <ImageButton
+                    android:id="@+id/echo"
+                    android:layout_width="105dp"
+                    android:layout_height="105dp"
+                    android:background="@drawable/echo_modulate"
+                    android:contentDescription="TODO"
+                    android:onClick="onClick" />
 
-                    <ImageButton
-                        android:id="@+id/echo"
-                        android:layout_width="105dp"
-                        android:layout_height="105dp"
-                        android:layout_marginEnd="20dp"
-                        android:layout_marginRight="20dp"
-                        android:background="@drawable/echo_modulate"
-                        android:contentDescription="TODO"
-                        android:onClick="onClick" />
+                <ImageButton
+                    android:id="@+id/backwards"
+                    android:layout_width="105dp"
+                    android:layout_height="105dp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp"
+                    android:background="@drawable/ic_backwards"
+                    android:contentDescription="TODO"
+                    android:onClick="onClick" />
 
-                    <ImageButton
-                        android:id="@+id/backwards"
-                        android:layout_width="105dp"
-                        android:layout_height="105dp"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginLeft="20dp"
-                        android:background="@drawable/modulate_background"
-                        android:contentDescription="TODO"
-                        android:onClick="onClick" />
-                        <!--app:srcCompat="@drawable/ic_backwards" />-->
-
-                </LinearLayout>
-
-                <Space
-                    android:layout_width="match_parent"
-                    android:layout_height="22dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center">
-
-                    <ImageButton
-                        android:id="@+id/one_sample_delay"
-                        android:layout_width="105dp"
-                        android:layout_height="105dp"
-                        android:layout_marginEnd="20dp"
-                        android:layout_marginRight="20dp"
-                        android:background="@drawable/modulate_background"
-                        android:onClick="onClick"
-                        android:src="@drawable/ic_robot_svgrepo_com" />
-
-                    <ImageButton
-                        android:id="@+id/phaser"
-                        android:layout_width="105dp"
-                        android:layout_height="105dp"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginLeft="20dp"
-                        android:contentDescription="TODO"
-                        android:onClick="onClick"
-                        app:srcCompat="@drawable/ic_phaser" />
-                </LinearLayout>
-
-                <Space
-                    android:layout_width="match_parent"
-                    android:layout_height="30dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="horizontal">
-
-                    <ImageButton
-                        android:id="@+id/flanger"
-                        android:layout_width="105dp"
-                        android:layout_height="105dp"
-                        android:layout_marginEnd="20dp"
-                        android:layout_marginRight="20dp"
-                        android:onClick="onClick"
-                        app:srcCompat="@drawable/ic_flanger" />
-
-                    <ImageButton
-                        android:id="@+id/squared"
-                        android:layout_width="105dp"
-                        android:layout_height="105dp"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginLeft="20dp"
-                        android:onClick="onClick"
-                        app:srcCompat="@android:drawable/btn_star_big_on" />
-                </LinearLayout>
+                <ImageButton
+                    android:id="@+id/flanger"
+                    android:layout_width="105dp"
+                    android:layout_height="105dp"
+                    android:background="@drawable/ic_flanger"
+                    android:onClick="onClick" />
+                <!--app:srcCompat="@drawable/ic_backwards" />-->
 
             </LinearLayout>
-        </androidx.core.widget.NestedScrollView>
 
-        <FrameLayout
-            android:id="@+id/god_mode"
-            android:name="com.example.voicemodulation.widgets.nControls"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:layout="@layout/user_controls">
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="22dp" />
 
-        </FrameLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center">
 
-        <LinearLayout
-            android:id="@+id/n_parameter"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:orientation="horizontal"></LinearLayout>
-        <FrameLayout
-            android:id="@+id/record_controls"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+                <ImageButton
+                    android:id="@+id/phaser"
+                    android:layout_width="105dp"
+                    android:layout_height="105dp"
+                    android:background="@drawable/ic_phaser"
+                    android:contentDescription="TODO"
+                    android:onClick="onClick" />
 
-            <ImageButton
-                android:id="@+id/stop_recording"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                <ImageButton
+                    android:id="@+id/quantize"
+                    android:layout_width="105dp"
+                    android:layout_height="105dp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp"
+                    android:background="@drawable/quantize"
+                    android:onClick="onClick" />
 
-                android:layout_gravity="center|left"
-                android:layout_marginStart="50dp"
-                android:layout_marginLeft="50dp"
-                android:background="@drawable/stop_icon"
-                android:contentDescription="TODO"
-                android:onClick="onClick" />
+                <ImageButton
+                    android:id="@+id/squared"
+                    android:layout_width="105dp"
+                    android:layout_height="105dp"
+                    android:background="@drawable/squareroot"
+                    android:onClick="onClick" />
 
-            <ImageButton
-                android:id="@+id/pause_recording"
-                android:layout_width="47dp"
-                android:layout_height="44dp"
-                android:layout_gravity="center"
-                android:background="@drawable/pause_icon"
-                android:contentDescription="TODO"
-                android:cropToPadding="false"
-                android:onClick="onClick" />
+            </LinearLayout>
 
-            <ImageButton
-                android:id="@+id/play"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="30dp" />
 
-                android:layout_gravity="center|right|center_horizontal"
-                android:layout_marginEnd="50dp"
-                android:layout_marginRight="50dp"
-                android:adjustViewBounds="true"
-                android:background="@drawable/play_icon"
-                android:contentDescription="TODO"
-                android:onClick="onClick" />
-        </FrameLayout>
-    </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/phaser_triangle"
+                    android:layout_width="105dp"
+                    android:layout_height="105dp"
+                    android:background="@drawable/alien"
+                    android:onClick="onClick" />
+
+                <ImageButton
+                    android:id="@+id/phaser_saw"
+                    android:layout_width="105dp"
+                    android:layout_height="105dp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp"
+                    android:background="@drawable/ic_robot_svgrepo_com"
+                    android:onClick="onClick" />
+
+                <ImageButton
+                    android:id="@+id/imageButton"
+                    android:layout_width="105dp"
+                    android:layout_height="105dp"
+                    android:background="@drawable/backwards_modulate"
+                    tools:src="@drawable/alien" />
+            </LinearLayout>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="30dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/imageButton4"
+                    android:layout_width="105dp"
+                    android:layout_height="105dp"
+                    android:background="#3C3636"
+                    android:gravity="center"
+                    android:text="Flanger with Sqaure" />
+
+                <ImageButton
+                    android:id="@+id/imageButton5"
+                    android:layout_width="105dp"
+                    android:layout_height="105dp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp"
+                    android:background="@drawable/backwards_modulate"
+                    android:onClick="onClick" />
+
+                <ImageButton
+                    android:id="@+id/imageButton6"
+                    android:layout_width="105dp"
+                    android:layout_height="105dp"
+                    android:background="#530808" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
