@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+
 //TODO remove redundancy ->  all time domain modulations
 //TODO test performance -> manipulate all then write all VS manipulate one and write one
 //TODO rename class to reflect only time domain operations
@@ -17,18 +18,12 @@ public class ModulateLogic {
     private static int SELECTED_AUDIO_ENCODING;
     private static String CREATION_NAME;
     private static FileOutputStream out;
-    private byte[] track;
-    private static int[] params;
+    private static double[] params;
 
-    public ModulateLogic(int[] _params, String s, int play_back_rate){
+    public ModulateLogic(double[] _params, String s, int play_back_rate){
         params=_params;
         CREATION_NAME = s;
         PLAYBACK_SAMPLE_RATE = play_back_rate;}
-    public ModulateLogic(int _PLAYBACK_SAMPLE_RATE, int _SELECTED_AUDIO_ENCODING, String _SELECTED_FILE_NAME) {
-        this.SELECTED_AUDIO_ENCODING = _SELECTED_AUDIO_ENCODING;
-        this.PLAYBACK_SAMPLE_RATE = _PLAYBACK_SAMPLE_RATE;
-        this.CREATION_NAME = _SELECTED_FILE_NAME;
-    }
     public static void setFileOutputStream(String filePath) {
         try {
             out = new FileOutputStream(filePath);
@@ -70,7 +65,7 @@ public class ModulateLogic {
     }
 
     public static void makeBackwardsCreation() {
-        int volume = params[0];
+        double volume = params[0];
         short[] frontwards = getAudioData();
         short[] backwards = new short[frontwards.length];
         int size = frontwards.length;
@@ -79,47 +74,66 @@ public class ModulateLogic {
         }
         closeFileOutputStream(backwards);
     }
-
     public static void makePhaserCreation() {
-        int frequency = params[0];
+        double frequency = params[0];
+        double carrier_amplitude = params[1];
+        double modulator_amplitude = params[2];
+        double theta = params[3];
         short[] carrier_wave = getAudioData();
-        double[] modulation_wave = Generate.sin(1, frequency, carrier_wave.length,PLAYBACK_SAMPLE_RATE);
+        double[] modulation_wave = Generate.sin(1, frequency,theta, carrier_wave.length,PLAYBACK_SAMPLE_RATE);
         short[] result = new short[carrier_wave.length];
         for (int i = 0; i < carrier_wave.length; i++) {
-            result[i] = (short) (carrier_wave[i] * modulation_wave[i]);
+            result[i] = (short) ((carrier_amplitude*carrier_wave[i])*(modulator_amplitude*modulation_wave[i]));
         }
         closeFileOutputStream(result);
     }
-    public static void makeAlienCreation() {
-        int frequency = params[0];
+    public static void makePhaserTriangleCreation() {
+        double frequency = params[0];
+        double carrier_amplitude = params[1];
+        double modulator_amplitude = params[2];
+        double theta = params[3];
         short[] carrier_wave = getAudioData();
-        double[] modulation_wave = Generate.triangle(1, frequency, carrier_wave.length,PLAYBACK_SAMPLE_RATE);
+        double[] modulation_wave = Generate.triangle(1, frequency,theta, carrier_wave.length,PLAYBACK_SAMPLE_RATE);
         short[] result = new short[carrier_wave.length];
         for (int i = 0; i < carrier_wave.length; i++) {
-            result[i] = (short) (carrier_wave[i] * modulation_wave[i]);
+            result[i] = (short) ((carrier_amplitude*carrier_wave[i])*(modulator_amplitude*modulation_wave[i]));
         }
         closeFileOutputStream(result);
     }
-    public static void makeRoboticCreation() {
-        int frequency = params[0];
+    public static void makePhaserSawCreation() {
+        double frequency = params[0];
+        double carrier_amplitude = params[1];
+        double modulator_amplitude = params[2];
+        double theta = params[3];
         short[] carrier_wave = getAudioData();
-        double[] modulation_wave = Generate.saw(1, frequency, carrier_wave.length,PLAYBACK_SAMPLE_RATE);
+        double[] modulation_wave = Generate.saw(1, frequency,theta, carrier_wave.length,PLAYBACK_SAMPLE_RATE);
         short[] result = new short[carrier_wave.length];
         for (int i = 0; i < carrier_wave.length; i++) {
-            result[i] = (short) (carrier_wave[i] * modulation_wave[i]);
+            result[i] = (short) ((carrier_amplitude*carrier_wave[i])*(modulator_amplitude*modulation_wave[i]));
         }
         closeFileOutputStream(result);
     }
-
-
+    public static void makePhaserSquareCreation() {
+        double frequency = params[0];
+        double carrier_amplitude = params[1];
+        double modulator_amplitude = params[2];
+        double theta = params[3];
+        short[] carrier_wave = getAudioData();
+        double[] modulation_wave = Generate.square(1, frequency,theta, carrier_wave.length,PLAYBACK_SAMPLE_RATE);
+        short[] result = new short[carrier_wave.length];
+        for (int i = 0; i < carrier_wave.length; i++) {
+            result[i] = (short) ((carrier_amplitude*carrier_wave[i])*(modulator_amplitude*modulation_wave[i]));
+        }
+        closeFileOutputStream(result);
+    }
     public static void makeQuantizedCreation() {
-        int C = params[0];
+        double C = params[0];
         short[] carrier_wave = getAudioData();
         short[] result = new short[carrier_wave.length];
         for (int i=0; i<carrier_wave.length; i++) {
             short x = carrier_wave[i];
             if (x>0 || x<0) {
-                double sample = .1*((x/Math.abs(x))*C*Math.floor((Math.abs(x)/C)+.5));
+                double sample = .1*(x/Math.abs(x))*C*Math.floor((Math.abs(x)/C)+.5);
                 result[i]= (short) sample; }
             else {
                 result[i]=x; }
@@ -128,15 +142,19 @@ public class ModulateLogic {
     }
 
     public static void makeEchoCreation() {
-        int num_signals = params[0];
-        int delay = params[1];
+        double num_signals = params[0];
+        double delay = params[1];
+        System.out.println(delay+" and "+num_signals);
         short[] carrier_wave = getAudioData();
         short[] result = new short[carrier_wave.length];
         for (int i = 0; i < carrier_wave.length; i++) {
             try {
                 double echo_sample = 0;
                 for (int signal = 0; signal < num_signals + 1; signal++) {
+                    //TODO recall limits of exponential functions. then formulate equation to scale exponent signal given delay
+                    //echo_sample += .1 * carrier_wave[(int) (i - Math.pow(delay, signal))];
                     echo_sample += .1 * carrier_wave[(int) (i - Math.pow(delay, signal))];
+
                 }
                 result[i] = (short) echo_sample;
             } catch (IndexOutOfBoundsException e) {
@@ -147,15 +165,51 @@ public class ModulateLogic {
     }
 
     public static void makeFlangerCreation() {
-        int min = params[0];
-        int max = params[1];
-        int frequency = params[2];
+        double min = params[0];
+        double max = params[1];
+        double frequency = params[2];
         short[] carrier_wave = getAudioData();
         short[] result = new short[carrier_wave.length];
         for (int i = 0; i < carrier_wave.length; i++) {
             try {
                 double flanger_sample = .1 * carrier_wave[i] + carrier_wave[i - (int) ((max - min) * (.5 * Math.sin(frequency * i) + .5) + min)];
-                //System.out.println(flanger_sample);
+                result[i] = (short) flanger_sample;
+            } catch (IndexOutOfBoundsException e) {
+                result[i] = (short) (.1 * carrier_wave[i]);
+            }
+
+        }
+        closeFileOutputStream(result);
+    }
+
+    public static void makeFlangerSquareCreation() {
+        double min = params[0];
+        double max = params[1];
+        double frequency = params[2];
+        short[] carrier_wave = getAudioData();
+        short[] result = new short[carrier_wave.length];
+        for (int i = 0; i < carrier_wave.length; i++) {
+            try {
+                double yx=Generate.square_t(frequency * i);
+                double flanger_sample = .1 * carrier_wave[i] + carrier_wave[i - (int) ((max - min) * (.5 * yx + .5) + min)];
+                result[i] = (short) flanger_sample;
+            } catch (IndexOutOfBoundsException e) {
+                result[i] = (short) (.1 * carrier_wave[i]);
+            }
+
+        }
+        closeFileOutputStream(result);
+    }
+    public static void makeFlangerTriangleCreation() {
+        double min = params[0];
+        double max = params[1];
+        double frequency = params[2];
+        short[] carrier_wave = getAudioData();
+        short[] result = new short[carrier_wave.length];
+        for (int i = 0; i < carrier_wave.length; i++) {
+            try {
+                double yx=Generate.triangle_t(frequency * i);
+                double flanger_sample = .1 * carrier_wave[i] + carrier_wave[i - (int) ((max - min) * (.5 * yx + .5) + min)];
                 result[i] = (short) flanger_sample;
             } catch (IndexOutOfBoundsException e) {
                 result[i] = (short) (.1 * carrier_wave[i]);
@@ -179,7 +233,7 @@ public class ModulateLogic {
         closeFileOutputStream(result);
     }
     public void makeAMCreation() {
-        int amplitude = params[0];
+        double amplitude = params[0];
         short[] carrier_wave = getAudioData();
         short[] result = new short[carrier_wave.length];
         for (int i = 0; i < carrier_wave.length; i++) {

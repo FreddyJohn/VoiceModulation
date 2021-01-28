@@ -54,24 +54,11 @@
             android:onClick="onClick" />
     </FrameLayout>
 
-    <FrameLayout
-        android:id="@+id/god_mode"
-        android:name="com.example.voicemodulation.widgets.nControls"
-        app:layout_constraintBottom_toTopOf="@+id/record_controls"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/nestedScrollView"
-        tools:layout="@layout/user_controls"
-        android:layout_height="120dp"
-        android:layout_width="wrap_content">
-
-    </FrameLayout>
-
     <androidx.core.widget.NestedScrollView
         android:id="@+id/nestedScrollView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginBottom="164dp"
+        android:layout_marginBottom="200dp"
         android:background="#392929"
         android:fillViewport="true"
         app:layout_constraintBottom_toTopOf="@+id/record_controls"
@@ -181,10 +168,11 @@
                     android:onClick="onClick" />
 
                 <ImageButton
-                    android:id="@+id/imageButton"
+                    android:id="@+id/phaser_square"
                     android:layout_width="105dp"
                     android:layout_height="105dp"
                     android:background="@drawable/backwards_modulate"
+                    android:onClick="onClick"
                     tools:src="@drawable/alien" />
             </LinearLayout>
 
@@ -199,15 +187,16 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/imageButton4"
+                    android:id="@+id/flanger_square"
                     android:layout_width="105dp"
                     android:layout_height="105dp"
                     android:background="#3C3636"
                     android:gravity="center"
+                    android:onClick="onClick"
                     android:text="Flanger with Sqaure" />
 
                 <ImageButton
-                    android:id="@+id/imageButton5"
+                    android:id="@+id/flanger_triangle"
                     android:layout_width="105dp"
                     android:layout_height="105dp"
                     android:layout_marginLeft="20dp"
@@ -216,13 +205,40 @@
                     android:onClick="onClick" />
 
                 <ImageButton
-                    android:id="@+id/imageButton6"
+                    android:id="@+id/flanger_saw"
                     android:layout_width="105dp"
                     android:layout_height="105dp"
-                    android:background="#530808" />
+                    android:background="#530808"
+                    android:onClick="onClick" />
             </LinearLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+
+
+
+    <FrameLayout
+        android:id="@+id/user_controls"
+        android:name="com.example.voicemodulation.widgets.nControls"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/record_controls"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/nestedScrollView"
+        app:layout_constraintVertical_bias="0.0"
+        tools:layout="@layout/user_controls">
+        <!--
+        <TextView
+            android:id="@+id/modulation_type"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="#FFFFFF"
+            app:layout_constraintBottom_toTopOf="@+id/user_controls"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"></TextView>-->
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

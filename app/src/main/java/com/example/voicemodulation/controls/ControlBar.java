@@ -28,8 +28,8 @@ public class ControlBar extends androidx.appcompat.widget.AppCompatSeekBar {
     @Override
     protected void onMeasure(int width, int height) {
         float p = Resources.getSystem().getDisplayMetrics().density;
-        int h = (int) (100 * p);
-        int w = (int) (90 * p);
+        int h = (int) (120 * p);
+        int w = (int) (110 * p);
         super.onMeasure(w, h);
         setMeasuredDimension(w, h);
     }

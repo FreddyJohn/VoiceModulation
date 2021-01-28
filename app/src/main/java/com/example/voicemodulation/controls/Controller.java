@@ -16,7 +16,7 @@ public class Controller extends LinearLayout {
     private TextView status;
     private TextView title;
     private ControlBar param;
-    public Controller(Context context, @Nullable AttributeSet attrs) {
+    public Controller(Context context, @Nullable AttributeSet attrs,String type,double scale) {
         super(context, attrs);
         param = new ControlBar(context,null);
         title = new TextView(context);
@@ -36,7 +36,10 @@ public class Controller extends LinearLayout {
         param.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            status.setText(param.getProgress()+"big ones");
+            String quantity =String.format("%.2f",param.getProgress()*scale);
+            if (type!=null) { status.setText(quantity+type); }
+            else { status.setText(quantity); }
+            //status.setText(param.getProgress());
         }
 
         @Override
