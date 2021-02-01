@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.voicemodulation.MainActivity">
+    <item
+        android:id="@+id/delete"
+        android:orderInCategory="20"
+        android:title="delete"
+        android:icon="@android:drawable/ic_menu_delete"
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/update"
+        android:orderInCategory="20"
+        android:title="change directory"
+        android:icon="@android:drawable/ic_input_get"
+        app:showAsAction="always"/>
+</menu>

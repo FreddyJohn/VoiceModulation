@@ -1,5 +1,7 @@
 package com.example.voicemodulation;
 import android.media.AudioFormat;
+import java.util.Arrays;
+import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.audio.util.Convert;
 import com.example.voicemodulation.audio.util.Generate;
 import java.io.File;
@@ -14,33 +16,35 @@ import java.io.IOException;
 //TODO rename class to reflect only time domain operations
 public class ModulateLogic {
     private static final int RECORDER_CHANNELS_OUT = AudioFormat.CHANNEL_OUT_MONO;
+    private static String MODULATION_NAME;
     private static int PLAYBACK_SAMPLE_RATE;
     private static int SELECTED_AUDIO_ENCODING;
     private static String CREATION_NAME;
     private static FileOutputStream out;
     private static double[] params;
-
+    /*
     public ModulateLogic(double[] _params, String s, int play_back_rate){
         params=_params;
         CREATION_NAME = s;
         PLAYBACK_SAMPLE_RATE = play_back_rate;}
+
+     */
+    public ModulateLogic(double[] _params, AudioFile recording){
+        params=_params;
+        CREATION_NAME = recording.getNewRecordFile();
+        MODULATION_NAME = recording.getNewModulateFile();
+        PLAYBACK_SAMPLE_RATE = recording.getSampleRate();}
+
     public static void setFileOutputStream(String filePath) {
         try {
-            out = new FileOutputStream(filePath);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
+            out = new FileOutputStream(filePath); }
+        catch (FileNotFoundException e) { e.printStackTrace(); } }
     public static void closeFileOutputStream(short[] data) {
         byte[] bytes = Convert.getBytesFromShorts(data);
         try {
             out.write(bytes, 0, bytes.length);
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
+            out.close(); }
+        catch (IOException e) { e.printStackTrace(); } }
     public static byte[] getBytesFromTrack() {
         File file = new File(CREATION_NAME);
         byte[] track = new byte[(int) file.length()];
@@ -48,20 +52,28 @@ public class ModulateLogic {
         try {
             in = new FileInputStream(file);
             in.read(track);
-            in.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return track;
-    }
-
+            in.close(); }
+        catch (FileNotFoundException e) { e.printStackTrace(); }
+        catch (IOException e) { e.printStackTrace(); }
+        return track; }
     public static short[] getAudioData() {
-        setFileOutputStream("/sdcard/Music/test.pcm");
         byte[] bytes = getBytesFromTrack();
+        setFileOutputStream(MODULATION_NAME);
         short[] shorts = Convert.getShortsFromBytes(bytes);
-        return shorts;
+        return shorts; }
+
+    public double getMaximumAmplitude(){
+        short[] data = getAudioData();
+        Arrays.sort(data);
+        double normalization_coefficient=0;
+        short max=data[data.length-1];
+        short min=data[0];
+        if (max>Math.abs(min)){
+            normalization_coefficient=32676/max;
+        }else if(max<Math.abs(min)){
+            normalization_coefficient=32676/min;
+        }
+        return normalization_coefficient;
     }
 
     public static void makeBackwardsCreation() {

@@ -1,9 +1,11 @@
 package com.example.voicemodulation.audio;
+import android.os.Environment;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 public final class AudioFile implements Parcelable {
     @SuppressWarnings("unused")
+
     public static final Parcelable.Creator<AudioFile> CREATOR = new Parcelable.Creator<AudioFile>() {
         @Override
         public AudioFile createFromParcel(Parcel in) {
@@ -20,8 +22,10 @@ public final class AudioFile implements Parcelable {
     private final int num_channels_in;
     private final int num_channels_out;
     private String file_path;
+    //TODO make not fixed file but project file
+    private String record_file = Environment.getExternalStorageDirectory().getPath()+"/rec.pcm";
+    private String modulation_file = Environment.getExternalStorageDirectory().getPath()+"/mod.pcm";
     private final String format;
-
     public AudioFile(int sample_rate, int playback_rate, int bit_depth, int[] channels, String _format) {
         this.sample_rate = sample_rate;
         this.playback_rate = playback_rate;
@@ -58,7 +62,10 @@ public final class AudioFile implements Parcelable {
     public void setFilePath(String filePath) {
         this.file_path = filePath;
     }
-
+    public String getNewRecordFile(){return this.record_file;}
+    public String getNewModulateFile(){return this.modulation_file;}
+    public void setNewModulateFile(String file_path){ this.modulation_file =file_path;}
+    public void setNewRecordFile(String file_path){ this.record_file =file_path;}
     @Override
     public int describeContents() {
         return 0;

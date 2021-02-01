@@ -10,7 +10,7 @@ import com.example.voicemodulation.controls.NControls;
 
 public class ModulateActivity extends AppCompatActivity implements View.OnClickListener {
     private AudioFile creation;
-    private String file = "/sdcard/Music/creation_test.pcm";
+    private String file;
     private final String[] phaser_titles = new String[] {"Frequency","Carrier Amp","Modulator Amp","Theta"};
     private final String[] phaser_quantities = new String[] {"Hz","Amp","Amp","θ"};
     private final String[] flanger_titles = new String[] {"Min","Max","Frequency"};
@@ -21,6 +21,8 @@ public class ModulateActivity extends AppCompatActivity implements View.OnClickL
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_modulate);
         creation = getIntent().getParcelableExtra("AudioFile");
+        //TODO make getNewProjectFile and getCurrentFile
+        file = creation.getNewRecordFile();
         nyquist = (creation.getSampleRate()/2)/20;
         displayFragment(echo_titles,new int[] {10,10},new double[]{1,1},
                 new String[] {"S","D"},"makeEchoCreation",Gravity.CENTER,
@@ -116,11 +118,15 @@ public class ModulateActivity extends AppCompatActivity implements View.OnClickL
             //    } catch (IOException e) {
             //        e.printStackTrace();
              //   }
-                break; }
+                break;
+            case R.id.stop_recording:
+                creation.setNewRecordFile(creation.getNewModulateFile());
+                break;
+                }
     }
     public NControls displayFragment(String[] titles,int[] maxes,double[] scale, String[] quantity_type,
                                      String method, int gravity, String name) {
-        NControls controls = NControls.newInstance(titles,maxes,scale,quantity_type,creation,method,file,gravity,name);
+        NControls controls = NControls.newInstance(titles,maxes,scale,quantity_type,creation,method,gravity,name);
         FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager
                     .beginTransaction();

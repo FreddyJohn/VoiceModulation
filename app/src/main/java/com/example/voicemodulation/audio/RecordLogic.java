@@ -45,13 +45,11 @@ public class RecordLogic {
         System.out.println("THE FILE NAME IS: " + file_path);
         this.out = ioRAF.getWriteObject(file_state);
     }
-
     public void setRecordingState(boolean state) {
         this.isPaused = state;
         this.out = ioRAF.getWriteObject(false);
         stopRecording();
     }
-
     public void startRecording() {
         int bufferSize = AudioRecord.getMinBufferSize(
                 file_data.getSampleRate(), file_data.getNumChannelsIn(), file_data.getBitDepth());
@@ -64,7 +62,6 @@ public class RecordLogic {
         recordingThread = new Thread(() -> writeAudioDataToFile(), "AudioRecorder Thread");
         recordingThread.start();
     }
-
     public void stopRecording() {
         if (null != recorder) {
             isRecording = false;

@@ -2,14 +2,11 @@ package com.example.voicemodulation;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.app.AlertDialog;
 import android.content.ContentUris;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.media.AudioFormat;
 import android.net.Uri;
@@ -18,40 +15,26 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.TypedValue;
-import android.view.GestureDetector;
-import android.view.MotionEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+
 import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.AudioFile;
-import com.example.voicemodulation.audio.Format;
 import com.example.voicemodulation.graph.GraphLogic;
 import com.example.voicemodulation.audio.RecordLogic;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PipedReader;
 import java.io.PipedWriter;
-import java.util.concurrent.CountDownLatch;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private SharedPreferences sharedPref;
@@ -74,23 +57,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean has_recorded = false;
     private AudioFile creation;
     private Boolean file_state=true;
-    private int STORAGE_PERMISSION_CODE = 1;
-    private int AUDIO_PERMISSION_CODE = 2;
-    private GestureDetector mGesture;
+    int PERMISSION_ALL = 1;
+    private final String[] PERMISSIONS = {
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.RECORD_AUDIO};
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        if (ContextCompat.checkSelfPermission(MainActivity.this,
-                 Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(MainActivity.this,
-                        Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED){
-            requestNPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE,"permission needed in order to save recording",STORAGE_PERMISSION_CODE);
-            requestNPermission(Manifest.permission.RECORD_AUDIO,"permission needed in order to record",AUDIO_PERMISSION_CODE);
-        }
         sharedPref = getPreferences(Context.MODE_PRIVATE);
         editor = sharedPref.edit();
+        if (!hasPermissions(this, PERMISSIONS)) {
+            ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
+        }
         AudioCon.Pipes pipes = new AudioCon.Pipes();
         jay = pipes.getWriterObject();
         silentBob = pipes.getReaderObject();
@@ -105,8 +87,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         change_num_channels = findViewById(R.id.selected_num_channels);
         playback_rate = findViewById(R.id.playback_rate);
         format = findViewById(R.id.format);
-        mGesture = new GestureDetector(this, mOnGesture);
-        //record = new RecordLogic(SELECTED_FILE_NAME);
         record = new RecordLogic();
         record.setPipedWriter(jay);
         graph = new GraphLogic(this);
@@ -185,31 +165,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
     }
-
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        boolean handled= super.dispatchTouchEvent(ev);
-        handled = mGesture.onTouchEvent(ev);
-        return handled;
-    }
-    private final GestureDetector.OnGestureListener mOnGesture = new GestureDetector.SimpleOnGestureListener()
-    {
-        @Override
-        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            if (has_recorded)
-            {
-                Intent intent = new Intent(MainActivity.this, ModulateActivity.class);
-                intent.putExtra("AudioFile", creation);
-                startActivity(intent);
-            }
-            return true;
-        }
-    };
-
     public String encodingSeeker(int progress) {
         switch (progress) {
             case 2:
                 SELECTED_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_FLOAT;
+                //AudioFormat.AAC
                 display_selected_encoding = "PCM Float";
                 break;
             case 1:
@@ -261,38 +221,67 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         return display_num_channels;
     }
-
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.update:
+                boolean permission = hasPermissions(this, PERMISSIONS);
+                if(permission) {
+                    getUserDirectorySelection(false);
+                }
+                return true;
+            case R.id.delete:
+                Toast.makeText(getApplicationContext(), "delete", Toast.LENGTH_SHORT).show();
+                return true;
+            default:
+        }
+        return super.onOptionsItemSelected(item);
+    }
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.start_recording:
-                    String directory = sharedPref.getString("directory",getFilesDir().toString());
-                    int file_index = sharedPref.getInt("index",1);
-                    System.out.println("CHOSEN DIRECTORY: " + directory);
-                    editor.putInt("index",file_index+=1);
-                    //editor.apply();
-                    SELECTED_FILE_NAME=directory+"/Recording "+file_index+".pcm";
-                    Toast.makeText(MainActivity.this, "Now Recording",
-                            Toast.LENGTH_SHORT).show();
-                    SELECTED_SAMPLE_RATE = sample_rate.getProgress() * seeker_multiplier;
-                    encodingSeeker(encoding.getProgress());
-                    channelSeeker(num_channels.getProgress());
-                    SELECTED_PLAYBACK_RATE = playback_rate.getProgress() * seeker_multiplier;
-                    creation = new AudioFile(SELECTED_SAMPLE_RATE, SELECTED_PLAYBACK_RATE,
-                            SELECTED_AUDIO_ENCODING, SELECTED_CHANNELS,formatSeeker(format.getProgress()));
-                    formatSeeker(format.getProgress());
-                    creation.setFilePath(SELECTED_FILE_NAME);
-                    record.setFileObject(creation,file_state);
-                    record.setRecordingState(false);
-                    record.startRecording();
-                    graph.setGraphState(true, silentBob);
-                    play_button.setVisibility(View.VISIBLE);
-                    stop_button.setVisibility(View.VISIBLE);
-                    record_button.setVisibility(View.INVISIBLE);
-                    pause_button.setVisibility(View.VISIBLE);
-                    num_channels.setEnabled(false);
-                    format.setEnabled(false);
-                    encoding.setEnabled(false);
+                boolean permission = hasPermissions(this, PERMISSIONS);
+                boolean selected = sharedPref.getBoolean("selected",false);
+                if (!permission) {
+                    ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
+                }
+                else if(permission){
+                    if (!selected) { getUserDirectorySelection(selected);}
+                    else if(selected) {
+                            String directory = sharedPref.getString("directory", getFilesDir().toString());
+                            int file_index = sharedPref.getInt("index", 1);
+                            editor.putInt("index", file_index += 1);
+                            editor.apply();
+                            //SELECTED_FILE_NAME = directory + "/Recording " + file_index + formatSeeker(format.getProgress());;
+                            Toast.makeText(MainActivity.this, "Now Recording",
+                                    Toast.LENGTH_SHORT).show();
+                            SELECTED_SAMPLE_RATE = sample_rate.getProgress() * seeker_multiplier;
+                            encodingSeeker(encoding.getProgress());
+                            channelSeeker(num_channels.getProgress());
+                            SELECTED_PLAYBACK_RATE = playback_rate.getProgress() * seeker_multiplier;
+                            creation = new AudioFile(SELECTED_SAMPLE_RATE, SELECTED_PLAYBACK_RATE,
+                                    SELECTED_AUDIO_ENCODING, SELECTED_CHANNELS, formatSeeker(format.getProgress()));
+                            formatSeeker(format.getProgress());
+                            creation.setFilePath(creation.getNewRecordFile());
+                            record.setFileObject(creation, file_state);
+                            //TODO fix this bullshit right here
+                            record.setRecordingState(false);
+                            record.startRecording();
+                            graph.setGraphState(true, silentBob);
+                            play_button.setVisibility(View.VISIBLE);
+                            stop_button.setVisibility(View.VISIBLE);
+                            record_button.setVisibility(View.INVISIBLE);
+                            pause_button.setVisibility(View.VISIBLE);
+                            num_channels.setEnabled(false);
+                            format.setEnabled(false);
+                            encoding.setEnabled(false);
+                        }}
                 break;
             case R.id.stop_recording:
                 record.stopRecording();
@@ -302,8 +291,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.pause_recording:
                 file_state=false;
-                boolean selected = sharedPref.getBoolean("selected",false);
-                getUserDirectorySelection(selected);
                 formatSeeker(format.getProgress());
                 record.setRecordingState(true);
                 System.out.println("YOU PRESSED PAUSE");
@@ -317,6 +304,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
     }
+    /*
+    private void checkPermissions(){
+        if (ContextCompat.checkSelfPermission(MainActivity.this,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(MainActivity.this,
+                    Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED){
+        requestNPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE,"permission needed in order to save recording",STORAGE_PERMISSION_CODE);
+        requestNPermission(Manifest.permission.RECORD_AUDIO,"permission needed in order to record",AUDIO_PERMISSION_CODE);
+    }
+        else if (ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(MainActivity.this,
+                        Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED){editor.putBoolean("permission", true); editor.apply();}}
     private void requestNPermission(String permission,String reason,int code) {
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)){
             new AlertDialog.Builder(this)
@@ -331,6 +331,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             ActivityCompat.requestPermissions(this,
                     new String[] {permission}, code); }
     }
+
+     */
+    public static boolean hasPermissions(Context context, String... permissions) {
+        if (context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
     /*
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -344,7 +356,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     public void getUserDirectorySelection(boolean selected){
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP & !selected){
-            System.out.println(";ohugiyftdrjxxchvbknl;p'[iuyoifutdjchgvbknl;p[iu98yt7rujcghvbknlopi089y7tfuych vPOT7IKUTCJGM, NKLJ;IOU");
             Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
             i.putExtra("android.content.extra.SHOW_ADVANCED", true);
             i.putExtra("android.content.extra.FANCY", true);
@@ -360,12 +371,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         switch(requestCode) {
             case 9999:
-                Uri uri = data.getData();
-                Uri docUri = DocumentsContract.buildDocumentUriUsingTree(uri,
-                        DocumentsContract.getTreeDocumentId(uri));
-                String path = getPath(this, docUri);
-                editor.putString("directory", path);
-                editor.apply();
+                if (data!=null) {
+                    Uri uri = data.getData();
+                    Uri docUri = DocumentsContract.buildDocumentUriUsingTree(uri,
+                            DocumentsContract.getTreeDocumentId(uri));
+                    String path = getPath(this, docUri);
+                    editor.putString("directory", path);
+                    editor.apply();
+                }
+                break;
+            default:
+                break;
         }
     }
     @TargetApi(Build.VERSION_CODES.KITKAT)
@@ -450,101 +466,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static boolean isGooglePhotosUri(Uri uri) {
         return "com.google.android.apps.photos.content".equals(uri.getAuthority());
     }
-    /*
-    public void setRecordName(boolean showCheckbox, final boolean needDecode) {
-        LinearLayout container = new LinearLayout(getApplicationContext());
-        container.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams containerLp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        container.setLayoutParams(containerLp);
-        final EditText editText = new EditText(getApplicationContext());
-        ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
-        editText.setLayoutParams(lp);
-        editText.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-            @Override public void afterTextChanged(Editable s) {
-                if (s.length() > 50) {
-                    s.delete(s.length() - 1, s.length());
-                }
-            }
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { }
-        });
-        editText.setTextColor(getResources().getColor(R.color.black));
-        editText.setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimension(R.dimen.text_medium));
 
-        int pad = (int) getResources().getDimension(R.dimen.spacing_normal);
-        ViewGroup.MarginLayoutParams params = new ViewGroup.MarginLayoutParams(editText.getLayoutParams());
-        params.setMargins(pad, pad, pad, pad);
-        editText.setLayoutParams(params);
-        container.addView(editText);
-        if (showCheckbox) {
-            container.addView(createCheckerView());
-        }
-        AlertDialog alertDialog = new AlertDialog.Builder(this)
-                .setTitle("New name")
-                .setView(container)
-                .setPositiveButton("save", (dialog, id) -> {
-                    String newName = editText.getText().toString();
-                    editText.setText(newName);
-                    if (!creation.getFilePath().equalsIgnoreCase(newName)) {
-                        SELECTED_FILE_NAME=getFilesDir().getPath()+newName+".pcm";
-                        System.out.println(newName);
-                    }
-                    //dialog.dismiss();
-                })
-                .setNegativeButton("cancel", (dialog, id) -> {
-                    //no_name=true;
-                    //dialog.dismiss();
-
-                })
-                .create();
-        alertDialog.show();
-        alertDialog.setOnDismissListener(dialog -> hideKeyboard());
-        editText.requestFocus();
-        editText.setSelection(editText.getText().length());
-        showKeyboard();
-    }
-    public CheckBox createCheckerView() {
-        final CheckBox checkBox = new CheckBox(getApplicationContext());
-        int color = getResources().getColor(R.color.black);
-        checkBox.setTextColor(color);
-        ColorStateList colorStateList = new ColorStateList(
-                new int[][]{
-                        new int[]{-android.R.attr.state_checked}, // unchecked
-                        new int[]{android.R.attr.state_checked}  // checked
-                },
-                new int[]{color, color}
-        );
-        checkBox.setButtonTintList(colorStateList);
-        checkBox.setText("Don't ask again");
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        int PADD = (int) getResources().getDimension(R.dimen.spacing_normal);
-        params.setMargins(PADD, 0, PADD, PADD);
-        checkBox.setLayoutParams(params);
-        checkBox.setSaveEnabled(false);
-        checkBox.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        checkBox.setPadding(
-                checkBox.getPaddingLeft()+(int) getResources().getDimension(R.dimen.spacing_small),
-                checkBox.getPaddingTop(),
-                checkBox.getPaddingRight(),
-                checkBox.getPaddingBottom());
-        checkBox.setOnClickListener(v -> {
-            //presenter.dontAskRename();
-            no_name=true;
-        });
-        return checkBox;
-    }
-    public void showKeyboard(){
-        InputMethodManager inputMethodManager = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-    }
-    public void hideKeyboard(){
-        InputMethodManager inputMethodManager = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        inputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
-    }
-*/
 }

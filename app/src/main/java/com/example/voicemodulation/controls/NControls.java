@@ -21,15 +21,15 @@ public class NControls extends Fragment {
     private LinkedList<Controller> controllers;
     private ImageButton play_button;
     private ImageButton stop_button;
+    private ModulateLogic modulate;
     public NControls(){}
     public static NControls newInstance(String[] title,int[] maxes,double scale[], String[]
-                                        quantity_type, AudioFile creation, String method,String file,
+                                        quantity_type, AudioFile creation, String method,
                                         int gravity, String name) {
         NControls controls = new NControls();
         Bundle args = new Bundle();
         args.putString("name",name);
         args.putInt("gravity",gravity);
-        args.putString("filepath",file);
         args.putDoubleArray("scale",scale);
         args.putStringArray("quantities",quantity_type);
         args.putString("method",method);
@@ -46,9 +46,8 @@ public class NControls extends Fragment {
         String method = args.getString("method");
         String[] quantities = args.getStringArray("quantities");
         double[] scale = args.getDoubleArray("scale");
-        AudioFile file = args.getParcelable("file");
+        AudioFile creation = args.getParcelable("file");
         //file.setFormat(new Format.wav(file));
-        String filePath = args.getString("filepath");
         int[] maxes = args.getIntArray("maxes");
         String[] titles = args.getStringArray("titles");
         final View rootView = inflater.inflate(R.layout.user_controls, _container, false);
@@ -67,17 +66,25 @@ public class NControls extends Fragment {
             controllers.add(controller);
             controls_view.addView(controller); }
         RecordLogic recordLogic = new RecordLogic();
-        file.setFilePath("/sdcard/Music/test.pcm");
-        recordLogic.setFileData(file);
+        creation.setFilePath(creation.getNewModulateFile());
+        //creation.setFilePath("/sdcard/Music/test.pcm"); // this the modulation file that we want to play duh
+        recordLogic.setFileData(creation);
         double[] params = new double[maxes.length];
         play_button.setOnClickListener(v ->  new Thread(() ->{
+            //TODO each seekbar should have its own setProgress. In other words, set all Amp parameters to 1 at the onset
             for (int i = 0; i <maxes.length; i++) { params[i]=controllers.get(i).getProgress()*scale[i]; }
-            ModulateLogic modulate = new ModulateLogic(params,filePath,file.getPlaybackRate());
+            modulate = new ModulateLogic(params,creation);
             try { invokeMethod(modulate.getClass().getMethod(method)); }
             catch (Exception e) { e.printStackTrace(); }
             try { recordLogic.play_recording(); }
             catch (IOException e) { e.printStackTrace(); } }).start());
-        stop_button.setOnClickListener(v ->{ new Thread(() ->{ file.save(); }).start();});
+        /*
+        stop_button.setOnClickListener(v ->{ //new Thread(() ->{
+            modulate.stackModulation();
+            //creation.save();
+            });//).start();});
+
+         */
         return rootView; }
     static void invokeMethod(Method method) throws Exception { method.invoke(null); }
 }
