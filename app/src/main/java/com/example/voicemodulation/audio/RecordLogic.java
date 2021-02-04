@@ -4,8 +4,16 @@ import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
+import android.os.Environment;
 
+import com.example.voicemodulation.audio.util.Generate;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PipedWriter;
 import java.io.RandomAccessFile;
@@ -19,20 +27,24 @@ public class RecordLogic {
     private Thread recordingThread;
     private boolean isRecording = false;
     private boolean isPaused = false;
-    private int buffer_size;
+    public int buffer_size;
     private AudioFile file_data;
-    private PipedWriter jay;
     private String file_path;
+    private int file_size;
+    private DataOutputStream jack;
 
     public RecordLogic() {
-        //this.file_path = filePath;
-        //this.ioRAF = new AudioCon.IO_RAF(file_path);
-        //this.out = ioRAF.getWriteObject(true);
+
+        try {
+            String name =Environment.getExternalStorageDirectory().getPath()+"/data.0";
+            File i = new File(name);
+            this.jack = new DataOutputStream(new FileOutputStream(name));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
     }
 
-    public void setPipedWriter(PipedWriter jay) {
-        this.jay = jay;
-    }
     public void setFileData(AudioFile file)
     {
         this.file_data = file;
@@ -43,7 +55,7 @@ public class RecordLogic {
         this.file_path = creation.getFilePath();
         this.ioRAF = new AudioCon.IO_RAF(file_path);
         System.out.println("THE FILE NAME IS: " + file_path);
-        this.out = ioRAF.getWriteObject(file_state);
+        this.out = ioRAF.getWriteObject(file_state); //TODO instead of new file or not seekPos
     }
     public void setRecordingState(boolean state) {
         this.isPaused = state;
@@ -76,17 +88,17 @@ public class RecordLogic {
         byte[] sData = new byte[buffer_size];
         while (isPaused == false && isRecording) {
             recorder.read(sData, 0, buffer_size);
+            file_size+=sData.length/2;
             try {
                 out.write(sData, 0, buffer_size);
-                jay.write(sData[sData.length - 1]);
-                jay.flush();
+                jack.write(sData);
+                jack.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
         try {
             out.close();
-            //jay.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

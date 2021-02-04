@@ -30,8 +30,9 @@ import androidx.core.app.ActivityCompat;
 
 import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.AudioFile;
-import com.example.voicemodulation.graph.GraphLogic;
 import com.example.voicemodulation.audio.RecordLogic;
+import com.example.voicemodulation.graph.GraphLogic;
+
 import java.io.IOException;
 import java.io.PipedReader;
 import java.io.PipedWriter;
@@ -40,17 +41,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
     private static final int seeker_multiplier = 4800;
-    GraphLogic graph;
+    private GraphLogic graph;
     int SELECTED_SAMPLE_RATE;
     int SELECTED_PLAYBACK_RATE;
     int SELECTED_AUDIO_ENCODING;
     int SELECTED_NUM_CHANNELS;
     int[] SELECTED_CHANNELS;
-    private PipedWriter jay;
-    private PipedReader silentBob;
-    private SeekBar sample_rate, encoding, format, playback_rate, num_channels,test;
+    //private PipedWriter jay;
+    //private PipedReader silentBob;
+    private SeekBar sample_rate, encoding, format, playback_rate, num_channels;
     private TextView change_rate, change_encoding, change_format, change_playback_rate, change_num_channels;
-    private String SELECTED_FILE_NAME = "/sdcard/Music/creation_test.pcm";
     private String display_selected_encoding, display_selected_format, display_num_channels;
     private ImageButton play_button, stop_button, record_button, pause_button;
     private RecordLogic record;
@@ -74,9 +74,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
         }
         AudioCon.Pipes pipes = new AudioCon.Pipes();
-        jay = pipes.getWriterObject();
-        silentBob = pipes.getReaderObject();
-        pipes.connectPipes(silentBob, jay);
+        //jay = pipes.getWriterObject();
+        //silentBob = pipes.getReaderObject();
+        //pipes.connectPipes(silentBob, jay);
         sample_rate = findViewById(R.id.sample_rate);
         encoding = findViewById(R.id.encoding);
         num_channels = findViewById(R.id.num_channels);
@@ -88,8 +88,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         playback_rate = findViewById(R.id.playback_rate);
         format = findViewById(R.id.format);
         record = new RecordLogic();
-        record.setPipedWriter(jay);
-        graph = new GraphLogic(this);
+        //record.setPipedWriter(jay);
+        graph = findViewById(R.id.display);
+        //graph = new GraphLogic(this);
         play_button = findViewById(R.id.play_recording);
         stop_button = findViewById(R.id.stop_recording);
         record_button = findViewById(R.id.start_recording);
@@ -97,8 +98,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         play_button.setVisibility(View.INVISIBLE);
         stop_button.setVisibility(View.INVISIBLE);
         pause_button.setVisibility(View.INVISIBLE);
-        LinearLayout display = findViewById(R.id.display);
-        display.addView(graph);
+        //LinearLayout display = findViewById(R.id.display);
+        //display.addView(graph);
         playback_rate.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -254,6 +255,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 else if(permission){
                     if (!selected) { getUserDirectorySelection(selected);}
                     else if(selected) {
+                            //if (!file_state){ int file_pos = global_seek.getProgress()*creation.getSampleRate();}
                             String directory = sharedPref.getString("directory", getFilesDir().toString());
                             int file_index = sharedPref.getInt("index", 1);
                             editor.putInt("index", file_index += 1);
@@ -273,7 +275,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             //TODO fix this bullshit right here
                             record.setRecordingState(false);
                             record.startRecording();
-                            graph.setGraphState(true, silentBob);
+                            graph.setGraphState(true,record.buffer_size);
+                            //graph.setGraphState(true,silentBob);
+                            //displayFragment();
+                            //graph.setGraphState(true, silentBob);
                             play_button.setVisibility(View.VISIBLE);
                             stop_button.setVisibility(View.VISIBLE);
                             record_button.setVisibility(View.INVISIBLE);
@@ -293,6 +298,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 file_state=false;
                 formatSeeker(format.getProgress());
                 record.setRecordingState(true);
+                //TODO once you press pause recalculate the max of global seek
+                //global_seek.setMax(record.getLength/creation.getSampleRate());
                 System.out.println("YOU PRESSED PAUSE");
                 pause_button.setVisibility(View.INVISIBLE);
                 record_button.setVisibility(View.VISIBLE);
@@ -468,3 +475,4 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 }
+

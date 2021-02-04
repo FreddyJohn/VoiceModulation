@@ -18,8 +18,8 @@
     </style>
 
     <style name="SeekBarStyle" parent="Widget.AppCompat.SeekBar.Discrete">
-        <item name="android:layout_width">100dp</item>
-        <item name="android:layout_height">90dp</item>
+        <item name="android:layout_width">130dp</item>
+        <item name="android:layout_height">120dp</item>
         <item name="android:rotation">270</item>
         <item name="android:thumb">@drawable/seekbar_thumb</item>
         <item name="android:progressTint">@color/transparent</item>

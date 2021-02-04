@@ -55,7 +55,7 @@
     </FrameLayout>
 
     <androidx.core.widget.NestedScrollView
-        android:id="@+id/nestedScrollView"
+        android:id="@+id/NModulation"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginBottom="200dp"
@@ -82,9 +82,10 @@
                     android:id="@+id/echo"
                     android:layout_width="105dp"
                     android:layout_height="105dp"
-                    android:background="@drawable/echo_modulate"
+                    android:background="@drawable/modulate_background"
                     android:contentDescription="TODO"
-                    android:onClick="onClick" />
+                    android:onClick="onClick"
+                    android:src="@drawable/echo_modulate" />
 
                 <ImageButton
                     android:id="@+id/backwards"
@@ -92,16 +93,18 @@
                     android:layout_height="105dp"
                     android:layout_marginLeft="20dp"
                     android:layout_marginRight="20dp"
-                    android:background="@drawable/ic_backwards"
+                    android:background="@drawable/backwards_modulate"
                     android:contentDescription="TODO"
-                    android:onClick="onClick" />
+                    android:onClick="onClick"
+                    android:src="@drawable/ic_backwards" />
 
                 <ImageButton
                     android:id="@+id/flanger"
                     android:layout_width="105dp"
                     android:layout_height="105dp"
-                    android:background="@drawable/ic_flanger"
-                    android:onClick="onClick" />
+                    android:background="@drawable/backwards_modulate"
+                    android:onClick="onClick"
+                    android:src="@drawable/ic_flanger" />
                 <!--app:srcCompat="@drawable/ic_backwards" />-->
 
             </LinearLayout>
@@ -119,9 +122,10 @@
                     android:id="@+id/phaser"
                     android:layout_width="105dp"
                     android:layout_height="105dp"
-                    android:background="@drawable/ic_phaser"
+                    android:background="@drawable/modulate_background"
                     android:contentDescription="TODO"
-                    android:onClick="onClick" />
+                    android:onClick="onClick"
+                    android:src="@drawable/ic_phaser" />
 
                 <ImageButton
                     android:id="@+id/quantize"
@@ -129,15 +133,17 @@
                     android:layout_height="105dp"
                     android:layout_marginLeft="20dp"
                     android:layout_marginRight="20dp"
-                    android:background="@drawable/quantize"
-                    android:onClick="onClick" />
+                    android:background="@drawable/modulate_background"
+                    android:onClick="onClick"
+                    android:src="@drawable/quantize" />
 
                 <ImageButton
                     android:id="@+id/squared"
                     android:layout_width="105dp"
                     android:layout_height="105dp"
-                    android:background="@drawable/squareroot"
-                    android:onClick="onClick" />
+                    android:background="@drawable/backwards_modulate"
+                    android:onClick="onClick"
+                    android:src="@drawable/squareroot" />
 
             </LinearLayout>
 
@@ -155,8 +161,9 @@
                     android:id="@+id/phaser_triangle"
                     android:layout_width="105dp"
                     android:layout_height="105dp"
-                    android:background="@drawable/alien"
-                    android:onClick="onClick" />
+                    android:background="@drawable/modulate_background"
+                    android:onClick="onClick"
+                    android:src="@drawable/alien" />
 
                 <ImageButton
                     android:id="@+id/phaser_saw"
@@ -164,8 +171,9 @@
                     android:layout_height="105dp"
                     android:layout_marginLeft="20dp"
                     android:layout_marginRight="20dp"
-                    android:background="@drawable/ic_robot_svgrepo_com"
-                    android:onClick="onClick" />
+                    android:background="@drawable/modulate_background"
+                    android:onClick="onClick"
+                    android:src="@drawable/robotic_modulate" />
 
                 <ImageButton
                     android:id="@+id/phaser_square"
@@ -173,7 +181,7 @@
                     android:layout_height="105dp"
                     android:background="@drawable/backwards_modulate"
                     android:onClick="onClick"
-                    tools:src="@drawable/alien" />
+                    android:src="@drawable/alien" />
             </LinearLayout>
 
             <Space
@@ -216,7 +224,6 @@
     </androidx.core.widget.NestedScrollView>
 
 
-
     <FrameLayout
         android:id="@+id/user_controls"
         android:name="com.example.voicemodulation.widgets.nControls"
@@ -226,7 +233,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/nestedScrollView"
+        app:layout_constraintTop_toBottomOf="@+id/NModulation"
         app:layout_constraintVertical_bias="0.0"
         tools:layout="@layout/user_controls">
         <!--

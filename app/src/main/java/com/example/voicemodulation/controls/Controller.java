@@ -25,7 +25,6 @@ public class Controller extends LinearLayout {
         status = new TextView(context);
         status.setTextAppearance(R.style.DynamicSeekBarTitle);
         status.setText("status");
-        param.setMax(5);
         addView(title);
         addView(param);
         addView(status);
@@ -53,10 +52,11 @@ public class Controller extends LinearLayout {
         }
     });
 }
-    public void setParam(String _title, int max)
+    public void setParam(String _title, int max,int progress)
     {
         title.setText(_title);
         param.setMax(max);
+        param.setProgress(progress);
     }
     public int getProgress()
     {

@@ -16,6 +16,7 @@ import com.example.voicemodulation.R;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
+import java.util.stream.IntStream;
 
 public class NControls extends Fragment {
     private LinkedList<Controller> controllers;
@@ -23,9 +24,10 @@ public class NControls extends Fragment {
     private ImageButton stop_button;
     private ModulateLogic modulate;
     public NControls(){}
+
     public static NControls newInstance(String[] title,int[] maxes,double scale[], String[]
                                         quantity_type, AudioFile creation, String method,
-                                        int gravity, String name) {
+                                        int gravity, String name, int[] progress) {
         NControls controls = new NControls();
         Bundle args = new Bundle();
         args.putString("name",name);
@@ -36,6 +38,7 @@ public class NControls extends Fragment {
         args.putParcelable("file",creation);
         args.putStringArray("titles",title);
         args.putIntArray("maxes",maxes);
+        args.putIntArray("progress",progress);
         controls.setArguments(args);
         return controls; }
     @Override
@@ -50,6 +53,7 @@ public class NControls extends Fragment {
         //file.setFormat(new Format.wav(file));
         int[] maxes = args.getIntArray("maxes");
         String[] titles = args.getStringArray("titles");
+        int[] progress = args.getIntArray("progress");
         final View rootView = inflater.inflate(R.layout.user_controls, _container, false);
         LinearLayout controls_view = rootView.findViewById(R.id.n_parameters);
         LayoutParams view_params = new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.MATCH_PARENT);
@@ -58,11 +62,11 @@ public class NControls extends Fragment {
         TextView modulation_type = rootView.findViewById(R.id.modulation_type);
         modulation_type.setText(name);
         play_button = getActivity().findViewById(R.id.play);
-        stop_button = getActivity().findViewById(R.id.stop_recording);
+        stop_button = getActivity().findViewById(R.id.pause_recording);
         controllers = new LinkedList<>();
         for (int i = 0; i <titles.length ; i++) {
             Controller controller = new Controller(getContext(),null,quantities[i],scale[i]);
-            controller.setParam(titles[i],maxes[i]);
+            controller.setParam(titles[i],maxes[i],progress[i]);
             controllers.add(controller);
             controls_view.addView(controller); }
         RecordLogic recordLogic = new RecordLogic();
@@ -71,20 +75,15 @@ public class NControls extends Fragment {
         recordLogic.setFileData(creation);
         double[] params = new double[maxes.length];
         play_button.setOnClickListener(v ->  new Thread(() ->{
-            //TODO each seekbar should have its own setProgress. In other words, set all Amp parameters to 1 at the onset
             for (int i = 0; i <maxes.length; i++) { params[i]=controllers.get(i).getProgress()*scale[i]; }
             modulate = new ModulateLogic(params,creation);
             try { invokeMethod(modulate.getClass().getMethod(method)); }
             catch (Exception e) { e.printStackTrace(); }
             try { recordLogic.play_recording(); }
             catch (IOException e) { e.printStackTrace(); } }).start());
-        /*
-        stop_button.setOnClickListener(v ->{ //new Thread(() ->{
-            modulate.stackModulation();
-            //creation.save();
-            });//).start();});
 
-         */
+        stop_button.setOnClickListener(v ->{ new Thread(() -> creation.save()).start();});
+
         return rootView; }
     static void invokeMethod(Method method) throws Exception { method.invoke(null); }
 }

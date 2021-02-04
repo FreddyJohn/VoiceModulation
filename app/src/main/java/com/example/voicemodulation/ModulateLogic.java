@@ -10,10 +10,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-
-//TODO remove redundancy ->  all time domain modulations
-//TODO test performance -> manipulate all then write all VS manipulate one and write one
-//TODO rename class to reflect only time domain operations
 public class ModulateLogic {
     private static final int RECORDER_CHANNELS_OUT = AudioFormat.CHANNEL_OUT_MONO;
     private static String MODULATION_NAME;
@@ -22,19 +18,12 @@ public class ModulateLogic {
     private static String CREATION_NAME;
     private static FileOutputStream out;
     private static double[] params;
-    /*
-    public ModulateLogic(double[] _params, String s, int play_back_rate){
-        params=_params;
-        CREATION_NAME = s;
-        PLAYBACK_SAMPLE_RATE = play_back_rate;}
-
-     */
+    private static double n;
     public ModulateLogic(double[] _params, AudioFile recording){
         params=_params;
         CREATION_NAME = recording.getNewRecordFile();
         MODULATION_NAME = recording.getNewModulateFile();
         PLAYBACK_SAMPLE_RATE = recording.getSampleRate();}
-
     public static void setFileOutputStream(String filePath) {
         try {
             out = new FileOutputStream(filePath); }
@@ -60,21 +49,9 @@ public class ModulateLogic {
         byte[] bytes = getBytesFromTrack();
         setFileOutputStream(MODULATION_NAME);
         short[] shorts = Convert.getShortsFromBytes(bytes);
+        n=Generate.getNormalizationCoefficient(shorts);
+        System.out.println("ALL THAT TALK:"+n);
         return shorts; }
-
-    public double getMaximumAmplitude(){
-        short[] data = getAudioData();
-        Arrays.sort(data);
-        double normalization_coefficient=0;
-        short max=data[data.length-1];
-        short min=data[0];
-        if (max>Math.abs(min)){
-            normalization_coefficient=32676/max;
-        }else if(max<Math.abs(min)){
-            normalization_coefficient=32676/min;
-        }
-        return normalization_coefficient;
-    }
 
     public static void makeBackwardsCreation() {
         double volume = params[0];
@@ -145,7 +122,7 @@ public class ModulateLogic {
         for (int i=0; i<carrier_wave.length; i++) {
             short x = carrier_wave[i];
             if (x>0 || x<0) {
-                double sample = .1*(x/Math.abs(x))*C*Math.floor((Math.abs(x)/C)+.5);
+                double sample = n*(x/Math.abs(x))*C*Math.floor((Math.abs(x)/C)+.5);
                 result[i]= (short) sample; }
             else {
                 result[i]=x; }
@@ -165,12 +142,13 @@ public class ModulateLogic {
                 for (int signal = 0; signal < num_signals + 1; signal++) {
                     //TODO recall limits of exponential functions. then formulate equation to scale exponent signal given delay
                     //echo_sample += .1 * carrier_wave[(int) (i - Math.pow(delay, signal))];
-                    echo_sample += .1 * carrier_wave[(int) (i - Math.pow(delay, signal))];
+                    echo_sample += n * carrier_wave[(int) (i - Math.pow(delay, signal))];
+                    //echo_sample += .1 * carrier_wave[(int) (i - Math.pow(delay, signal))];
 
                 }
                 result[i] = (short) echo_sample;
             } catch (IndexOutOfBoundsException e) {
-                result[i] = (short) (.1 * carrier_wave[i]);
+                result[i] = (short) (n * carrier_wave[i]);
             }
         }
         closeFileOutputStream(result);
@@ -184,10 +162,10 @@ public class ModulateLogic {
         short[] result = new short[carrier_wave.length];
         for (int i = 0; i < carrier_wave.length; i++) {
             try {
-                double flanger_sample = .1 * carrier_wave[i] + carrier_wave[i - (int) ((max - min) * (.5 * Math.sin(frequency * i) + .5) + min)];
+                double flanger_sample = n * carrier_wave[i] + carrier_wave[i - (int) ((max - min) * (.5 * Math.sin(frequency * i) + .5) + min)];
                 result[i] = (short) flanger_sample;
             } catch (IndexOutOfBoundsException e) {
-                result[i] = (short) (.1 * carrier_wave[i]);
+                result[i] = (short) (n * carrier_wave[i]);
             }
 
         }
@@ -203,10 +181,10 @@ public class ModulateLogic {
         for (int i = 0; i < carrier_wave.length; i++) {
             try {
                 double yx=Generate.square_t(frequency * i);
-                double flanger_sample = .1 * carrier_wave[i] + carrier_wave[i - (int) ((max - min) * (.5 * yx + .5) + min)];
+                double flanger_sample = n * carrier_wave[i] + carrier_wave[i - (int) ((max - min) * (.5 * yx + .5) + min)];
                 result[i] = (short) flanger_sample;
             } catch (IndexOutOfBoundsException e) {
-                result[i] = (short) (.1 * carrier_wave[i]);
+                result[i] = (short) (n * carrier_wave[i]);
             }
 
         }
@@ -221,10 +199,10 @@ public class ModulateLogic {
         for (int i = 0; i < carrier_wave.length; i++) {
             try {
                 double yx=Generate.triangle_t(frequency * i);
-                double flanger_sample = .1 * carrier_wave[i] + carrier_wave[i - (int) ((max - min) * (.5 * yx + .5) + min)];
+                double flanger_sample = n * carrier_wave[i] + carrier_wave[i - (int) ((max - min) * (.5 * yx + .5) + min)];
                 result[i] = (short) flanger_sample;
             } catch (IndexOutOfBoundsException e) {
-                result[i] = (short) (.1 * carrier_wave[i]);
+                result[i] = (short) (n * carrier_wave[i]);
             }
 
         }

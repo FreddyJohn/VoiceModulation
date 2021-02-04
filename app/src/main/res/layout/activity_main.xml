@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="#131313"
     tools:context=".MainActivity">
-
+    <!--
     <LinearLayout
         android:id="@+id/display"
         android:layout_width="0dp"
@@ -19,12 +19,46 @@
         android:layout_marginRight="10dp"
         android:layout_marginBottom="10dp"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/controls"
+        app:layout_constraintBottom_toTopOf="@+id/global_seek"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0"/>
+        -->
+
+
+    <!--
+    <LinearLayout
+        android:id="@+id/display"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="10dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/global_seek"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"/>
+  -->
+
+    <com.example.voicemodulation.graph.GraphLogic
+        android:id="@+id/display"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/controls"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
     <LinearLayout
         android:id="@+id/controls"
@@ -36,6 +70,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
+
+
 
         <HorizontalScrollView
             android:id="@+id/record_params_scroll"
