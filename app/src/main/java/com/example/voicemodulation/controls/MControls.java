@@ -17,16 +17,16 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 
-public class NControls extends Fragment {
+public class MControls extends Fragment {
     private LinkedList<Controller> controllers;
     private ImageButton play_button;
     private ImageButton stop_button;
     private ModulateLogic modulate;
-    public NControls(){}
-    public static NControls newInstance(String[] title, int[] maxes, double[] scale, String[]
+    public MControls(){}
+    public static MControls newInstance(String[] title, int[] maxes, double[] scale, String[]
                                         quantity_type, AudioFile creation, String method,
                                         int gravity, String name, int[] progress) {
-        NControls controls = new NControls();
+        MControls controls = new MControls();
         Bundle args = new Bundle();
         args.putString("name",name);
         args.putInt("gravity",gravity);
@@ -59,7 +59,7 @@ public class NControls extends Fragment {
         controls_view.setLayoutParams(view_params);
         TextView modulation_type = rootView.findViewById(R.id.modulation_type);
         modulation_type.setText(name);
-        play_button = getActivity().findViewById(R.id.play);
+        play_button = getActivity().findViewById(R.id.play_recording);
         stop_button = getActivity().findViewById(R.id.pause_recording);
         controllers = new LinkedList<>();
         for (int i = 0; i <titles.length ; i++) {

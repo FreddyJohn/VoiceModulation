@@ -7,7 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import com.example.voicemodulation.audio.AudioFile;
-import com.example.voicemodulation.controls.NControls;
+import com.example.voicemodulation.controls.MControls;
 
 public class ModulateActivity extends AppCompatActivity implements View.OnClickListener {
     private AudioFile creation;
@@ -139,9 +139,9 @@ public class ModulateActivity extends AppCompatActivity implements View.OnClickL
 
                 }
     }
-    public NControls displayFragment(String[] titles,int[] maxes,double[] scale, String[] quantity_type,
+    public MControls displayFragment(String[] titles, int[] maxes, double[] scale, String[] quantity_type,
                                      String method, int gravity, String name, int[] progress) {
-        NControls controls = NControls.newInstance(titles,maxes,scale,quantity_type,creation,method,gravity,name,progress);
+        MControls controls = MControls.newInstance(titles,maxes,scale,quantity_type,creation,method,gravity,name,progress);
         FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager
                     .beginTransaction();
@@ -150,7 +150,7 @@ public class ModulateActivity extends AppCompatActivity implements View.OnClickL
             return controls; }
     public void closeFragment() {
         FragmentManager fragmentManager = getSupportFragmentManager();
-        NControls simpleFragment = (NControls) fragmentManager
+        MControls simpleFragment = (MControls) fragmentManager
                 .findFragmentById(R.id.user_controls);
         if (simpleFragment != null) {
             FragmentTransaction fragmentTransaction =
