@@ -1,5 +1,7 @@
 package com.example.voicemodulation.audio.util;
 
+import java.lang.ref.Reference;
+
 public class Generate {
     public static double[] sin(double a, double f, double p, int samples, int fps) {
         int time = samples/fps;

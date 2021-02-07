@@ -21,7 +21,7 @@ import java.nio.file.Paths;
 public class AudioCon {
 
     public static class IO_RAF {
-        private String file_path;
+        private final String file_path;
 
         public IO_RAF(String file_path) {
             this.file_path = file_path;

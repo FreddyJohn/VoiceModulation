@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="StaticSeekBarTitle" parent="TextAppearance.AppCompat">
+    <style name="StaticSeekBarTitle">
         <item name="android:textColor">@color/white</item>
         <item name="android:gravity">center</item>
         <item name="android:textSize">10sp</item>
@@ -9,7 +9,7 @@
         <item name="android:layout_width">match_parent</item>
     </style>
 
-    <style name="DynamicSeekBarTitle" parent="TextAppearance.AppCompat">
+    <style name="DynamicSeekBarTitle">
         <item name="android:textColor">@color/white</item>
         <item name="android:gravity">center</item>
         <item name="android:textSize">12sp</item>
@@ -17,7 +17,7 @@
         <item name="android:layout_width">match_parent</item>
     </style>
 
-    <style name="SeekBarStyle" parent="Widget.AppCompat.SeekBar.Discrete">
+    <style name="SeekBarStyle">
         <item name="android:layout_width">130dp</item>
         <item name="android:layout_height">120dp</item>
         <item name="android:rotation">270</item>
@@ -31,4 +31,22 @@
         <attr name="android:rotation">270</attr>
         <attr name="android:thumb">@drawable/seekbar_thumb</attr>
     </declare-styleable>
+    <style name="AppTheme" parent="@android:style/Theme.Material">
+        <item name="android:colorPrimary">@color/purple_500</item>
+        <item name="android:colorPrimaryDark">@color/purple_700</item>
+        <item name="android:colorAccent">@color/md_yellow_A700</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBarOverlay">true</item>
+        <item name="android:windowBackground">@color/black</item>
+        <item name="android:navigationBarColor">@color/black</item>
+        <!--<item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>-->
+
+    </style>
+    <style name="AppTheme.Blue" parent="AppTheme">
+        <item name="android:colorPrimaryDark">@color/md_blue_700</item>
+        <item name="android:windowBackground">@drawable/gradient_blue</item>
+        <item name="android:navigationBarColor">@color/md_blue_700</item>
+    </style>
+
 </resources>

@@ -8,7 +8,7 @@ This block allows for an arbitrary amount of padding. The contents of a PADDING 
 */
 public class Format {
     public static class wav implements Runnable{
-        private AudioFile data;
+        private final AudioFile data;
         public wav(AudioFile _data) {
             this.data=_data;
         }
@@ -21,7 +21,7 @@ public class Format {
             long sample_rate = data.getPlaybackRate();
             int num_channels_in = data.getNumChannelsIn();
             System.out.println("num channels in "+num_channels_in);
-            byte[] wav_header = Generate.wavHeader(total_bytes, total_bytes / bit_depth,
+            byte[] wav_header = Generate.wavHeader(total_bytes, total_bytes + 36,
                     sample_rate,
                     num_channels_in, (byte) (bit_depth * 8));
             byte[] raw_data_plus_header = new byte[wav_header.length + raw_data.length];
@@ -34,7 +34,7 @@ public class Format {
         }
     }
     public static class aiff implements Runnable {
-        private AudioFile data;
+        private final AudioFile data;
         public aiff(AudioFile _data) {
             this.data=_data;
         }

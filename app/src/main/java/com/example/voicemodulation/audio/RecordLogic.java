@@ -20,7 +20,7 @@ import java.io.RandomAccessFile;
 //TODO fix implementation of play/pause on every call to setFileObject there's call to AudioCon.getWriteObject
 //TODO ^ this sets file length to zero for no reason.
 public class RecordLogic {
-    private static int AUDIO_SOURCE = MediaRecorder.AudioSource.MIC;
+    private static final int AUDIO_SOURCE = MediaRecorder.AudioSource.MIC;
     private AudioRecord recorder;
     private AudioCon.IO_RAF ioRAF;
     private RandomAccessFile out;
@@ -86,7 +86,7 @@ public class RecordLogic {
 
     public void writeAudioDataToFile() {
         byte[] sData = new byte[buffer_size];
-        while (isPaused == false && isRecording) {
+        while (!isPaused && isRecording) {
             recorder.read(sData, 0, buffer_size);
             file_size+=sData.length/2;
             try {

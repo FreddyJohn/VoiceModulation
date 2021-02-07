@@ -13,9 +13,9 @@ import com.example.voicemodulation.R;
 
 
 public class Controller extends LinearLayout {
-    private TextView status;
-    private TextView title;
-    private ControlBar param;
+    private final TextView status;
+    private final TextView title;
+    private final ControlBar param;
     public Controller(Context context, @Nullable AttributeSet attrs,String type,double scale) {
         super(context, attrs);
         param = new ControlBar(context,null);

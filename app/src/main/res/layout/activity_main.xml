@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#131313"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:visibility="visible"
     tools:context=".MainActivity">
     <!--
     <LinearLayout
@@ -50,168 +53,25 @@
 
     <com.example.voicemodulation.graph.GraphLogic
         android:id="@+id/display"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/controls"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        android:layout_marginBottom="20dp"
+        android:layout_weight="1" />
 
     <LinearLayout
         android:id="@+id/controls"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
         android:layout_marginBottom="20dp"
+        android:layout_weight="0"
+        android:gravity="center"
         android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        android:visibility="visible">
 
-
-
-        <HorizontalScrollView
-            android:id="@+id/record_params_scroll"
+        <FrameLayout
+            android:id="@+id/user_controls"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <LinearLayout
-                android:id="@+id/record_params"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/seekbar_border"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/StaticSeekBarTitle"
-                        android:text="@string/playback_rate" />
-
-                    <SeekBar
-                        android:id="@+id/playback_rate"
-                        style="@style/SeekBarStyle"
-                        android:max="10"
-                        android:min="1"
-                        android:progress="10"
-                        app:tickMark="@drawable/seekbar_tickmark" />
-
-                    <TextView
-                        android:id="@+id/selected_playback_rate"
-                        style="@style/DynamicSeekBarTitle"
-                        android:text="@string/selected_playback_rate" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/seekbar_border"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/StaticSeekBarTitle"
-                        android:text="@string/sample_rate" />
-
-                    <SeekBar
-                        android:id="@+id/sample_rate"
-                        style="@style/SeekBarStyle"
-                        android:max="10"
-                        android:min="1"
-                        android:progress="10"
-                        app:tickMark="@drawable/seekbar_tickmark" />
-
-                    <TextView
-                        android:id="@+id/selected_sample_rate"
-                        style="@style/DynamicSeekBarTitle"
-                        android:text="@string/selected_sample_rate" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/seekbar_border"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/StaticSeekBarTitle"
-                        android:text="@string/format" />
-
-                    <SeekBar
-                        android:id="@+id/format"
-                        style="@style/SeekBarStyle"
-                        android:max="2"
-                        android:progress="2"
-                        app:tickMark="@drawable/seekbar_tickmark" />
-
-                    <TextView
-                        android:id="@+id/selected_format"
-                        style="@style/DynamicSeekBarTitle"
-                        android:text="@string/selected_format" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/seekbar_border"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/StaticSeekBarTitle"
-                        android:text="@string/num_channels" />
-
-                    <SeekBar
-                        android:id="@+id/num_channels"
-                        style="@style/SeekBarStyle"
-                        android:max="1"
-                        android:min="0"
-                        android:progress="0"
-                        app:tickMark="@drawable/seekbar_tickmark" />
-
-                    <TextView
-                        android:id="@+id/selected_num_channels"
-                        style="@style/DynamicSeekBarTitle"
-                        android:text="@string/selected_num_channels" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/seekbar_border"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/StaticSeekBarTitle"
-                        android:text="@string/encoding" />
-
-                    <SeekBar
-
-                        android:id="@+id/encoding"
-                        style="@style/SeekBarStyle"
-                        android:max="2"
-                        android:progress="1"
-                        app:tickMark="@drawable/seekbar_tickmark" />
-
-                    <TextView
-                        android:id="@+id/selected_encoding"
-                        style="@style/DynamicSeekBarTitle"
-                        android:text="@string/selected_encoding" />
-                </LinearLayout>
-
-            </LinearLayout>
-        </HorizontalScrollView>
+            android:layout_height="wrap_content"></FrameLayout>
 
         <Space
             android:layout_width="match_parent"
@@ -271,4 +131,4 @@
     </LinearLayout>
 
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

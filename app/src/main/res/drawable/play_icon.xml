@@ -4,5 +4,5 @@
     <item
         android:drawable="@drawable/play_foreground"
         android:gravity="center"
-        android:left="5dp"></item>
+        android:left="5dp" />
 </layer-list>

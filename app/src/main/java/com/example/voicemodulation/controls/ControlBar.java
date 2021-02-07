@@ -1,5 +1,4 @@
 package com.example.voicemodulation.controls;
-
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.Resources;
@@ -9,12 +8,9 @@ import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.example.voicemodulation.R;
-
 public class ControlBar extends androidx.appcompat.widget.AppCompatSeekBar {
     public ControlBar(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);

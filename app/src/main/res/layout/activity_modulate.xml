@@ -1,70 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#131313"
+    android:orientation="vertical"
     tools:context=".ModulateActivity">
     <!--TODO redo vector creation for echo and backwards. Make them src compact and set background as the background
         TODO organize vectors, backgrounds, and layer list xml objects -->
 
-    <FrameLayout
-        android:id="@+id/record_controls"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <ImageButton
-            android:id="@+id/stop_recording"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-
-            android:layout_gravity="center|left"
-            android:layout_marginStart="50dp"
-            android:layout_marginLeft="50dp"
-            android:background="@drawable/stop_icon"
-            android:contentDescription="TODO"
-            android:onClick="onClick" />
-
-        <ImageButton
-            android:id="@+id/pause_recording"
-            android:layout_width="47dp"
-            android:layout_height="44dp"
-            android:layout_gravity="center"
-            android:background="@drawable/pause_icon"
-            android:contentDescription="TODO"
-            android:cropToPadding="false"
-            android:onClick="onClick" />
-
-        <ImageButton
-            android:id="@+id/play"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-
-            android:layout_gravity="center|right|center_horizontal"
-            android:layout_marginEnd="50dp"
-            android:layout_marginRight="50dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/play_icon"
-            android:contentDescription="TODO"
-            android:onClick="onClick" />
-    </FrameLayout>
-
     <androidx.core.widget.NestedScrollView
         android:id="@+id/NModulation"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="362dp"
         android:layout_marginBottom="200dp"
         android:background="#392929"
-        android:fillViewport="true"
-        app:layout_constraintBottom_toTopOf="@+id/record_controls"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -104,7 +56,7 @@
                     android:layout_height="105dp"
                     android:background="@drawable/backwards_modulate"
                     android:onClick="onClick"
-                    android:src="@drawable/ic_flanger" />
+                    android:src="@drawable/ic_launcher_foreground" />
                 <!--app:srcCompat="@drawable/ic_backwards" />-->
 
             </LinearLayout>
@@ -143,7 +95,7 @@
                     android:layout_height="105dp"
                     android:background="@drawable/backwards_modulate"
                     android:onClick="onClick"
-                    android:src="@drawable/squareroot" />
+                    android:src="@drawable/ic_launcher_foreground" />
 
             </LinearLayout>
 
@@ -226,26 +178,50 @@
 
     <FrameLayout
         android:id="@+id/user_controls"
-        android:name="com.example.voicemodulation.widgets.nControls"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/record_controls"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/NModulation"
-        app:layout_constraintVertical_bias="0.0"
-        tools:layout="@layout/user_controls">
-        <!--
-        <TextView
-            android:id="@+id/modulation_type"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:textColor="#FFFFFF"
-            app:layout_constraintBottom_toTopOf="@+id/user_controls"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"></TextView>-->
+        android:layout_width="match_parent"
+        android:layout_height="102dp">
     </FrameLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <FrameLayout
+        android:id="@+id/record_controls"
+        android:layout_width="394dp"
+        android:layout_height="57dp"
+        android:layout_marginBottom="20dp">
+
+        <ImageButton
+            android:id="@+id/stop_recording"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+
+            android:layout_gravity="center|left"
+            android:layout_marginStart="50dp"
+            android:layout_marginLeft="50dp"
+            android:background="@drawable/stop_icon"
+            android:contentDescription="TODO"
+            android:onClick="onClick" />
+
+        <ImageButton
+            android:id="@+id/pause_recording"
+            android:layout_width="47dp"
+            android:layout_height="44dp"
+            android:layout_gravity="center"
+            android:background="@drawable/pause_icon"
+            android:contentDescription="TODO"
+            android:cropToPadding="false"
+            android:onClick="onClick" />
+
+        <ImageButton
+            android:id="@+id/play"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+
+            android:layout_gravity="center|right|center_horizontal"
+            android:layout_marginEnd="50dp"
+            android:layout_marginRight="50dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/play_icon"
+            android:contentDescription="TODO"
+            android:onClick="onClick" />
+    </FrameLayout>
+
+</LinearLayout>

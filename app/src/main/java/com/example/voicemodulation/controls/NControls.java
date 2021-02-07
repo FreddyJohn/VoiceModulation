@@ -1,4 +1,5 @@
 package com.example.voicemodulation.controls;
+import androidx.fragment.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,7 +9,6 @@ import android.widget.ImageButton;
 import android.widget.FrameLayout.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import androidx.fragment.app.Fragment;
 import com.example.voicemodulation.ModulateLogic;
 import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.audio.RecordLogic;
@@ -16,7 +16,6 @@ import com.example.voicemodulation.R;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
-import java.util.stream.IntStream;
 
 public class NControls extends Fragment {
     private LinkedList<Controller> controllers;
@@ -24,8 +23,7 @@ public class NControls extends Fragment {
     private ImageButton stop_button;
     private ModulateLogic modulate;
     public NControls(){}
-
-    public static NControls newInstance(String[] title,int[] maxes,double scale[], String[]
+    public static NControls newInstance(String[] title, int[] maxes, double[] scale, String[]
                                         quantity_type, AudioFile creation, String method,
                                         int gravity, String name, int[] progress) {
         NControls controls = new NControls();
@@ -81,9 +79,7 @@ public class NControls extends Fragment {
             catch (Exception e) { e.printStackTrace(); }
             try { recordLogic.play_recording(); }
             catch (IOException e) { e.printStackTrace(); } }).start());
-
         stop_button.setOnClickListener(v ->{ new Thread(() -> creation.save()).start();});
-
         return rootView; }
     static void invokeMethod(Method method) throws Exception { method.invoke(null); }
 }
