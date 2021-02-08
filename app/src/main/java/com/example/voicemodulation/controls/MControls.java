@@ -9,7 +9,7 @@ import android.widget.ImageButton;
 import android.widget.FrameLayout.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import com.example.voicemodulation.ModulateLogic;
+import com.example.voicemodulation.audio.ModulateLogic;
 import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.R;
@@ -60,7 +60,7 @@ public class MControls extends Fragment {
         TextView modulation_type = rootView.findViewById(R.id.modulation_type);
         modulation_type.setText(name);
         play_button = getActivity().findViewById(R.id.play_recording);
-        stop_button = getActivity().findViewById(R.id.pause_recording);
+        //stop_button = getActivity().findViewById(R.id.pause_recording);
         controllers = new LinkedList<>();
         for (int i = 0; i <titles.length ; i++) {
             Controller controller = new Controller(getContext(),null,quantities[i],scale[i]);
@@ -79,7 +79,7 @@ public class MControls extends Fragment {
             catch (Exception e) { e.printStackTrace(); }
             try { recordLogic.play_recording(); }
             catch (IOException e) { e.printStackTrace(); } }).start());
-        stop_button.setOnClickListener(v ->{ new Thread(() -> creation.save()).start();});
+        //stop_button.setOnClickListener(v ->{ new Thread(() -> creation.save()).start();});
         return rootView; }
     static void invokeMethod(Method method) throws Exception { method.invoke(null); }
 }

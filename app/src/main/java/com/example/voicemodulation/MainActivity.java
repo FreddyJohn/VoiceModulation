@@ -18,9 +18,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.HorizontalScrollView;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final String record_control_title = "Record Controls";
     private HorizontalScrollView modulations;
     private RControls record_controls;
-    private boolean transaction;
+    private boolean initial_record_transaction;
     int PERMISSION_ALL = 1;
     private final String[] PERMISSIONS = {
                     Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (!hasPermissions(this, PERMISSIONS)) {
             requestPermissions( PERMISSIONS, PERMISSION_ALL);
         }
-        record_controls = displayFragment(record_control_titles,record_control_ranges,
+        record_controls = displayRFragment(record_control_titles,record_control_ranges,
                                                     record_control_scales,record_control_quantities,
                                                     record_gravity,record_control_title,record_control_progresses);
         modulations = findViewById(R.id.modulations);
@@ -219,23 +219,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static boolean isGooglePhotosUri(Uri uri) {
         return "com.google.android.apps.photos.content".equals(uri.getAuthority());
     }
-    public RControls displayFragment(String[] titles, int[] maxes, int[] scale, String[] quantity_type, int gravity, String name, int[] progress) {
+    public RControls displayRFragment(String[] titles, int[] maxes, int[] scale, String[] quantity_type, int gravity, String name, int[] progress) {
         RControls controls = RControls.newInstance(titles,maxes,scale,quantity_type,gravity,name,progress);
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager
                 .beginTransaction();
         fragmentTransaction.add(R.id.user_controls,
-                controls).addToBackStack(null).commit();
-        transaction=true;
+                controls).commit();
+        initial_record_transaction=true;
         return controls; }
-    public void closeFragment() {
+    public void closeFragment(int resource_id) {
         FragmentManager fragmentManager = getSupportFragmentManager();
-        RControls simpleFragment = (RControls) fragmentManager
-                .findFragmentById(R.id.user_controls);
-        if (simpleFragment != null) {
+        Fragment controller_type = fragmentManager
+                .findFragmentById(resource_id);
+        if (controller_type != null) {
             FragmentTransaction fragmentTransaction =
                     fragmentManager.beginTransaction();
-            fragmentTransaction.remove(simpleFragment).commit(); } }
+            //TODO hide vs remove I do not want a bunch of modulation fragment initializations just hanging out
+            fragmentTransaction.hide(controller_type).commit(); } }
 
     public MControls displayMFragment(String[] titles, int[] maxes, double[] scale, String[] quantity_type,AudioFile creation,
                                      String method, int gravity, String name, int[] progress) {
@@ -244,101 +245,79 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         FragmentTransaction fragmentTransaction = fragmentManager
                 .beginTransaction();
         fragmentTransaction.add(R.id.user_controls,
-                controls).addToBackStack(null).commit();
+                controls).commit();
         return controls; }
-    public void closeMFragment() {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        MControls simpleFragment = (MControls) fragmentManager
-                .findFragmentById(R.id.modulate_controls);
-        if (simpleFragment != null) {
-            FragmentTransaction fragmentTransaction =
-                    fragmentManager.beginTransaction();
-            fragmentTransaction.remove(simpleFragment).commit(); } }
-
     @Override
     public void onClick(View v) {
         Bundle record_parameters = record_controls.getArguments();
         AudioFile creation = record_parameters.getParcelable("file");
         double nyquist = (creation.getSampleRate() / 2) / 20;
-        if (transaction) {
-            closeFragment();
-            transaction=false;
-        } else if (!transaction) {
-            switch (v.getId()) {
-                case R.id.backwards:
-                    String[] backwards_titles = new String[]{"Volume"};
-                    int[] backwards_maxes = new int[]{10};
-                    closeMFragment();
-                    displayMFragment(backwards_titles, backwards_maxes, new double[]{.1},
-                            new String[]{"Volume"}, creation, "makeBackwardsCreation", Gravity.CENTER,
-                            "Backwards Effect", new int[]{10});
-                    break;
-                case R.id.echo:
-                    int[] echo_maxes = new int[]{10, 10};
-                    closeMFragment();
-                    displayMFragment(echo_titles, echo_maxes, new double[]{1, 1},
-                            new String[]{"S", "D"}, creation, "makeEchoCreation", Gravity.CENTER,
-                            "Echo Effect", new int[]{5, 6});
-                    break;
-                case R.id.quantize:
-                    String[] robotic_titles = new String[]{"Quantize", "Amplitude"};
-                    int[] robotic_maxes = new int[]{10, 10};
-                    closeMFragment();
-                    displayMFragment(robotic_titles, robotic_maxes, new double[]{1000, .1},
-                            new String[]{"C", "Amp"}, creation, "makeQuantizedCreation", Gravity.CENTER,
-                            "Quantize Audio Sample", new int[]{5, 10});
-                    break;
-                case R.id.phaser:
-                    int[] phaser_maxes = new int[]{20, 10, 10, 20};
-                    closeMFragment();
-                    displayMFragment(phaser_titles, phaser_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
-                            phaser_quantities, creation, "makePhaserCreation", Gravity.NO_GRAVITY,
-                            "Phaser with Sine Wave", phaser_progress);
-                    break;
-                case R.id.phaser_triangle:
-                    int[] alien_maxes = new int[]{20, 10, 10, 10};
-                    closeMFragment();
-                    displayMFragment(phaser_titles, alien_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
-                            phaser_quantities, creation, "makePhaserTriangleCreation", Gravity.NO_GRAVITY,
-                            "Phaser with Triangle Wave", phaser_progress);
-                    break;
-                case R.id.phaser_square:
-                    int[] square_maxes = new int[]{20, 10, 10, 10};
-                    closeMFragment();
-                    displayMFragment(phaser_titles, square_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
-                            phaser_quantities, creation, "makePhaserSquareCreation", Gravity.NO_GRAVITY,
-                            "Phaser with Square Wave", phaser_progress);
-                    break;
-                case R.id.phaser_saw:
-                    int[] saw_maxes = new int[]{20, 10, 10, 10};
-                    closeMFragment();
-                    displayMFragment(phaser_titles, saw_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
-                            phaser_quantities, creation, "makePhaserSawCreation", Gravity.NO_GRAVITY,
-                            "Phaser with Saw Wave", phaser_progress);
-                    break;
-                case R.id.flanger:
-                    int[] flanger_maxes = new int[]{10, 10, 20};
-                    closeMFragment();
-                    displayMFragment(flanger_titles, flanger_maxes, new double[]{10, 10, nyquist},
-                            new String[]{null, null, "Hz"}, creation, "makeFlangerCreation", Gravity.NO_GRAVITY,
-                            "Flanger with Sine Wave", flanger_progress);
-                    break;
-                case R.id.flanger_triangle:
-                    int[] flanger_triangle_maxes = new int[]{10, 10, 20};
-                    closeMFragment();
-                    displayMFragment(flanger_titles, flanger_triangle_maxes, new double[]{10, 10, nyquist},
-                            new String[]{null, null, "Hz"}, creation, "makeFlangerTriangleCreation", Gravity.NO_GRAVITY,
-                            "Flanger with Triangle Wave", flanger_progress);
-                    break;
-                case R.id.flanger_square:
-                    int[] flanger_square_maxes = new int[]{10, 10, 20};
-                    closeMFragment();
-                    displayMFragment(flanger_titles, flanger_square_maxes, new double[]{10, 10, nyquist},
-                            new String[]{null, null, "Hz"}, creation, "makeFlangerSquareCreation", Gravity.NO_GRAVITY,
-                            "Flanger with Square Wave", flanger_progress);
-                    break;
+        closeFragment(R.id.user_controls);
+        switch (v.getId()) {
+            case R.id.backwards:
+                String[] backwards_titles = new String[]{"Volume"};
+                int[] backwards_maxes = new int[]{10};
+                displayMFragment(backwards_titles, backwards_maxes, new double[]{.1},
+                        new String[]{"Volume"}, creation, "makeBackwardsCreation", Gravity.CENTER,
+                        "Backwards Effect", new int[]{10});
+                break;
+            case R.id.echo:
+                int[] echo_maxes = new int[]{10, 10};
+                displayMFragment(echo_titles, echo_maxes, new double[]{1, 1},
+                        new String[]{"S", "D"}, creation, "makeEchoCreation", Gravity.CENTER,
+                        "Echo Effect", new int[]{5, 6});
+                break;
+            case R.id.quantize:
+                String[] robotic_titles = new String[]{"Quantize", "Amplitude"};
+                int[] robotic_maxes = new int[]{10, 10};
+                displayMFragment(robotic_titles, robotic_maxes, new double[]{1000, .1},
+                        new String[]{"C", "Amp"}, creation, "makeQuantizedCreation", Gravity.CENTER,
+                        "Quantize Audio Sample", new int[]{5, 10});
+                break;
+            case R.id.phaser:
+                int[] phaser_maxes = new int[]{20, 10, 10, 20};
+                displayMFragment(phaser_titles, phaser_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
+                        phaser_quantities, creation, "makePhaserCreation", Gravity.NO_GRAVITY,
+                        "Phaser with Sine Wave", phaser_progress);
+                break;
+            case R.id.phaser_triangle:
+                int[] alien_maxes = new int[]{20, 10, 10, 10};
+                displayMFragment(phaser_titles, alien_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
+                        phaser_quantities, creation, "makePhaserTriangleCreation", Gravity.NO_GRAVITY,
+                        "Phaser with Triangle Wave", phaser_progress);
+                break;
+            case R.id.phaser_square:
+                int[] square_maxes = new int[]{20, 10, 10, 10};
+                displayMFragment(phaser_titles, square_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
+                        phaser_quantities, creation, "makePhaserSquareCreation", Gravity.NO_GRAVITY,
+                        "Phaser with Square Wave", phaser_progress);
+                break;
+            case R.id.phaser_saw:
+                int[] saw_maxes = new int[]{20, 10, 10, 10};
+                displayMFragment(phaser_titles, saw_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
+                        phaser_quantities, creation, "makePhaserSawCreation", Gravity.NO_GRAVITY,
+                        "Phaser with Saw Wave", phaser_progress);
+                break;
+            case R.id.flanger:
+                int[] flanger_maxes = new int[]{10, 10, 20};
+                displayMFragment(flanger_titles, flanger_maxes, new double[]{10, 10, nyquist},
+                        new String[]{null, null, "Hz"}, creation, "makeFlangerCreation", Gravity.NO_GRAVITY,
+                        "Flanger with Sine Wave", flanger_progress);
+                break;
+            case R.id.flanger_triangle:
+                int[] flanger_triangle_maxes = new int[]{10, 10, 20};
+                displayMFragment(flanger_titles, flanger_triangle_maxes, new double[]{10, 10, nyquist},
+                        new String[]{null, null, "Hz"}, creation, "makeFlangerTriangleCreation", Gravity.NO_GRAVITY,
+                        "Flanger with Triangle Wave", flanger_progress);
+                break;
+            case R.id.flanger_square:
+                int[] flanger_square_maxes = new int[]{10, 10, 20};
+                displayMFragment(flanger_titles, flanger_square_maxes, new double[]{10, 10, nyquist},
+                        new String[]{null, null, "Hz"}, creation, "makeFlangerSquareCreation", Gravity.NO_GRAVITY,
+                        "Flanger with Square Wave", flanger_progress);
+                break;
             }
-        }
+
     }
 }
 

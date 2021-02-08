@@ -1,4 +1,4 @@
-package com.example.voicemodulation;
+package com.example.voicemodulation.audio;
 import android.media.AudioFormat;
 import java.util.Arrays;
 import com.example.voicemodulation.audio.AudioFile;
