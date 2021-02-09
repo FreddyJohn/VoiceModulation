@@ -95,9 +95,10 @@
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_weight="1"
+                    android:hapticFeedbackEnabled="true"
                     android:onClick="onClick"
                     android:scaleType="fitCenter"
-                    app:srcCompat="@drawable/ic_launcher_foreground" />
+                    app:srcCompat="@drawable/ic_backwards" />
 
                 <ImageButton
                     android:id="@+id/echo"
