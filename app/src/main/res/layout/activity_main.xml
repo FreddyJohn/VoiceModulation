@@ -58,6 +58,20 @@
         android:layout_marginBottom="20dp"
         android:layout_weight="1" />
 
+    <com.example.voicemodulation.graph.AudioDisplay
+        android:id="@+id/audio_display"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginBottom="20dp" />
+
+    <SeekBar
+        android:id="@+id/seek"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:progressTint="#FFFFFF"
+        android:thumbTint="#FFFFFF"
+        android:visibility="visible" />
+
     <LinearLayout
         android:id="@+id/controls"
         android:layout_width="match_parent"
@@ -72,10 +86,7 @@
             android:id="@+id/user_controls"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"></FrameLayout>
-        <FrameLayout
-            android:id="@+id/modulate_controls"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"></FrameLayout>
+
 
         <Space
             android:layout_width="match_parent"

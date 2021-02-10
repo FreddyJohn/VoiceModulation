@@ -1,7 +1,37 @@
 package com.example.voicemodulation.audio.util;
 
-import java.lang.ref.Reference;
+//TODO my assumption is that the more modulations you stack onto a given series the faster
+//    the output of normalization algorithm should approach one
+//      nao:
+//          o(n) = 1 + .(n)
+//          o(n) is never < 1
+//          o(n) is never > encoding range
 
+//TODO ^ to understand the creation of this algorithm better consider this problem
+//  1.) carrier amplitude > modulation amplitude
+//  2.) carrier and modulation amplitude does not change
+//  3.) what does the (n feature) of the carrier signal approach as we repeatably multiply by modulation signal
+//           on n feature: in Calculus 1&2 we discusses the limits of the output of functions
+//              however, can you think of limits as not approaching a certain point in a function
+//              but approaching a certain feature in an operation on a series:
+//                  c(x)=2sin(x)
+//                  m(x)=sin(x)
+//                  lim  c*m
+//                   x[] -> ?
+//            this is something discussed briefly towards the end of calc2 and in depth with additive synthesis
+//  Anyways, I assume the result of this is we approach shit and that one possible solution to this involves thinking
+//  one step above this operation. To elaborate, there are not one but two dynamic ranges involved the dynamic range of the
+//  encoding and the range associated with the modulation wave
+//      for example: a modulation wave with amplitude of 1 has many numbers in its domain that are <1
+//          so an index wise multiplication of carrier signal would/could result in silencing the signal
+//          perhaps depending on the frequency of the modulation signal as well
+// More thoughts here, much of this is driven through the framework of thinking a constant modulation amplitude of 1
+//  ^perhaps consider instead, the maximum amplitude of given segment within carrier signal
+//  this as parameter
+
+//TODO test all _t single point in time output functions against desmos graphs
+//  first plot the series in its continuous form and ensure you are traveling about this form with any x input into given _t function
+//  test math in python then implement final version here
 public class Generate {
     public static double[] sin(double a, double f, double p, int samples, int fps) {
         int time = samples/fps;

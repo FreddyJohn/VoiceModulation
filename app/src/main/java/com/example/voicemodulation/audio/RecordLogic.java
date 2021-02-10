@@ -91,8 +91,8 @@ public class RecordLogic {
             file_size+=sData.length/2;
             try {
                 out.write(sData, 0, buffer_size);
-                jack.write(sData);
-                jack.flush();
+                //jack.write(sData);
+                //jack.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }

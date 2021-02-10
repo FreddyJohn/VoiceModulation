@@ -1,12 +1,18 @@
 package com.example.voicemodulation.graph;
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Environment;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.SeekBar;
+
+import com.example.voicemodulation.MainActivity;
+import com.example.voicemodulation.R;
 import com.example.voicemodulation.audio.util.Convert;
 import java.io.DataInputStream;
 import java.io.File;
@@ -16,14 +22,23 @@ import java.io.IOException;
 import java.util.LinkedList;
 public class GraphLogic extends View {
     private float pixel_density;
+    private SeekBar seeker;
     private Paint paint;
     private float view_height;
     private float view_width;
+    //private float this_thing;
     private boolean graphState = false;
     private DataInputStream jill;
+    private DataInputStream jane;
     private int bufferSize;
+    private Bitmap mExtraBitmap;
+    private Canvas mExtraCanvas;
+    private int iter;
     private LinkedList<Short> data;
     private int graph_pos=0;
+    private boolean liveAudioState =false;
+    private float testing;
+
     public GraphLogic(Context context) {
         super(context);
         init(context, null);
@@ -44,14 +59,43 @@ public class GraphLogic extends View {
         pixel_density = Resources.getSystem().getDisplayMetrics().density;
         paint.setDither(true);
         paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(pixel_density);
+        paint.setStrokeWidth(7-.05f/pixel_density);
         try {
-            String name = Environment.getExternalStorageDirectory().getPath()+"/data.0";
+            //TODO fix this shit
+            String name = Environment.getExternalStorageDirectory().getPath()+"/rec.pcm";
             File i = new File(name);
             this.jill = new DataInputStream(new FileInputStream(name));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+        try {
+            //TODO fix this shit
+            String name = Environment.getExternalStorageDirectory().getPath()+"/rec.pcm";
+            File i = new File(name);
+            this.jane = new DataInputStream(new FileInputStream(name));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        setOnTouchListener(new OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction() & MotionEvent.ACTION_MASK) {
+                 /*TODO
+                    do not think of this as being where the drawable will take place
+                    from direct input from the user.
+                    Rather, this is where you update instance variables that are used elsewhere for drawing operations
+                    based on the user action event
+                 */
+                    case MotionEvent.ACTION_DOWN:
+                        System.out.println(event.getX());
+                        break;
+                }
+
+                return false;
+            }
+        });
+
+
     }
     @Override
     protected void onSizeChanged(int width, int height,
@@ -59,15 +103,25 @@ public class GraphLogic extends View {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
         view_width = width;
         view_height = height;
+        mExtraBitmap = Bitmap.createBitmap(width, height,
+                Bitmap.Config.ARGB_8888);
+        mExtraCanvas = new Canvas(mExtraBitmap);
     }
+
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        canvas.drawBitmap(mExtraBitmap, testing, 0, null);
         canvas.drawLine(0, view_height / 2, view_width, view_height / 2, paint);
         if (graphState) {
             startGraphing(canvas);
         }
+        if(liveAudioState){
+            startLiveAudio(canvas);
+        }
     }
+
     @Override
     protected void onMeasure(int width, int height) {
         super.onMeasure(width, height);
@@ -86,22 +140,32 @@ public class GraphLogic extends View {
             System.out.println("FAILED TO READ BUFFER");
         }
         short[] chunk = Convert.getShortsFromBytes(buffer);
-        for(int i=0; i<chunk.length; i++) {
-
-            /*
-            graph_pos+=.1;
-            canvas.drawLine(graph_pos, view_height / 2, graph_pos, (float) ((view_height / 2) - chunk[i]*.05),paint);
-            canvas.translate(+1,0);
-            invalidate();
-             */
-            graph_pos+=.1;
-            canvas.drawLine(graph_pos, view_height / 2, graph_pos, (float) ((view_height / 2) - chunk[i]*(view_height/65535)),paint);
-            canvas.translate(+1,0);
-            //invalidate();
+        float[] test = new float[chunk.length * 4];
+        iter += pixel_density;
+        for (int i = 4; i < chunk.length; i += 4) {
+            test[i - 4] = iter;
+            test[i - 3] = view_height / 2;
+            test[i - 2] = iter;
+            test[i - 1] = (view_height / 2) - chunk[i] * (view_height / 65535);
         }
-        chunk=null;
+        mExtraCanvas.drawLines(test, paint);
         invalidate();
-
+    }
+    private void startLiveAudio(Canvas canvas) {
+        byte[] buffer = new byte[bufferSize];
+        try {
+            jill.read(buffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("FAILED TO READ BUFFER");
+        }
+        short[] chunk = Convert.getShortsFromBytes(buffer);
+        for(int i=0; i<chunk.length; i++) {
+            graph_pos += .1;
+            canvas.drawLine(graph_pos, view_height / 2, graph_pos, (view_height / 2) - chunk[i] * (view_height / 65535), paint);
+            canvas.translate(+1, 0);
+        }
+        invalidate();
     }
 }
 /*

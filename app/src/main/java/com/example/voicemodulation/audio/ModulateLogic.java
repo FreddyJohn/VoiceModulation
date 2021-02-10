@@ -1,5 +1,7 @@
 package com.example.voicemodulation.audio;
 import android.media.AudioFormat;
+
+import java.io.DataOutputStream;
 import java.util.Arrays;
 import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.audio.util.Convert;
@@ -17,6 +19,7 @@ public class ModulateLogic {
     private static int SELECTED_AUDIO_ENCODING;
     private static String CREATION_NAME;
     private static FileOutputStream out;
+    private static DataOutputStream jack;
     private static double[] params;
     private static double n;
     public ModulateLogic(double[] _params, AudioFile recording){
@@ -26,12 +29,16 @@ public class ModulateLogic {
         PLAYBACK_SAMPLE_RATE = recording.getSampleRate();}
     public static void setFileOutputStream(String filePath) {
         try {
-            out = new FileOutputStream(filePath); }
+            out = new FileOutputStream(filePath);
+            //jack = new DataOutputStream(out);
+        }
         catch (FileNotFoundException e) { e.printStackTrace(); } }
     public static void closeFileOutputStream(short[] data) {
         byte[] bytes = Convert.getBytesFromShorts(data);
         try {
             out.write(bytes, 0, bytes.length);
+            //jack.write(bytes);
+            //jack.flush();
             out.close(); }
         catch (IOException e) { e.printStackTrace(); } }
     public static byte[] getBytesFromTrack() {

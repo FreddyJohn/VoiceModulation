@@ -3,6 +3,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.media.AudioFormat;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,9 +13,12 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
+
+import com.example.voicemodulation.MainActivity;
 import com.example.voicemodulation.R;
 import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.audio.RecordLogic;
+import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
 import java.io.IOException;
 import java.util.LinkedList;
@@ -77,6 +81,7 @@ public class RControls extends Fragment {
         controllers = new LinkedList<>();
         RecordLogic record = new RecordLogic();
         GraphLogic graph = getActivity().findViewById(R.id.display);
+        //AudioDisplay audio_display = getActivity().findViewById(R.id.audio_display);
         for (int i = 0; i <titles.length ; i++) {
             Controller controller = new Controller(getContext(),null,quantities[i],scale[i]);
             controller.setParam(titles[i],maxes[i],progress[i]);
@@ -99,6 +104,9 @@ public class RControls extends Fragment {
             //TODO fix this bullshit right here
             record.setRecordingState(false);
             record.startRecording();
+            String nam = Environment.getExternalStorageDirectory().getPath()+"/data.0";
+            MainActivity.setDisplayStream(record.buffer_size,creation.getNewRecordFile());
+            //TODO should graphing actions be done in main activity or somewhere with better more accessible & long term scope
             graph.setGraphState(true,record.buffer_size);
             record_button.setVisibility(View.INVISIBLE);
             pause_button.setVisibility(View.VISIBLE);

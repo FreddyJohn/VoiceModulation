@@ -23,13 +23,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-
 import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.controls.MControls;
 import com.example.voicemodulation.controls.RControls;
+import com.example.voicemodulation.graph.AudioDisplay;
 
-
-
+//TODO you could have a boolean variable for any i of n controller that allows for
+//     scaling of scale based on user feedback to allow for very very very very very fine Hz
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int[] phaser_progress = new int[] {1,10,10,0};
     private final int[] flanger_progress = new int[] {8,4,1};
     private final int record_gravity = Gravity.NO_GRAVITY;
+    private static AudioDisplay display;
     private final String record_control_title = "Record Controls";
     private HorizontalScrollView modulations;
     private RControls record_controls;
@@ -68,9 +69,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                     record_gravity,record_control_title,record_control_progresses);
         modulations = findViewById(R.id.modulations);
         modulations.setVisibility(View.INVISIBLE);
+        display = findViewById(R.id.audio_display);
         //Bundle record_parameters = record_controls.getArguments();
-
-
+    }
+    public static void setDisplayStream(int buffsize,String file){
+        display.setGraphState(true,buffsize,file);
     }
 
     @Override
@@ -253,6 +256,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         AudioFile creation = record_parameters.getParcelable("file");
         double nyquist = (creation.getSampleRate() / 2) / 20;
         closeFragment(R.id.user_controls);
+        //display.setGraphState(true,1000,creation.getNewModulateFile());
         switch (v.getId()) {
             case R.id.backwards:
                 String[] backwards_titles = new String[]{"Volume"};
