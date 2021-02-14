@@ -19,7 +19,6 @@ public class ModulateLogic {
     private static int SELECTED_AUDIO_ENCODING;
     private static String CREATION_NAME;
     private static FileOutputStream out;
-    private static DataOutputStream jack;
     private static double[] params;
     private static double n;
     public ModulateLogic(double[] _params, AudioFile recording){
@@ -30,15 +29,12 @@ public class ModulateLogic {
     public static void setFileOutputStream(String filePath) {
         try {
             out = new FileOutputStream(filePath);
-            //jack = new DataOutputStream(out);
         }
         catch (FileNotFoundException e) { e.printStackTrace(); } }
     public static void closeFileOutputStream(short[] data) {
         byte[] bytes = Convert.getBytesFromShorts(data);
         try {
             out.write(bytes, 0, bytes.length);
-            //jack.write(bytes);
-            //jack.flush();
             out.close(); }
         catch (IOException e) { e.printStackTrace(); } }
     public static byte[] getBytesFromTrack() {
@@ -147,11 +143,7 @@ public class ModulateLogic {
             try {
                 double echo_sample = 0;
                 for (int signal = 0; signal < num_signals + 1; signal++) {
-                    //TODO recall limits of exponential functions. then formulate equation to scale exponent signal given delay
-                    //echo_sample += .1 * carrier_wave[(int) (i - Math.pow(delay, signal))];
                     echo_sample += n * carrier_wave[(int) (i - Math.pow(delay, signal))];
-                    //echo_sample += .1 * carrier_wave[(int) (i - Math.pow(delay, signal))];
-
                 }
                 result[i] = (short) echo_sample;
             } catch (IndexOutOfBoundsException e) {

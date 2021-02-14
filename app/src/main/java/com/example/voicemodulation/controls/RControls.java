@@ -11,6 +11,7 @@ import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 
@@ -19,7 +20,7 @@ import com.example.voicemodulation.R;
 import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.graph.AudioDisplay;
-import com.example.voicemodulation.graph.GraphLogic;
+
 import java.io.IOException;
 import java.util.LinkedList;
 
@@ -32,12 +33,23 @@ public class RControls extends Fragment {
     private static int SELECTED_AUDIO_ENCODING;
     private LinkedList<Controller> controllers;
     private ImageButton play_button, stop_button, record_button, pause_button;
+    private SeekBar seek_bar;
     private Boolean file_state=true;
     private AudioFile creation;
     private HorizontalScrollView modulations;
+    private AudioDisplay display;
+
     public RControls(){}
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        System.out.println("record fragment has entered onPause. Now hiding fragment to keep listeners alive");
+        getActivity().getSupportFragmentManager().beginTransaction().hide(this).commit();
+    }
+
     public static RControls newInstance(String[] title, int[] maxes, int[] scale, String[]
-            quantity_type,int gravity, String name, int[] progress) {
+            quantity_type, int gravity, String name, int[] progress) {
         RControls controls = new RControls();
         Bundle args = new Bundle();
         args.putString("name",name);
@@ -53,13 +65,15 @@ public class RControls extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup _container, Bundle savedInstanceState) {
         Bundle args = getArguments();
         modulations = getActivity().findViewById(R.id.modulations);
-        modulations.setVisibility(View.INVISIBLE);
+        display = getActivity().findViewById(R.id.audio_display);
+        seek_bar = getActivity().findViewById(R.id.seek);
         sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
         editor = sharedPref.edit();
         play_button = getActivity().findViewById(R.id.play_recording);
         record_button = getActivity().findViewById(R.id.start_recording);
         pause_button = getActivity().findViewById(R.id.pause_recording);
         stop_button = getActivity().findViewById(R.id.stop_recording);
+        seek_bar = getActivity().findViewById(R.id.seek);
         play_button.setVisibility(View.INVISIBLE);
         stop_button.setVisibility(View.INVISIBLE);
         pause_button.setVisibility(View.INVISIBLE);
@@ -80,11 +94,11 @@ public class RControls extends Fragment {
         modulation_type.setText(name);
         controllers = new LinkedList<>();
         RecordLogic record = new RecordLogic();
-        GraphLogic graph = getActivity().findViewById(R.id.display);
+        //GraphLogic graph = getActivity().findViewById(R.id.display);
         //AudioDisplay audio_display = getActivity().findViewById(R.id.audio_display);
         for (int i = 0; i <titles.length ; i++) {
             Controller controller = new Controller(getContext(),null,quantities[i],scale[i]);
-            controller.setParam(titles[i],maxes[i],progress[i]);
+            controller.setParam(titles[i],maxes[i],progress[i]); //TODO add conditional for these cases -> encodingSeeker(params[4]),channelSeeker(params[3])formatSeeker(params[2])
             controllers.add(controller);
             controls_view.addView(controller); }
         int[] params = new int[maxes.length];
@@ -96,25 +110,33 @@ public class RControls extends Fragment {
             creation = new AudioFile(params[0],params[1],
                                            encodingSeeker(params[4]),channelSeeker(params[3]),
                                            formatSeeker(params[2]));
+
             int file_index = sharedPref.getInt("index", 1);
             editor.putInt("index", file_index += 1);
+            seek_bar.setVisibility(View.GONE);
             editor.apply();
             creation.setFilePath(creation.getNewRecordFile());
             record.setFileObject(creation, file_state);
-            //TODO fix this bullshit right here
+            file_state = false;
             record.setRecordingState(false);
             record.startRecording();
             String nam = Environment.getExternalStorageDirectory().getPath()+"/data.0";
-            MainActivity.setDisplayStream(record.buffer_size,creation.getNewRecordFile());
-            //TODO should graphing actions be done in main activity or somewhere with better more accessible & long term scope
-            graph.setGraphState(true,record.buffer_size);
+            display.setVisibility(View.VISIBLE);
+            MainActivity.setGraphStream(record.buffer_size,creation.getNewRecordFile(),true);
+            MainActivity.setDisplayStream(record.buffer_size,creation.getNewRecordFile(),true);
+            //TODO move me into main via calling method just like this dude ^
+            //graph.setGraphState(true,record.buffer_size);
             record_button.setVisibility(View.INVISIBLE);
             pause_button.setVisibility(View.VISIBLE);
+            //args.putParcelable("file",creation);
         });
         stop_button.setOnClickListener(v -> {
             record.stopRecording();
         });
+
         pause_button.setOnClickListener(v -> {
+            display.setVisibility(View.GONE);
+            seek_bar.setVisibility(View.VISIBLE);
             modulations.setVisibility(View.VISIBLE);
             play_button.setVisibility(View.VISIBLE);
             stop_button.setVisibility(View.VISIBLE);
@@ -124,20 +146,15 @@ public class RControls extends Fragment {
             pause_button.setVisibility(View.INVISIBLE);
             record_button.setVisibility(View.VISIBLE);
             args.putParcelable("file",creation);
-            //System.out.println("YOU PRESSED PAUSE");
-            //file_state=false;
-            //record.setRecordingState(true);
-           // pause_button.setVisibility(View.INVISIBLE);
-            //record_button.setVisibility(View.VISIBLE);
+            args.putInt("buff_size",record.buffer_size);
+            //graph.setGraphState(false,record.buffer_size);
+            MainActivity.setGraphStream(record.buffer_size,creation.getNewRecordFile(),false);
+            MainActivity.setDisplayStream(record.buffer_size,creation.getNewRecordFile(),false);
             });
+
+
         play_button.setOnClickListener(v-> new Thread(()->{ try { record.play_recording();}
         catch (IOException e) { e.printStackTrace();}}).start());
-        //AudioFile file = new AudioFile();
-        //RecordLogic recordLogic = new RecordLogic();
-        //creation.setFilePath(creation.getNewModulateFile());
-        //creation.setFilePath("/sdcard/Music/test.pcm"); // this the modulation file that we want to play duh
-        //recordLogic.setFileData(creation);
-        //double[] params = new double[maxes.length];
 
         return rootView; }
 

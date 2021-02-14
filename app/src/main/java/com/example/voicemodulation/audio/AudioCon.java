@@ -102,26 +102,6 @@ public class AudioCon {
     }
     }
 
-    public static class Pipes {
-        public PipedReader getReaderObject() {
-            PipedReader reader = new PipedReader();
-            return reader;
-        }
-
-        public PipedWriter getWriterObject() {
-            PipedWriter writer = new PipedWriter();
-            return writer;
-        }
-
-        public void connectPipes(PipedReader reader, PipedWriter writer) {
-            try {
-                writer.connect(reader);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
     public static class Data{
         @RequiresApi(api = Build.VERSION_CODES.O)
         public static short[] getShorts(String filePath){

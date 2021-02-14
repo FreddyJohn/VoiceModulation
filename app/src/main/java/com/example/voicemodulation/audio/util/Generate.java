@@ -33,6 +33,13 @@ package com.example.voicemodulation.audio.util;
 //  first plot the series in its continuous form and ensure you are traveling about this form with any x input into given _t function
 //  test math in python then implement final version here
 public class Generate {
+    public static double[] linspace(double min, double max, int points) {
+        double[] d = new double[points];
+        for (int i = 0; i < points; i++) {
+            d[i] = min + i * (max - min) / (points - 1);
+        }
+        return d;
+    }
     public static double[] sin(double a, double f, double p, int samples, int fps) {
         int time = samples/fps;
         double[] t = linspace(0, time, samples);
@@ -82,13 +89,6 @@ public class Generate {
     {
         double y = Math.signum(Math.sin(2*Math.PI*t));
         return y;
-    }
-    public static double[] linspace(double min, double max, int points) {
-        double[] d = new double[points];
-        for (int i = 0; i < points; i++) {
-            d[i] = min + i * (max - min) / (points - 1);
-        }
-        return d;
     }
     public static int mixEquation(int a, int b, int range) {
         int y;

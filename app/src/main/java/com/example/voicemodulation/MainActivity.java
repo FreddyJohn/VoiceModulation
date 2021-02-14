@@ -17,7 +17,10 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
+import android.widget.SeekBar;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -27,6 +30,13 @@ import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.controls.MControls;
 import com.example.voicemodulation.controls.RControls;
 import com.example.voicemodulation.graph.AudioDisplay;
+import com.example.voicemodulation.graph.GraphLogic;
+
+/*TODO remove AudioDisplay implementation from GraphLogic
+    the idea is to have a ViewGroup within MainActivity so that we can
+    remove or add the SeekBar or AudioDisplay based on context
+
+ */
 
 //TODO you could have a boolean variable for any i of n controller that allows for
 //     scaling of scale based on user feedback to allow for very very very very very fine Hz
@@ -35,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private SharedPreferences.Editor editor;
     private final String[] record_control_titles = new String[] {"PlayBack Rate","Sample Rate","Format","Channels","Encoding"};
     private final String[] phaser_titles = new String[] {"Frequency","Carrier Amp","Modulator Amp","Theta"};
-    private final String[] record_control_quantities = new String[]{"Hz","Hz",".wav","mono","Bit"};
+    private final String[] record_control_quantities = new String[]{"Hz","Hz",".wav","mono","Bit"}; //This is the reason why you cannot divide R and M Controls i+3 all []>1
     private final String[] phaser_quantities = new String[] {"Hz","Amp","Amp","θ"};
     private final String[] flanger_titles = new String[] {"Min","Max","Frequency"};
     private final String[] echo_titles = new String[] {"Signals","Delay"};
@@ -46,15 +56,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int[] flanger_progress = new int[] {8,4,1};
     private final int record_gravity = Gravity.NO_GRAVITY;
     private static AudioDisplay display;
+    private static GraphLogic graph;
     private final String record_control_title = "Record Controls";
     private HorizontalScrollView modulations;
     private RControls record_controls;
-    private boolean initial_record_transaction;
+    private FrameLayout seek_n_loader;
+    private SeekBar the_seeker;
     int PERMISSION_ALL = 1;
     private final String[] PERMISSIONS = {
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     Manifest.permission.RECORD_AUDIO};
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,14 +82,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                     record_control_scales,record_control_quantities,
                                                     record_gravity,record_control_title,record_control_progresses);
         modulations = findViewById(R.id.modulations);
-        modulations.setVisibility(View.INVISIBLE);
+        //modulations.setVisibility(View.INVISIBLE);
         display = findViewById(R.id.audio_display);
+        the_seeker = findViewById(R.id.seek);
+        seek_n_loader = findViewById(R.id.seek_n_load);
+        graph = findViewById(R.id.display);
         //Bundle record_parameters = record_controls.getArguments();
     }
-    public static void setDisplayStream(int buffsize,String file){
-        display.setGraphState(true,buffsize,file);
+    //TODO im pretty sure you are going to need to do some state saving or something here in order to fix
+    //  fragments vanishing on exit (onStop?) or have to do something with how you are adding with fragment transactions
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+    @Override
+    protected void onStop() {
+        super.onStop();
     }
 
+    //TODO remove the file param
+    public static void setGraphStream(int buffsize, String file, boolean state){
+        graph.setGraphState(state,buffsize);
+    }
+    public static void setDisplayStream(int buffsize, String file, boolean state) {
+        display.setGraphState(state, buffsize, file);
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
@@ -229,8 +264,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .beginTransaction();
         fragmentTransaction.add(R.id.user_controls,
                 controls).commit();
-        initial_record_transaction=true;
         return controls; }
+
+    //closeFragment has the effect of forcing a fragment through the rest of its lifecycle
+    //part of that lifecycle is onPause
+    //we can override this in the fragment to get the behavior we want for record and modulate fragments respectively
+    //removing it in modulate case and hiding it in record case
     public void closeFragment(int resource_id) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         Fragment controller_type = fragmentManager
@@ -238,8 +277,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (controller_type != null) {
             FragmentTransaction fragmentTransaction =
                     fragmentManager.beginTransaction();
-            //TODO hide vs remove I do not want a bunch of modulation fragment initializations just hanging out
-            fragmentTransaction.hide(controller_type).commit(); } }
+                fragmentTransaction.remove(controller_type).commit(); } }
 
     public MControls displayMFragment(String[] titles, int[] maxes, double[] scale, String[] quantity_type,AudioFile creation,
                                      String method, int gravity, String name, int[] progress) {
@@ -250,15 +288,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         fragmentTransaction.add(R.id.user_controls,
                 controls).commit();
         return controls; }
+
     @Override
     public void onClick(View v) {
         Bundle record_parameters = record_controls.getArguments();
         AudioFile creation = record_parameters.getParcelable("file");
+        int buff_size = record_parameters.getInt("buff_size");
         double nyquist = (creation.getSampleRate() / 2) / 20;
-        closeFragment(R.id.user_controls);
+        //closeFragment(R.id.user_controls,true);
         //display.setGraphState(true,1000,creation.getNewModulateFile());
         switch (v.getId()) {
             case R.id.backwards:
+                closeFragment(R.id.user_controls);
                 String[] backwards_titles = new String[]{"Volume"};
                 int[] backwards_maxes = new int[]{10};
                 displayMFragment(backwards_titles, backwards_maxes, new double[]{.1},
@@ -266,12 +307,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         "Backwards Effect", new int[]{10});
                 break;
             case R.id.echo:
+                closeFragment(R.id.user_controls);
                 int[] echo_maxes = new int[]{10, 10};
                 displayMFragment(echo_titles, echo_maxes, new double[]{1, 1},
                         new String[]{"S", "D"}, creation, "makeEchoCreation", Gravity.CENTER,
                         "Echo Effect", new int[]{5, 6});
                 break;
             case R.id.quantize:
+                closeFragment(R.id.user_controls);
                 String[] robotic_titles = new String[]{"Quantize", "Amplitude"};
                 int[] robotic_maxes = new int[]{10, 10};
                 displayMFragment(robotic_titles, robotic_maxes, new double[]{1000, .1},
@@ -279,47 +322,55 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         "Quantize Audio Sample", new int[]{5, 10});
                 break;
             case R.id.phaser:
+                closeFragment(R.id.user_controls);
                 int[] phaser_maxes = new int[]{20, 10, 10, 20};
                 displayMFragment(phaser_titles, phaser_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
                         phaser_quantities, creation, "makePhaserCreation", Gravity.NO_GRAVITY,
                         "Phaser with Sine Wave", phaser_progress);
                 break;
             case R.id.phaser_triangle:
+                closeFragment(R.id.user_controls);
                 int[] alien_maxes = new int[]{20, 10, 10, 10};
                 displayMFragment(phaser_titles, alien_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
                         phaser_quantities, creation, "makePhaserTriangleCreation", Gravity.NO_GRAVITY,
                         "Phaser with Triangle Wave", phaser_progress);
                 break;
             case R.id.phaser_square:
+                closeFragment(R.id.user_controls);
                 int[] square_maxes = new int[]{20, 10, 10, 10};
                 displayMFragment(phaser_titles, square_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
                         phaser_quantities, creation, "makePhaserSquareCreation", Gravity.NO_GRAVITY,
                         "Phaser with Square Wave", phaser_progress);
                 break;
             case R.id.phaser_saw:
+                closeFragment(R.id.user_controls);
                 int[] saw_maxes = new int[]{20, 10, 10, 10};
                 displayMFragment(phaser_titles, saw_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
                         phaser_quantities, creation, "makePhaserSawCreation", Gravity.NO_GRAVITY,
                         "Phaser with Saw Wave", phaser_progress);
                 break;
             case R.id.flanger:
+                closeFragment(R.id.user_controls);
                 int[] flanger_maxes = new int[]{10, 10, 20};
                 displayMFragment(flanger_titles, flanger_maxes, new double[]{10, 10, nyquist},
                         new String[]{null, null, "Hz"}, creation, "makeFlangerCreation", Gravity.NO_GRAVITY,
                         "Flanger with Sine Wave", flanger_progress);
                 break;
             case R.id.flanger_triangle:
+                closeFragment(R.id.user_controls);
                 int[] flanger_triangle_maxes = new int[]{10, 10, 20};
                 displayMFragment(flanger_titles, flanger_triangle_maxes, new double[]{10, 10, nyquist},
                         new String[]{null, null, "Hz"}, creation, "makeFlangerTriangleCreation", Gravity.NO_GRAVITY,
                         "Flanger with Triangle Wave", flanger_progress);
                 break;
             case R.id.flanger_square:
+                closeFragment(R.id.user_controls);
                 int[] flanger_square_maxes = new int[]{10, 10, 20};
                 displayMFragment(flanger_titles, flanger_square_maxes, new double[]{10, 10, nyquist},
                         new String[]{null, null, "Hz"}, creation, "makeFlangerSquareCreation", Gravity.NO_GRAVITY,
                         "Flanger with Square Wave", flanger_progress);
                 break;
+
             }
 
     }

@@ -16,7 +16,7 @@ public class ControlBar extends androidx.appcompat.widget.AppCompatSeekBar {
         super(context, attrs);
         setProgress(2);
         setRotation(270);
-        setProgressTintList(ColorStateList.valueOf(Color.WHITE));
+        setProgressTintList(ColorStateList.valueOf(Color.rgb(75,75,75)));
         Drawable t = context.getDrawable(R.drawable.seekbar_thumb);
         setThumb(t);
     }
@@ -33,14 +33,14 @@ public class ControlBar extends androidx.appcompat.widget.AppCompatSeekBar {
     protected synchronized void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         Paint paint = new Paint();
-        paint.setColor(Color.WHITE);
+        paint.setColor(Color.rgb(115,115,115));
         DisplayMetrics display = Resources.getSystem().getDisplayMetrics();
         int dp = (int) display.density;
         paint.setStrokeWidth(5);
         int height = getHeight();
         int width = getWidth();
         int spacing = width / getMax();
-        int tickwidth = dp;
+        int tickwidth = dp*3;
         if (getMax() > 2) {
             for (int i = 1; i < getMax(); i++) {
                 width -= spacing;

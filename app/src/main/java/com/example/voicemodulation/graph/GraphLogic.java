@@ -9,16 +9,19 @@ import android.os.Environment;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.SeekBar;
 
 import com.example.voicemodulation.MainActivity;
 import com.example.voicemodulation.R;
+import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.util.Convert;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.LinkedList;
 public class GraphLogic extends View {
     private float pixel_density;
@@ -63,36 +66,26 @@ public class GraphLogic extends View {
         try {
             //TODO fix this shit
             String name = Environment.getExternalStorageDirectory().getPath()+"/rec.pcm";
-            File i = new File(name);
+            //File i = new File(name);
             this.jill = new DataInputStream(new FileInputStream(name));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        try {
-            //TODO fix this shit
-            String name = Environment.getExternalStorageDirectory().getPath()+"/rec.pcm";
-            File i = new File(name);
-            this.jane = new DataInputStream(new FileInputStream(name));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        setOnTouchListener(new OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                 /*TODO
-                    do not think of this as being where the drawable will take place
-                    from direct input from the user.
-                    Rather, this is where you update instance variables that are used elsewhere for drawing operations
-                    based on the user action event
-                 */
-                    case MotionEvent.ACTION_DOWN:
-                        System.out.println(event.getX());
-                        break;
-                }
 
-                return false;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        setOnTouchListener((v, event) -> {
+            switch (event.getAction() & MotionEvent.ACTION_MASK) {
+             /*TODO
+                do not think of this as being where the drawable will take place
+                from direct input from the user.
+                Rather, this is where you update instance variables that are used elsewhere for drawing operations
+                based on the user action event
+             */
+                case MotionEvent.ACTION_DOWN:
+                    System.out.println(event.getX());
+                    break;
             }
+
+            return false;
         });
 
 
@@ -101,25 +94,29 @@ public class GraphLogic extends View {
     protected void onSizeChanged(int width, int height,
                                  int oldWidth, int oldHeight) {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
-        view_width = width;
-        view_height = height;
-        mExtraBitmap = Bitmap.createBitmap(width, height,
-                Bitmap.Config.ARGB_8888);
-        mExtraCanvas = new Canvas(mExtraBitmap);
+        if (oldWidth==0 && oldHeight==0)
+        {
+            mExtraBitmap = Bitmap.createBitmap(width, height,
+                    Bitmap.Config.ARGB_8888);
+            mExtraCanvas = new Canvas(mExtraBitmap);
+            view_width = width;
+            view_height = height;
+        } else {
+            view_width = oldWidth;
+            view_height = oldHeight;
+        }
+
+
     }
-
-
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        canvas.drawBitmap(mExtraBitmap, testing, 0, null);
+        canvas.drawBitmap(mExtraBitmap, 0, 0, null);
         canvas.drawLine(0, view_height / 2, view_width, view_height / 2, paint);
         if (graphState) {
-            startGraphing(canvas);
+            startGraphing();
         }
-        if(liveAudioState){
-            startLiveAudio(canvas);
-        }
+
     }
 
     @Override
@@ -131,7 +128,7 @@ public class GraphLogic extends View {
     }
     public void setGraphState(boolean state, int buffer_size) { this.graphState=state;
     this.bufferSize=buffer_size; invalidate();}
-    public void startGraphing(Canvas canvas) {
+    public void startGraphing() {
         byte[] buffer = new byte[bufferSize];
         try {
             jill.read(buffer);
@@ -151,22 +148,7 @@ public class GraphLogic extends View {
         mExtraCanvas.drawLines(test, paint);
         invalidate();
     }
-    private void startLiveAudio(Canvas canvas) {
-        byte[] buffer = new byte[bufferSize];
-        try {
-            jill.read(buffer);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("FAILED TO READ BUFFER");
-        }
-        short[] chunk = Convert.getShortsFromBytes(buffer);
-        for(int i=0; i<chunk.length; i++) {
-            graph_pos += .1;
-            canvas.drawLine(graph_pos, view_height / 2, graph_pos, (view_height / 2) - chunk[i] * (view_height / 65535), paint);
-            canvas.translate(+1, 0);
-        }
-        invalidate();
-    }
+
 }
 /*
 TODO know this like the back of your hand ->
