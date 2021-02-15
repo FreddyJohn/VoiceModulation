@@ -1,9 +1,6 @@
 package com.example.voicemodulation.audio;
 import android.media.AudioFormat;
 
-import java.io.DataOutputStream;
-import java.util.Arrays;
-import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.audio.util.Convert;
 import com.example.voicemodulation.audio.util.Generate;
 import java.io.File;
@@ -32,7 +29,7 @@ public class ModulateLogic {
         }
         catch (FileNotFoundException e) { e.printStackTrace(); } }
     public static void closeFileOutputStream(short[] data) {
-        byte[] bytes = Convert.getBytesFromShorts(data);
+        byte[] bytes = Convert.bytesToShorts(data);
         try {
             out.write(bytes, 0, bytes.length);
             out.close(); }
@@ -51,9 +48,9 @@ public class ModulateLogic {
     public static short[] getAudioData() {
         byte[] bytes = getBytesFromTrack();
         setFileOutputStream(MODULATION_NAME);
-        short[] shorts = Convert.getShortsFromBytes(bytes);
+        short[] shorts = Convert.shortsToBytes(bytes);
         n=Generate.getNormalizationCoefficient(shorts);
-        System.out.println("ALL THAT TALK:"+n);
+        //System.out.println("ALL THAT TALK:"+n);
         return shorts; }
 
     public static void makeBackwardsCreation() {

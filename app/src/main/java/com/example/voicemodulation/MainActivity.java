@@ -26,11 +26,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+
+import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.controls.MControls;
 import com.example.voicemodulation.controls.RControls;
 import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
+
+import java.io.IOException;
+import java.io.RandomAccessFile;
 
 /*TODO remove AudioDisplay implementation from GraphLogic
     the idea is to have a ViewGroup within MainActivity so that we can
@@ -108,8 +113,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static void setGraphStream(int buffsize, String file, boolean state){
         graph.setGraphState(state,buffsize);
     }
-    public static void setDisplayStream(int buffsize, String file, boolean state) {
-        display.setGraphState(state, buffsize, file);
+    public static void setDisplayStream(int buffsize, String file, boolean state, int length) {
+        display.setGraphState(state, buffsize, file, length);
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -263,7 +268,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         FragmentTransaction fragmentTransaction = fragmentManager
                 .beginTransaction();
         fragmentTransaction.add(R.id.user_controls,
-                controls).commit();
+                controls).addToBackStack(null).commit();
         return controls; }
 
     //closeFragment has the effect of forcing a fragment through the rest of its lifecycle

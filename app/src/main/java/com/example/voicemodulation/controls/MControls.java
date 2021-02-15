@@ -15,6 +15,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.example.voicemodulation.MainActivity;
+import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.ModulateLogic;
 import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.audio.RecordLogic;
@@ -22,6 +23,7 @@ import com.example.voicemodulation.R;
 import com.example.voicemodulation.graph.AudioDisplay;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 
@@ -38,9 +40,34 @@ public class MControls extends Fragment {
     public void onPause() {
         super.onPause();
         System.out.println("modulate fragment has entered onPause. Now removing fragment to save memory");
-        getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
+        //getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        System.out.println("modulate fragment has entered onResume.");
+        //getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
+    }
+    @Override
+    public void onStop() {
+        super.onStop();
+        System.out.println("modulate fragment has entered onStop.");
+        //getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
+    }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        System.out.println("modulate fragment has entered onDestroy.");
+        //getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        System.out.println("modulate fragment has entered onStart.");
+        //getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
+    }
 
     public static MControls newInstance(String[] title, int[] maxes, double[] scale, String[]
                                         quantity_type, AudioFile creation, String method,
@@ -75,13 +102,22 @@ public class MControls extends Fragment {
         int[] progress = args.getIntArray("progress");
         final View rootView = inflater.inflate(R.layout.user_controls, _container, false);
         LinearLayout controls_view = rootView.findViewById(R.id.n_parameters);
-        LayoutParams view_params = new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.MATCH_PARENT);
+        FrameLayout.LayoutParams view_params = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.MATCH_PARENT);
         view_params.gravity = gravity;
         controls_view.setLayoutParams(view_params);
         TextView modulation_type = rootView.findViewById(R.id.modulation_type);
         modulation_type.setText(name);
         play_button = getActivity().findViewById(R.id.play_recording);
         //stop_button = getActivity().findViewById(R.id.pause_recording);
+        AudioCon.IO_RAF con = new AudioCon.IO_RAF(creation.getNewModulateFile());
+        RandomAccessFile f = con.getReadObject();
+        int length=0;
+        try {
+             length= (int) f.length();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         controllers = new LinkedList<>();
         for (int i = 0; i <titles.length ; i++) {
             Controller controller = new Controller(getContext(),null,quantities[i],scale[i]);
@@ -93,22 +129,59 @@ public class MControls extends Fragment {
         //creation.setFilePath("/sdcard/Music/test.pcm"); // this the modulation file that we want to play duh
         recordLogic.setFileData(creation);
         double[] params = new double[maxes.length];
-        display.setVisibility(View.VISIBLE);
+        int finalLength = length;
+        //boolean activated = display.isActivated();
+        System.out.println("length of file in bytes: "+length);
         seek_bar.setVisibility(View.GONE);
-        MainActivity.setDisplayStream(1000,creation.getNewModulateFile(),true);
-        play_button.setOnClickListener(v ->  new Thread(() ->{
+        getActivity().runOnUiThread(() -> {
+            try {
+                MainActivity.setDisplayStream(finalLength, creation.getNewModulateFile(), false, 0);
+            }
+            catch (NullPointerException e){}});
+        play_button.setOnClickListener(v -> new Thread(() ->{
             for (int i = 0; i <maxes.length; i++) { params[i]=controllers.get(i).getProgress()*scale[i]; }
             modulate = new ModulateLogic(params,creation);
-            //MainActivity.setDisplayStream(1000,creation.getNewModulateFile(),true);
+            try{
+                /*
+                getActivity().runOnUiThread(() -> {
+                    if (activated){
+                        MainActivity.setDisplayStream(finalLength,creation.getNewModulateFile(),false,0);
+                        display.setActivated(false);}});
+
+                 */
+                getActivity().runOnUiThread(() ->{
+                    System.out.println("display setting visible");
+                    //seek_bar.setVisibility(View.GONE);
+                    //display.setActivated(false);
+                    //if (!activated){
+                     //   display.setActivated(true);
+                    display.setVisibility(View.VISIBLE);
+                    MainActivity.setDisplayStream(finalLength,creation.getNewModulateFile(),true, 0);
+               // }
+                //if (a==true){display.setActivated(false);}
+                //display.setVisibility(View.VISIBLE);
+               // MainActivity.setDisplayStream(finalLength,creation.getNewModulateFile(),true, 0);
+                });}
+
+            catch (NullPointerException e){}
             try { invokeMethod(modulate.getClass().getMethod(method)); }
             catch (Exception e) { e.printStackTrace(); }
             try {
                 recordLogic.play_recording();
-                MainActivity.setDisplayStream(1000,creation.getNewModulateFile(),false);
-            }
-            catch (IOException e) { e.printStackTrace(); } }).start());
+                getActivity().runOnUiThread(() ->{
+                    //System.out.println("display setting gone");
+                    //display.setVisibility(View.GONE);
+                    //seek_bar.setVisibility(View.VISIBLE);
+                    //display.setActivated(false);
+                    //if (display.isActivated()){
+                    //MainActivity.setDisplayStream(finalLength,creation.getNewModulateFile(),false,0);
+                    //    display.setActivated(false);}
+                });
+            } catch (IOException e) { e.printStackTrace(); }
+              catch (NullPointerException e){ e.printStackTrace(); }}).start());
         play_button.setOnLongClickListener(v -> {
             try {
+                //getActivity().runOnUiThread(() -> MainActivity.setDisplayStream(1000,creation.getNewRecordFile(),true,0));
                 creation.setFilePath(creation.getNewRecordFile());
                 recordLogic.setFileData(creation);
                 recordLogic.play_recording();

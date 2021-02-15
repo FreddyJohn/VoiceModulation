@@ -11,12 +11,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PipedReader;
-import java.io.PipedWriter;
 import java.io.RandomAccessFile;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class AudioCon {
 
@@ -106,7 +101,7 @@ public class AudioCon {
         @RequiresApi(api = Build.VERSION_CODES.O)
         public static short[] getShorts(String filePath){
             byte[] bytes =getBytes(filePath);
-            short[] shorts = Convert.getShortsFromBytes(bytes);
+            short[] shorts = Convert.shortsToBytes(bytes);
             return shorts;
         }
         public static byte[] getBytes(String filePath) {

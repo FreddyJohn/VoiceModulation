@@ -25,13 +25,13 @@ public class Convert {
         return bytes;
     }
 
-    public static short[] getShortsFromBytes(byte[] track) {
+    public static short[] shortsToBytes(byte[] track) {
         short[] shorts = new short[track.length / 2];
         ByteBuffer.wrap(track).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shorts);
         return shorts;
     }
 
-    public static byte[] getBytesFromShorts(short[] track) {
+    public static byte[] bytesToShorts(short[] track) {
         byte[] bytes = new byte[track.length * 2];
         ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(track);
         return bytes;
