@@ -25,7 +25,7 @@ public class Convert {
         return bytes;
     }
 
-    public static short[] getShortsFromBytes(byte[] track) {
+    public static short[] shortsToBytes(byte[] track) {
         short[] shorts = new short[track.length / 2];
         ByteBuffer.wrap(track).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shorts);
         return shorts;

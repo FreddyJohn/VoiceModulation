@@ -2,14 +2,12 @@ package com.example.voicemodulation.graph;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 import androidx.annotation.Nullable;
@@ -18,7 +16,6 @@ import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.util.Convert;
 
 import java.io.DataInputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -115,26 +112,43 @@ public class AudioDisplay extends View {
         this.view_height = MeasureSpec.getSize(height);
         setMeasuredDimension(width, height);
     }
-    public void setGraphState(boolean state, int buffer_size,String in_file) { //TODO we need to know about SeekBar position
+    private void skipBytes(int offset){
+        try {
+            System.out.println("Length in Bytes: "+ offset);
+            System.out.println("Bytes skipped: "+jane.skipBytes(offset));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setGraphState(boolean state, int buffer_size,String in_file,int n) { //TODO we need to know about SeekBar position
         //TODO there are two different ways in which this class will be used
         //  1.) display input stream from n offset of memory location
         //  2.) display the entire stream
         //  both of these conditions can be described with one variable -> the offset 1.) = n , 2.) = 0
         this.graphState=state;
         this.bufferSize=buffer_size;
+        //File i = new File(in_file);
         try {
-            //File i = new File(in_file);
             this.jane = new DataInputStream(new FileInputStream(in_file));
-            AudioCon.IO_RAF con = new AudioCon.IO_RAF(in_file);
-            RandomAccessFile f = con.getReadObject();
-            long length = f.length();
-            this.jane = new DataInputStream(new FileInputStream(in_file));
-            System.out.println("Length in Bytes: "+ f.length());
-            System.out.println("Bytes skipped: "+jane.skipBytes((int) length));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        }
+        switch (n){
+            case 0:
+                skipBytes(0);
+                this.bufferSize= (int) view_width;
+
+                break;
+            case 1:
+                AudioCon.IO_RAF con = new AudioCon.IO_RAF(in_file);
+                RandomAccessFile f = con.getReadObject();
+                try {
+                    skipBytes((int) f.length());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
         }
         invalidate(); }
     public void startGraphing(Canvas canvas) {
@@ -145,9 +159,9 @@ public class AudioDisplay extends View {
             e.printStackTrace();
             System.out.println("FAILED TO READ BUFFER");
         }
-        short[] chunk = Convert.getShortsFromBytes(buffer);
+        short[] chunk = Convert.shortsToBytes(buffer);
         for(int i=0; i<chunk.length; i++) {
-            graph_pos += .1;
+            graph_pos += .1; //TODO this is a variable for two different cases for 1 no change, for 0 change
             canvas.drawLine(graph_pos, view_height / 2, graph_pos, (view_height / 2) - chunk[i] * (view_height / 65535), paint);
             canvas.translate(+1, 0);
         }

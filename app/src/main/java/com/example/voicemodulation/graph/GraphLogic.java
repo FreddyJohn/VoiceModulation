@@ -9,19 +9,13 @@ import android.os.Environment;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.SeekBar;
 
-import com.example.voicemodulation.MainActivity;
-import com.example.voicemodulation.R;
-import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.util.Convert;
 import java.io.DataInputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.LinkedList;
 public class GraphLogic extends View {
     private float pixel_density;
@@ -136,7 +130,7 @@ public class GraphLogic extends View {
             e.printStackTrace();
             System.out.println("FAILED TO READ BUFFER");
         }
-        short[] chunk = Convert.getShortsFromBytes(buffer);
+        short[] chunk = Convert.shortsToBytes(buffer);
         float[] test = new float[chunk.length * 4];
         iter += pixel_density;
         for (int i = 4; i < chunk.length; i += 4) {

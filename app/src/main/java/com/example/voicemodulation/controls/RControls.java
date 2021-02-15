@@ -17,11 +17,13 @@ import androidx.fragment.app.Fragment;
 
 import com.example.voicemodulation.MainActivity;
 import com.example.voicemodulation.R;
+import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.graph.AudioDisplay;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.LinkedList;
 
 public class RControls extends Fragment {
@@ -40,7 +42,8 @@ public class RControls extends Fragment {
     private AudioDisplay display;
 
     public RControls(){}
-
+    //TODO the consequence of this is that anytime the user exits the application fragment is hidden
+    //  and consequently, a redraw of GraphLogic is triggered via onSizeChanged
     @Override
     public void onPause() {
         super.onPause();
@@ -63,6 +66,7 @@ public class RControls extends Fragment {
         return controls; }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup _container, Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         Bundle args = getArguments();
         modulations = getActivity().findViewById(R.id.modulations);
         display = getActivity().findViewById(R.id.audio_display);
@@ -123,7 +127,7 @@ public class RControls extends Fragment {
             String nam = Environment.getExternalStorageDirectory().getPath()+"/data.0";
             display.setVisibility(View.VISIBLE);
             MainActivity.setGraphStream(record.buffer_size,creation.getNewRecordFile(),true);
-            MainActivity.setDisplayStream(record.buffer_size,creation.getNewRecordFile(),true);
+            MainActivity.setDisplayStream(record.buffer_size,creation.getNewRecordFile(),true, 1);
             //TODO move me into main via calling method just like this dude ^
             //graph.setGraphState(true,record.buffer_size);
             record_button.setVisibility(View.INVISIBLE);
@@ -133,7 +137,6 @@ public class RControls extends Fragment {
         stop_button.setOnClickListener(v -> {
             record.stopRecording();
         });
-
         pause_button.setOnClickListener(v -> {
             display.setVisibility(View.GONE);
             seek_bar.setVisibility(View.VISIBLE);
@@ -149,7 +152,7 @@ public class RControls extends Fragment {
             args.putInt("buff_size",record.buffer_size);
             //graph.setGraphState(false,record.buffer_size);
             MainActivity.setGraphStream(record.buffer_size,creation.getNewRecordFile(),false);
-            MainActivity.setDisplayStream(record.buffer_size,creation.getNewRecordFile(),false);
+            MainActivity.setDisplayStream(record.buffer_size,creation.getNewRecordFile(),false, 1);
             });
 
 

@@ -1,9 +1,6 @@
 package com.example.voicemodulation.audio;
 import android.media.AudioFormat;
 
-import java.io.DataOutputStream;
-import java.util.Arrays;
-import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.audio.util.Convert;
 import com.example.voicemodulation.audio.util.Generate;
 import java.io.File;
@@ -51,7 +48,7 @@ public class ModulateLogic {
     public static short[] getAudioData() {
         byte[] bytes = getBytesFromTrack();
         setFileOutputStream(MODULATION_NAME);
-        short[] shorts = Convert.getShortsFromBytes(bytes);
+        short[] shorts = Convert.shortsToBytes(bytes);
         n=Generate.getNormalizationCoefficient(shorts);
         System.out.println("ALL THAT TALK:"+n);
         return shorts; }

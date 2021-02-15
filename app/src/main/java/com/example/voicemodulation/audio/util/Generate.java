@@ -112,7 +112,7 @@ public class Generate {
         return (max/65535)/1.7;
     }
     public static short getAbsoluteMax(byte[] buffer){
-        short[] data=Convert.getShortsFromBytes(buffer);
+        short[] data=Convert.shortsToBytes(buffer);
         short max=0;
         for (int counter = 1; counter < data.length; counter++)
         {

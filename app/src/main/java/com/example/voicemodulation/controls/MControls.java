@@ -15,6 +15,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.example.voicemodulation.MainActivity;
+import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.ModulateLogic;
 import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.audio.RecordLogic;
@@ -22,6 +23,7 @@ import com.example.voicemodulation.R;
 import com.example.voicemodulation.graph.AudioDisplay;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 
@@ -40,7 +42,6 @@ public class MControls extends Fragment {
         System.out.println("modulate fragment has entered onPause. Now removing fragment to save memory");
         getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
     }
-
 
     public static MControls newInstance(String[] title, int[] maxes, double[] scale, String[]
                                         quantity_type, AudioFile creation, String method,
@@ -95,20 +96,21 @@ public class MControls extends Fragment {
         double[] params = new double[maxes.length];
         display.setVisibility(View.VISIBLE);
         seek_bar.setVisibility(View.GONE);
-        MainActivity.setDisplayStream(1000,creation.getNewModulateFile(),true);
-        play_button.setOnClickListener(v ->  new Thread(() ->{
+        play_button.setOnClickListener(v -> new Thread(() ->{
             for (int i = 0; i <maxes.length; i++) { params[i]=controllers.get(i).getProgress()*scale[i]; }
             modulate = new ModulateLogic(params,creation);
-            //MainActivity.setDisplayStream(1000,creation.getNewModulateFile(),true);
+            getActivity().runOnUiThread(() -> MainActivity.setDisplayStream(10000,creation.getNewModulateFile(),false,0));
+            getActivity().runOnUiThread(() -> MainActivity.setDisplayStream(10000,creation.getNewModulateFile(),true, 0));
             try { invokeMethod(modulate.getClass().getMethod(method)); }
             catch (Exception e) { e.printStackTrace(); }
             try {
                 recordLogic.play_recording();
-                MainActivity.setDisplayStream(1000,creation.getNewModulateFile(),false);
-            }
-            catch (IOException e) { e.printStackTrace(); } }).start());
+                getActivity().runOnUiThread(() -> MainActivity.setDisplayStream(10000,creation.getNewModulateFile(),false,0));
+            } catch (IOException e) { e.printStackTrace(); }
+              catch (NullPointerException e){ e.printStackTrace(); }}).start());
         play_button.setOnLongClickListener(v -> {
             try {
+                //getActivity().runOnUiThread(() -> MainActivity.setDisplayStream(1000,creation.getNewRecordFile(),true,0));
                 creation.setFilePath(creation.getNewRecordFile());
                 recordLogic.setFileData(creation);
                 recordLogic.play_recording();
