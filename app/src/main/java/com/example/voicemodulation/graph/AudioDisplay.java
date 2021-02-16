@@ -58,6 +58,8 @@ public class AudioDisplay extends View {
     private LinkedList<Short> data;
     private int graph_pos=0;
     private double iter=.1;
+    private int dynamicRange;
+
     public AudioDisplay(Context context) {
         super(context);
         init(context, null);
@@ -102,8 +104,11 @@ public class AudioDisplay extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (graphState) {
+        if (graphState & dynamicRange==Short.MAX_VALUE*2+1) {
             startGraphing(canvas);
+        }
+        if(graphState & dynamicRange==Byte.MAX_VALUE*2+1){
+            startGraphingBytes(canvas);
         }
     }
     @Override
@@ -122,7 +127,7 @@ public class AudioDisplay extends View {
             e.printStackTrace();
         }
     }
-
+    public void setEncoding(int _dynamicRange){this.dynamicRange=_dynamicRange;}
     public void setGraphState(boolean state, int buffer_size,String in_file,int n) { //TODO we need to know about SeekBar position
         //TODO there are two different ways in which this class will be used
         //  1.) display input stream from n offset of memory location
@@ -157,20 +162,37 @@ public class AudioDisplay extends View {
         invalidate(); }
     public void startGraphing(Canvas canvas) {
         byte[] buffer = new byte[bufferSize];
+        short[] chunk = new short[bufferSize*2];
+        try {
+            jane.read(buffer);
+            chunk = Convert.shortsToBytes(buffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("FAILED TO READ BUFFER");
+        }
+        for(int i=0; i<chunk.length; i++) {
+            graph_pos += iter;
+            canvas.drawLine(graph_pos, view_height / 2, graph_pos, (view_height / 2) - chunk[i] * (view_height / dynamicRange), paint);
+            canvas.translate(+1, 0);
+        }
+
+        invalidate();
+    }
+    public void startGraphingBytes(Canvas canvas) {
+        byte[] buffer = new byte[bufferSize];
         try {
             jane.read(buffer);
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("FAILED TO READ BUFFER");
         }
-        short[] chunk = Convert.shortsToBytes(buffer);
-        for(int i=0; i<chunk.length; i++) {
-            graph_pos += iter; //TODO this is a variable for two different cases for 1 no change, for 0 change
-            canvas.drawLine(graph_pos, view_height / 2, graph_pos, (view_height / 2) - chunk[i] * (view_height / 65535), paint);
-            //canvas.translate(+1, 0);
+        for(int i=0; i<buffer.length; i++) {
+            graph_pos += iter;
+            canvas.drawLine(graph_pos, view_height / 2, graph_pos, (view_height / 2) - buffer[i], paint);
+            //canvas.drawLine(graph_pos, view_height / 2, graph_pos, (view_height / 2) - buffer[i] * (view_height / dynamicRange), paint);
+
             canvas.translate(+1, 0);
         }
-
         invalidate();
     }
 }

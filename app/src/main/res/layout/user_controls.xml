@@ -21,7 +21,7 @@
             android:id="@+id/n_parameters"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"></LinearLayout>
+            android:orientation="horizontal" />
     </HorizontalScrollView>
 
 </LinearLayout>

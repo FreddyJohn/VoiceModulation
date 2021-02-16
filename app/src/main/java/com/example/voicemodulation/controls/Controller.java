@@ -6,18 +6,27 @@ import android.view.Gravity;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-
 import androidx.annotation.Nullable;
-
 import com.example.voicemodulation.R;
 
-
 public class Controller extends LinearLayout {
-    private final TextView status;
-    private final TextView title;
-    private final ControlBar param;
-    public Controller(Context context, @Nullable AttributeSet attrs,String type,double scale) {
-        super(context, attrs);
+    private TextView status;
+    private TextView title;
+    private ControlBar param;
+    private String type;
+    private double scale;
+    private boolean zeroCase = true;
+    private RControls.seekers quantityToType;
+    public  Controller(Context context, @Nullable AttributeSet attrs,String type,double scale){
+        super(context,attrs);
+        this.scale = scale;
+        this.type = type;
+        init(context,attrs);}
+    public Controller(Context context, @Nullable AttributeSet attrs){
+        super(context,attrs);
+        init(context,attrs);
+    }
+    public void init(Context context, @Nullable AttributeSet attrs) {
         param = new ControlBar(context,null);
         title = new TextView(context);
         title.setTextAppearance(R.style.StaticSeekBarTitle);
@@ -37,11 +46,14 @@ public class Controller extends LinearLayout {
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
             if (param.getProgress()!=0) {
                 String quantity =String.format("%.2f",param.getProgress()*scale);
+                //TODO all record controls have types associated with their seek bar controller so this conditional is usuless
                 if (type != null) {
                     status.setText(quantity + type);
-                } else {
-                    status.setText(quantity);
                 }
+            }
+            if (!zeroCase) {
+                status.setText(quantityToType.quanToType(param.getProgress()));
+                //status.setText(quantity);
             }
             //TODO if less than scale for when we eventually implement fine and more sensitive scroll
             //  based on user touch feedback
@@ -80,6 +92,17 @@ public class Controller extends LinearLayout {
     public int getProgress()
     {
         return param.getProgress();
+    }
+    public void setSeekBarEnabled(boolean enabled)
+    {
+        //param.setActivated(false);
+    }
+    public void setTypeSwitch(RControls.seekers runnable){
+        this.quantityToType = runnable;
+        //(variable) -> switch statement
+    }
+    public void setZeroCase(Boolean _zeroCase){
+        this.zeroCase = _zeroCase;
     }
 
     @Override

@@ -31,6 +31,7 @@ public class RControls extends Fragment {
     private SharedPreferences.Editor editor;
     private static int[] SELECTED_CHANNELS;
     private static int SELECTED_NUM_CHANNELS;
+    private int dynamicEncoding;
     private static String CHOSEN_FORMAT;
     private static int SELECTED_AUDIO_ENCODING;
     private LinkedList<Controller> controllers;
@@ -42,7 +43,6 @@ public class RControls extends Fragment {
     private AudioDisplay display;
 
     public RControls(){}
-
 
     @Override
     public void onPause() {
@@ -127,20 +127,56 @@ public class RControls extends Fragment {
         RecordLogic record = new RecordLogic();
         //GraphLogic graph = getActivity().findViewById(R.id.display);
         //AudioDisplay audio_display = getActivity().findViewById(R.id.audio_display);
-        for (int i = 0; i <titles.length ; i++) {
-            Controller controller = new Controller(getContext(),null,quantities[i],scale[i]);
-            controller.setParam(titles[i],maxes[i],progress[i]); //TODO add conditional for these cases -> encodingSeeker(params[4]),channelSeeker(params[3])formatSeeker(params[2])
-            controllers.add(controller);
-            controls_view.addView(controller); }
+        Controller playback = new Controller(getContext(),null,quantities[0],scale[0]);
+        playback.setParam(titles[0],maxes[0],progress[0]);
+        controllers.add(playback);
+        controls_view.addView(playback);
+
+        Controller sample = new Controller(getContext(),null,quantities[1],scale[1]);
+        sample.setParam(titles[1],maxes[1],progress[1]);
+        controllers.add(sample);
+        controls_view.addView(sample);
+
+        RControls.formatSeeker fo = new RControls.formatSeeker();
+        Controller format = new Controller(getContext(),null,quantities[2],scale[2]);
+        seekers format_seek = (a) -> String.valueOf(fo.quanToType(a));
+        format.setTypeSwitch(format_seek);
+        format.setZeroCase(false);
+        format.setParam(titles[2],maxes[2],progress[2]);
+        controllers.add(format);
+        controls_view.addView(format);
+
+        RControls.channelSeeker ch = new RControls.channelSeeker();
+        Controller channel = new Controller(getContext(),null,quantities[3],scale[3]);
+        seekers channel_seek = (a) -> String.valueOf(ch.quanToType(a));
+        channel.setTypeSwitch(channel_seek);
+        channel.setZeroCase(false);
+        channel.setParam(titles[3],maxes[3],progress[3]);
+        controllers.add(channel);
+        controls_view.addView(channel);
+
+        RControls.encodingSeeker en = new RControls.encodingSeeker();
+        Controller encoding = new Controller(getContext(),null,quantities[4],scale[4]);
+        seekers encoding_seek = (a) -> String.valueOf(en.quanToType(a));
+        encoding.setTypeSwitch(encoding_seek);
+        encoding.setZeroCase(false);
+        encoding.setParam(titles[4],maxes[4],progress[4]);
+        controllers.add(encoding);
+        controls_view.addView(encoding);
+
         int[] params = new int[maxes.length];
         record_button.setOnClickListener(//v -> new Thread(() -> {
                 v -> {
             for (int i = 0; i < maxes.length; i++) {
                 params[i] = controllers.get(i).getProgress() * scale[i];
             }
+            //TODO delete methods and replace with calls to respective functional interface, see upper todo ^
             creation = new AudioFile(params[0],params[1],
                                            encodingSeeker(params[4]),channelSeeker(params[3]),
                                            formatSeeker(params[2]));
+            format.setSeekBarEnabled(false);
+            encoding.setSeekBarEnabled(false);
+            channel.setSeekBarEnabled(false);
             int file_index = sharedPref.getInt("index", 1);
             editor.putInt("index", file_index += 1);
             seek_bar.setVisibility(View.GONE);
@@ -153,7 +189,7 @@ public class RControls extends Fragment {
             String nam = Environment.getExternalStorageDirectory().getPath()+"/data.0";
             display.setVisibility(View.VISIBLE);
             MainActivity.setGraphStream(record.buffer_size,creation.getNewRecordFile(),true);
-            MainActivity.setDisplayStream(record.buffer_size,creation.getNewRecordFile(),true, 1);
+            MainActivity.setDisplayStream(record.buffer_size,creation.getNewRecordFile(),true, 1,dynamicEncoding);
             record_button.setVisibility(View.INVISIBLE);
             pause_button.setVisibility(View.VISIBLE);
             //args.putParcelable("file",creation);
@@ -173,7 +209,11 @@ public class RControls extends Fragment {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            int max = length/creation.getSampleRate()/4;
+            // length in bytes/encoding/sample rate*1000 = length in milliseconds
+            // pos of seek bar * (sample rate/1000) = file index in milliseconds
+            // with the only stipulation that we have one sample given rate
+            // otherwise x / (n>x) = > 1
+            int max = length/2/creation.getSampleRate()*1000;
             seek_bar.setMax(max);
             modulations.setVisibility(View.VISIBLE);
             play_button.setVisibility(View.VISIBLE);
@@ -187,7 +227,7 @@ public class RControls extends Fragment {
             args.putInt("buff_size",record.buffer_size);
             //graph.setGraphState(false,record.buffer_size);
             MainActivity.setGraphStream(record.buffer_size,creation.getNewRecordFile(),false);
-            MainActivity.setDisplayStream(record.buffer_size,creation.getNewRecordFile(),false, 1);
+            MainActivity.setDisplayStream(record.buffer_size,creation.getNewRecordFile(),false, 1,dynamicEncoding);
             });
 
 
@@ -195,18 +235,78 @@ public class RControls extends Fragment {
         catch (IOException e) { e.printStackTrace();}}).start());
 
         return rootView; }
+    public interface seekers{
+        String quanToType(int quan);
+    }
+    public static class encodingSeeker implements seekers{
+        @Override
+        public String quanToType(int quan) {
+            String type = "";
+            switch (quan) {
+                case 1:
+                    SELECTED_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
+                    type = "16Bit";
+                    break;
+                case 0:
+                    SELECTED_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_8BIT;
+                    type = "8Bit";
+                    break;
+                default:
+                    SELECTED_AUDIO_ENCODING = AudioFormat.ENCODING_DEFAULT;
+                    type = "16Bit";
+            }
+            return type;
+        }
+    }
+    public static class formatSeeker implements seekers {
+        @Override
+        public String quanToType(int quan) {
+            switch (quan) {
+                case 2:
+                    CHOSEN_FORMAT = ".wav";
+                    //chosen_format = new Format.wav(creation);
+                    //creation.setFormat(chosen_format);
+                    break;
+                case 1:
+                    CHOSEN_FORMAT = ".mp4";
+                    break;
+                case 0:
+                    CHOSEN_FORMAT = ".pcm";
+                    break;
+            }
+            return CHOSEN_FORMAT;
+        }
 
+    }
+    public static class channelSeeker implements seekers  {
+
+        @Override
+        public String quanToType(int quan) {
+            String channels="";
+            switch (quan) {
+                case 1:
+                    SELECTED_CHANNELS = new int[] {AudioFormat.CHANNEL_IN_STEREO, AudioFormat.CHANNEL_OUT_STEREO};
+                    channels="Stereo";
+                    break;
+                case 0:
+                    SELECTED_CHANNELS = new int[] {AudioFormat.CHANNEL_IN_MONO, AudioFormat.CHANNEL_OUT_MONO};
+                    channels="Mono";
+                    break;
+
+            }
+            return channels;
+        }
+
+    }
     public int encodingSeeker(int progress) {
         switch (progress) {
-            case 2:
-                SELECTED_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_FLOAT;
-                //AudioFormat.AAC
-                break;
             case 1:
                 SELECTED_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
+                this.dynamicEncoding = Short.MAX_VALUE*2+1;
                 break;
             case 0:
                 SELECTED_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_8BIT;
+                this.dynamicEncoding = Byte.MAX_VALUE*2+1;
                 break;
             default:
                 SELECTED_AUDIO_ENCODING = AudioFormat.ENCODING_DEFAULT;
@@ -214,7 +314,7 @@ public class RControls extends Fragment {
         return SELECTED_AUDIO_ENCODING;
     }
 
-    public String formatSeeker(int progress) {
+    public static String formatSeeker(int progress) {
         switch (progress) {
             case 2:
                 CHOSEN_FORMAT = ".wav";
@@ -231,7 +331,7 @@ public class RControls extends Fragment {
         return CHOSEN_FORMAT;
     }
 
-    public int[] channelSeeker(int progress) {
+    public static int[] channelSeeker(int progress) {
         switch (progress) {
             case 1:
                 SELECTED_CHANNELS = new int[] {AudioFormat.CHANNEL_IN_STEREO, AudioFormat.CHANNEL_OUT_STEREO};

@@ -30,7 +30,7 @@ public class RecordLogic {
     public int buffer_size;
     private AudioFile file_data;
     private String file_path;
-    private int file_size;
+    //private int file_size;
     private DataOutputStream jack;
 
     public RecordLogic() {
@@ -88,7 +88,7 @@ public class RecordLogic {
         byte[] sData = new byte[buffer_size];
         while (!isPaused && isRecording) {
             recorder.read(sData, 0, buffer_size);
-            file_size+=sData.length/2;
+            //file_size+=sData.length/2;
             try {
                 out.write(sData, 0, buffer_size);
                 //jack.write(sData);

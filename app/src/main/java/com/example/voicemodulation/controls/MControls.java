@@ -128,56 +128,38 @@ public class MControls extends Fragment {
             controls_view.addView(controller); }
         RecordLogic recordLogic = new RecordLogic();
         creation.setFilePath(creation.getNewModulateFile());
+        MainActivity test = new MainActivity();
         //creation.setFilePath("/sdcard/Music/test.pcm"); // this the modulation file that we want to play duh
         recordLogic.setFileData(creation);
         double[] params = new double[maxes.length];
         int finalLength = length;
-        //boolean activated = display.isActivated();
+        boolean activated = display.isActivated();
         System.out.println("length of file in bytes: "+length);
-        seek_bar.setVisibility(View.GONE);
+        //seek_bar.setVisibility(View.GONE);
         getActivity().runOnUiThread(() -> {
             try {
-                MainActivity.setDisplayStream(finalLength, creation.getNewModulateFile(), false, 0);
+                test.setDisplayStream(finalLength, creation.getNewModulateFile(), false, 0,Short.MAX_VALUE*2+1);
             }
             catch (NullPointerException e){}});
         play_button.setOnClickListener(v -> new Thread(() ->{
             for (int i = 0; i <maxes.length; i++) { params[i]=controllers.get(i).getProgress()*scale[i]; }
             modulate = new ModulateLogic(params,creation);
             try{
-                /*
-                getActivity().runOnUiThread(() -> {
-                    if (activated){
-                        MainActivity.setDisplayStream(finalLength,creation.getNewModulateFile(),false,0);
-                        display.setActivated(false);}});
-
-                 */
                 getActivity().runOnUiThread(() ->{
-                    System.out.println("display setting visible");
-                    //seek_bar.setVisibility(View.GONE);
-                    //display.setActivated(false);
-                    //if (!activated){
-                     //   display.setActivated(true);
+                    seek_bar.setVisibility(View.GONE);
                     display.setVisibility(View.VISIBLE);
-                    MainActivity.setDisplayStream(finalLength,creation.getNewModulateFile(),true, 0);
-               // }
-                //if (a==true){display.setActivated(false);}
-                //display.setVisibility(View.VISIBLE);
-               // MainActivity.setDisplayStream(finalLength,creation.getNewModulateFile(),true, 0);
+                    test.setDisplayStream(finalLength,creation.getNewModulateFile(),true, 0,Short.MAX_VALUE*2+1);
                 });}
-
             catch (NullPointerException e){}
-            try { invokeMethod(modulate.getClass().getMethod(method)); }
-            catch (Exception e) { e.printStackTrace(); }
+            try {
+                invokeMethod(modulate.getClass().getMethod(method)); }
+            catch (Exception e) {}
             try {
                 recordLogic.play_recording();
                 getActivity().runOnUiThread(() ->{
-                    //System.out.println("display setting gone");
-                    //display.setVisibility(View.GONE);
-                    //seek_bar.setVisibility(View.VISIBLE);
-                    //display.setActivated(false);
-                    //if (display.isActivated()){
-                    //MainActivity.setDisplayStream(finalLength,creation.getNewModulateFile(),false,0);
-                    //    display.setActivated(false);}
+                    display.setVisibility(View.GONE);
+                    seek_bar.setVisibility(View.VISIBLE);
+                    test.setDisplayStream(finalLength,creation.getNewModulateFile(),false,0,Short.MAX_VALUE*2+1);
                 });
             } catch (IOException e) { e.printStackTrace(); }
               catch (NullPointerException e){ e.printStackTrace(); }}).start());
@@ -201,4 +183,20 @@ public class MControls extends Fragment {
         return rootView; }
     static void invokeMethod(Method method) throws Exception { method.invoke(null); }
 }
+/*
+
+                getActivity().runOnUiThread(() -> {
+                    if (activated){
+                        MainActivity.setDisplayStream(finalLength,creation.getNewModulateFile(),false,0);
+                        display.setActivated(false);}});
+                    //display.setActivated(false);
+                    //if (!activated){
+                     //   display.setActivated(true);
+               // }
+                //if (a==true){display.setActivated(false);}
+                //display.setVisibility(View.VISIBLE);
+               // MainActivity.setDisplayStream(finalLength,creation.getNewModulateFile(),true, 0);
+
+
+ */
 

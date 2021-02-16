@@ -30,6 +30,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.controls.MControls;
+import com.example.voicemodulation.controls.NControls;
 import com.example.voicemodulation.controls.RControls;
 import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
@@ -50,13 +51,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private SharedPreferences.Editor editor;
     private final String[] record_control_titles = new String[] {"PlayBack Rate","Sample Rate","Format","Channels","Encoding"};
     private final String[] phaser_titles = new String[] {"Frequency","Carrier Amp","Modulator Amp","Theta"};
-    private final String[] record_control_quantities = new String[]{"Hz","Hz",".wav","mono","Bit"}; //This is the reason why you cannot divide R and M Controls i+3 all []>1
+    private final String[] record_control_quantities = new String[]{"Hz","Hz",null,null,null};
     private final String[] phaser_quantities = new String[] {"Hz","Amp","Amp","θ"};
     private final String[] flanger_titles = new String[] {"Min","Max","Frequency"};
     private final String[] echo_titles = new String[] {"Signals","Delay"};
-    private final int[] record_control_ranges = new int[]{10,10,3,2,2};
+    private final int[] record_control_ranges = new int[]{10,10,2,1,1};
     private final int[] record_control_scales = new int[]{4800,4800,1,1,1};
-    private final int[] record_control_progresses = new int[]{10,10,1,1,1};
+    private final int[] record_control_progresses = new int[]{10,10,2,0,1};
     private final int[] phaser_progress = new int[] {1,10,10,0};
     private final int[] flanger_progress = new int[] {8,4,1};
     private final int record_gravity = Gravity.NO_GRAVITY;
@@ -67,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private RControls record_controls;
     private FrameLayout seek_n_loader;
     private SeekBar the_seeker;
+    private NControls controls;
     int PERMISSION_ALL = 1;
     private final String[] PERMISSIONS = {
                     Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -80,12 +82,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         sharedPref = getPreferences(Context.MODE_PRIVATE);
         editor = sharedPref.edit();
-        if (!hasPermissions(this, PERMISSIONS)) {
-            requestPermissions( PERMISSIONS, PERMISSION_ALL);
-        }
+        //if (!hasPermissions(this, PERMISSIONS)) {
+        //    requestPermissions( PERMISSIONS, PERMISSION_ALL);
+        //}
         record_controls = displayRFragment(record_control_titles,record_control_ranges,
                                                     record_control_scales,record_control_quantities,
                                                     record_gravity,record_control_title,record_control_progresses);
+        controls = new NControls(this,record_control_titles,record_control_ranges,
+                record_control_scales,record_control_quantities,
+                record_gravity,record_control_title,record_control_progresses);
+
         modulations = findViewById(R.id.modulations);
         //modulations.setVisibility(View.INVISIBLE);
         display = findViewById(R.id.audio_display);
@@ -95,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         the_seeker.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                System.out.println("progress in seconds: "+progress);
+                System.out.println("progress in seconds "+progress);
             }
 
             @Override
@@ -109,31 +115,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
     }
-    //TODO im pretty sure you are going to need to do some state saving or something here in order to fix
-    //  fragments vanishing on exit (onStop?) or have to do something with how you are adding with fragment transactions
-    /*
-    @Override
-    protected void onPause() {
-        super.onPause();
-    }
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-     */
-
     //TODO remove the file param
     public static void setGraphStream(int buffsize, String file, boolean state){
         graph.setGraphState(state,buffsize);
     }
-    public static void setDisplayStream(int buffsize, String file, boolean state, int length) {
+    public static void setDisplayStream(int buffsize, String file, boolean state, int length,int range) {
+        System.out.println("the dynamic range of this encoding is: "+range);
+        display.setEncoding(range);
         display.setGraphState(state, buffsize, file, length);
     }
+    /*
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
@@ -280,6 +271,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static boolean isGooglePhotosUri(Uri uri) {
         return "com.google.android.apps.photos.content".equals(uri.getAuthority());
     }
+
+     */
     public RControls displayRFragment(String[] titles, int[] maxes, int[] scale, String[] quantity_type, int gravity, String name, int[] progress) {
         RControls controls = RControls.newInstance(titles,maxes,scale,quantity_type,gravity,name,progress);
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -376,23 +369,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 closeFragment(R.id.user_controls);
                 int[] flanger_maxes = new int[]{10, 10, 20};
                 displayMFragment(flanger_titles, flanger_maxes, new double[]{10, 10, nyquist},
-                        new String[]{null, null, "Hz"}, creation, "makeFlangerCreation", Gravity.NO_GRAVITY,
+                        new String[]{"∧", "∨", "Hz"}, creation, "makeFlangerCreation", Gravity.NO_GRAVITY,
                         "Flanger with Sine Wave", flanger_progress);
                 break;
             case R.id.flanger_triangle:
                 closeFragment(R.id.user_controls);
                 int[] flanger_triangle_maxes = new int[]{10, 10, 20};
                 displayMFragment(flanger_titles, flanger_triangle_maxes, new double[]{10, 10, nyquist},
-                        new String[]{null, null, "Hz"}, creation, "makeFlangerTriangleCreation", Gravity.NO_GRAVITY,
+                        new String[]{"∧", "∨", "Hz"}, creation, "makeFlangerTriangleCreation", Gravity.NO_GRAVITY,
                         "Flanger with Triangle Wave", flanger_progress);
                 break;
             case R.id.flanger_square:
                 closeFragment(R.id.user_controls);
                 int[] flanger_square_maxes = new int[]{10, 10, 20};
                 displayMFragment(flanger_titles, flanger_square_maxes, new double[]{10, 10, nyquist},
-                        new String[]{null, null, "Hz"}, creation, "makeFlangerSquareCreation", Gravity.NO_GRAVITY,
+                        new String[]{"∧", "∨", "Hz"}, creation, "makeFlangerSquareCreation", Gravity.NO_GRAVITY,
                         "Flanger with Square Wave", flanger_progress);
                 break;
+                /*
+            case R.id.start_recording:
+                break;
+            case  R.id.pause_recording:
+                break;
+            case  R.id.play_recording:
+                break;
+            case  R.id.stop_recording:
+                break;
+
+                 */
+
 
             }
 
