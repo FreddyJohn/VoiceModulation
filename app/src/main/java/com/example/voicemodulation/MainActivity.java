@@ -92,10 +92,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         the_seeker = findViewById(R.id.seek);
         seek_n_loader = findViewById(R.id.seek_n_load);
         graph = findViewById(R.id.display);
-        //Bundle record_parameters = record_controls.getArguments();
+        the_seeker.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                System.out.println("progress in seconds: "+progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
     }
     //TODO im pretty sure you are going to need to do some state saving or something here in order to fix
     //  fragments vanishing on exit (onStop?) or have to do something with how you are adding with fragment transactions
+    /*
     @Override
     protected void onPause() {
         super.onPause();
@@ -108,6 +124,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onStop() {
         super.onStop();
     }
+
+     */
 
     //TODO remove the file param
     public static void setGraphStream(int buffsize, String file, boolean state){
@@ -268,7 +286,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         FragmentTransaction fragmentTransaction = fragmentManager
                 .beginTransaction();
         fragmentTransaction.add(R.id.user_controls,
-                controls).addToBackStack(null).commit();
+                controls).commit();
         return controls; }
 
     //closeFragment has the effect of forcing a fragment through the rest of its lifecycle

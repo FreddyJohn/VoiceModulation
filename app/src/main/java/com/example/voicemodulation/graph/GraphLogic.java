@@ -82,7 +82,6 @@ public class GraphLogic extends View {
             return false;
         });
 
-
     }
     @Override
     protected void onSizeChanged(int width, int height,

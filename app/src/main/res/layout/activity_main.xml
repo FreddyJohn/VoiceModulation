@@ -71,7 +71,7 @@
             android:layout_gravity="center_vertical"
             android:progressTint="#4B4B4B"
             android:thumb="@drawable/seekbar_thumb"
-            android:visibility="visible" />
+            android:visibility="invisible" />
 
         <com.example.voicemodulation.graph.AudioDisplay
             android:id="@+id/audio_display"
@@ -105,7 +105,7 @@
             android:id="@+id/modulations"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:visibility="gone">
+            android:visibility="invisible">
 
             <LinearLayout
                 android:layout_width="wrap_content"

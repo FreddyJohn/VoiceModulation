@@ -39,7 +39,7 @@ public class MControls extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        System.out.println("modulate fragment has entered onPause. Now removing fragment to save memory");
+        System.out.println("modulate fragment has entered onPause.");
         //getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
     }
 
@@ -52,7 +52,7 @@ public class MControls extends Fragment {
     @Override
     public void onStop() {
         super.onStop();
-        System.out.println("modulate fragment has entered onStop.");
+        System.out.println("modulate fragment has entered onStop. Now removing fragment to save memory");
         //getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
     }
     @Override
@@ -68,6 +68,8 @@ public class MControls extends Fragment {
         System.out.println("modulate fragment has entered onStart.");
         //getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
     }
+
+
 
     public static MControls newInstance(String[] title, int[] maxes, double[] scale, String[]
                                         quantity_type, AudioFile creation, String method,
@@ -109,7 +111,7 @@ public class MControls extends Fragment {
         TextView modulation_type = rootView.findViewById(R.id.modulation_type);
         modulation_type.setText(name);
         play_button = getActivity().findViewById(R.id.play_recording);
-        //stop_button = getActivity().findViewById(R.id.pause_recording);
+        stop_button = getActivity().findViewById(R.id.stop_recording);
         AudioCon.IO_RAF con = new AudioCon.IO_RAF(creation.getNewModulateFile());
         RandomAccessFile f = con.getReadObject();
         int length=0;
@@ -192,7 +194,10 @@ public class MControls extends Fragment {
             }
             return true;
         });
-        //stop_button.setOnClickListener(v ->{ new Thread(() -> creation.save()).start();});
+        stop_button.setOnLongClickListener(v ->{ new Thread(creation::save).start();
+           System.out.println("I SAVED");
+           return true;
+        });
         return rootView; }
     static void invokeMethod(Method method) throws Exception { method.invoke(null); }
 }

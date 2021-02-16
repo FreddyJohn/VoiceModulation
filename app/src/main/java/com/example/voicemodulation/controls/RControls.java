@@ -42,13 +42,39 @@ public class RControls extends Fragment {
     private AudioDisplay display;
 
     public RControls(){}
-    //TODO the consequence of this is that anytime the user exits the application fragment is hidden
-    //  and consequently, a redraw of GraphLogic is triggered via onSizeChanged
+
+
     @Override
     public void onPause() {
         super.onPause();
-        //getActivity().getSupportFragmentManager().beginTransaction().addToBackStack(R.id.user_controls)
+        getActivity().getSupportFragmentManager().beginTransaction().hide(this).commit();
         System.out.println("record fragment has entered onPause. Now hiding fragment to keep listeners alive");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        System.out.println("record fragment has entered onResume.");
+        //getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        System.out.println("record fragment has entered onStop.");
+    }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        System.out.println("record fragment has entered onDestroy.");
+        //getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        System.out.println("record fragment has entered onStart.");
+        //getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
     }
 
     public static RControls newInstance(String[] title, int[] maxes, int[] scale, String[]
@@ -92,6 +118,7 @@ public class RControls extends Fragment {
         LinearLayout controls_view = rootView.findViewById(R.id.n_parameters);
         FrameLayout.LayoutParams view_params = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,
                                                                             FrameLayout.LayoutParams.MATCH_PARENT);
+
         view_params.gravity = gravity;
         controls_view.setLayoutParams(view_params);
         TextView modulation_type = rootView.findViewById(R.id.modulation_type);
@@ -114,7 +141,6 @@ public class RControls extends Fragment {
             creation = new AudioFile(params[0],params[1],
                                            encodingSeeker(params[4]),channelSeeker(params[3]),
                                            formatSeeker(params[2]));
-
             int file_index = sharedPref.getInt("index", 1);
             editor.putInt("index", file_index += 1);
             seek_bar.setVisibility(View.GONE);
@@ -132,16 +158,27 @@ public class RControls extends Fragment {
             pause_button.setVisibility(View.VISIBLE);
             //args.putParcelable("file",creation);
         });
-        stop_button.setOnClickListener(v -> {
-            record.stopRecording();
-        });
+        //TODO this was only removed to test length of file in seconds by creating wav
+        //stop_button.setOnClickListener(v -> {
+       //     record.stopRecording();
+       // });
         pause_button.setOnClickListener(v -> {
             display.setVisibility(View.GONE);
             seek_bar.setVisibility(View.VISIBLE);
+            AudioCon.IO_RAF readOnly = new AudioCon.IO_RAF(creation.getNewRecordFile());
+            RandomAccessFile f = readOnly.getReadObject();
+            int length =0;
+            try {
+                length= (int) f.length();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            int max = length/creation.getSampleRate()/4;
+            seek_bar.setMax(max);
             modulations.setVisibility(View.VISIBLE);
             play_button.setVisibility(View.VISIBLE);
             stop_button.setVisibility(View.VISIBLE);
-            System.out.println("YOU PRESSED PAUSE");
+            System.out.println("YOU PRESSED PAUSE "+ length);
             file_state=false;
             record.setRecordingState(true);
             pause_button.setVisibility(View.INVISIBLE);

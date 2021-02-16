@@ -130,7 +130,7 @@ public class AudioDisplay extends View {
         //  both of these conditions can be described with one variable -> the offset 1.) = n , 2.) = 0
         this.graphState=state;
         this.bufferSize=buffer_size;
-        //System.out.println("Buffer size: "+buffer_size);
+        System.out.println("Buffer size: "+buffer_size);
         //File i = new File(in_file);
         try {
             this.jane = new DataInputStream(new FileInputStream(in_file));

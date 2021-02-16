@@ -35,10 +35,29 @@ public class Controller extends LinearLayout {
         param.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            String quantity =String.format("%.2f",param.getProgress()*scale);
-            if (type!=null) { status.setText(quantity+type); }
-            else { status.setText(quantity); }
-            //status.setText(param.getProgress());
+            if (param.getProgress()!=0) {
+                String quantity =String.format("%.2f",param.getProgress()*scale);
+                if (type != null) {
+                    status.setText(quantity + type);
+                } else {
+                    status.setText(quantity);
+                }
+            }
+            //TODO if less than scale for when we eventually implement fine and more sensitive scroll
+            //  based on user touch feedback
+            // if controller uses 0
+            /*
+            if (param.getProgress()==0)
+            {
+                String quantity =String.format("%.2f",scale);
+                if (type != null) {
+                    status.setText(scale + type);
+                } else {
+                    status.setText(quantity);
+                }
+            }
+
+             */
         }
 
         @Override
