@@ -1,9 +1,5 @@
 package com.example.voicemodulation.audio;
 
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
-
 import com.example.voicemodulation.audio.util.Convert;
 
 import java.io.File;
@@ -79,7 +75,7 @@ public class AudioCon {
     }
     public static class IO_F
     {
-        public static FileOutputStream setFileOutputStream(String filePath) {
+        public FileOutputStream setFileOutputStream(String filePath) {
             FileOutputStream out = null;
             try {
                  out = new FileOutputStream(filePath);
@@ -87,7 +83,7 @@ public class AudioCon {
                  e.printStackTrace();
             }
                 return out; }
-        public static void closeFileOutputStream(FileOutputStream out, byte[] data) {
+        public void closeFileOutputStream(FileOutputStream out, byte[] data) {
         try {
             out.write(data, 0, data.length);
             out.close();
@@ -98,10 +94,9 @@ public class AudioCon {
     }
 
     public static class Data{
-        @RequiresApi(api = Build.VERSION_CODES.O)
         public static short[] getShorts(String filePath){
             byte[] bytes =getBytes(filePath);
-            short[] shorts = Convert.shortsToBytes(bytes);
+            short[] shorts = Convert.bytesToShorts(bytes);
             return shorts;
         }
         public static byte[] getBytes(String filePath) {

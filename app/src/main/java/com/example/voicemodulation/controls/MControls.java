@@ -1,32 +1,113 @@
 package com.example.voicemodulation.controls;
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Lifecycle;
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
+
+import android.content.Context;
+import android.util.AttributeSet;
 import android.widget.ImageButton;
-import android.widget.FrameLayout.LayoutParams;
 import android.widget.LinearLayout;
-import android.widget.SeekBar;
-import android.widget.TextView;
 
-import com.example.voicemodulation.MainActivity;
-import com.example.voicemodulation.audio.AudioCon;
+import androidx.annotation.Nullable;
+
+import com.example.voicemodulation.audio.AudioF;
 import com.example.voicemodulation.audio.ModulateLogic;
-import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.audio.RecordLogic;
-import com.example.voicemodulation.R;
-import com.example.voicemodulation.graph.AudioDisplay;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.lang.reflect.Method;
 import java.util.LinkedList;
 
+public class MControls extends LinearLayout{
+    private ImageButton play;
+    private LinkedList<Controller> controllers;
+    private String[] title;
+    private int[] maxes;
+    private double[] scale;
+    private  String[] quantity_type;
+    private AudioF creation;
+    private ModulateLogic.modulation method;
+    private int gravity;
+    private String name;
+    private int[] progress;
+
+    public MControls(Context context) {
+        super(context);
+        init(context,null);
+    }
+
+    public MControls(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init(context,attrs);
+    }
+
+    public MControls(Context context, String[] title, int[] maxes, double[] scale,
+                     String[] quantity_type, AudioF creation, ModulateLogic.modulation modulation,
+                     int gravity, String name, int[] progress, ImageButton play){
+        super(context);
+        this.title=title;
+        this.maxes=maxes;
+        this.scale=scale;
+        this.quantity_type=quantity_type;
+        this.creation=creation;
+        this.method=modulation;
+        this.gravity=gravity;
+        this.name=name;
+        this.progress=progress;
+        this.play = play;
+        init(context,null);
+    }
+    public LinkedList<Double> getModulateParameters(){
+        LinkedList<Double> parameters = new LinkedList<>();
+        for (int i = 0; i <title.length ; i++) {
+            parameters.add((double) controllers.get(i).getProgress()*scale[i]);
+        }
+        return parameters;
+    }
+    public void init(Context context, @Nullable AttributeSet attrs){
+        controllers = new LinkedList<>();
+        for (int i = 0; i <title.length ; i++) {
+            Controller controller = new Controller(getContext(),null,quantity_type[i],scale[i]);
+            controller.setParam(title[i],maxes[i],progress[i]);
+            controllers.add(controller);
+            addView(controller); }
+        play.setOnClickListener(v->{ new Thread(() -> {
+            RecordLogic recordLogic = new RecordLogic();
+            creation.setFilePath(creation.getNewModulateFile());
+            recordLogic.setFileData(creation);
+            method.modulate(getModulateParameters(),creation);
+            try {
+                recordLogic.play_recording();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();});
+    }
+}
+/*
+v -> new Thread(() ->{
+            for (int i = 0; i <maxes.length; i++) { params[i]=controllers.get(i).getProgress()*scale[i]; }
+            modulate = new ModulateLogic(params,creation);
+            try{
+                getActivity().runOnUiThread(() ->{
+                    seek_bar.setVisibility(View.GONE);
+                    display.setVisibility(View.VISIBLE);
+                    test.setDisplayStream(finalLength,creation.getNewModulateFile(),true, 0,Short.MAX_VALUE*2+1);
+                });}
+            catch (NullPointerException e){}
+            try {
+                invokeMethod(modulate.getClass().getMethod(method)); }
+            catch (Exception e) {}
+            try {
+                recordLogic.play_recording();
+                getActivity().runOnUiThread(() ->{
+                    display.setVisibility(View.GONE);
+                    seek_bar.setVisibility(View.VISIBLE);
+                    test.setDisplayStream(finalLength,creation.getNewModulateFile(),false,0,Short.MAX_VALUE*2+1);
+                });
+            } catch (IOException e) { e.printStackTrace(); }
+              catch (NullPointerException e){ e.printStackTrace(); }}).start());
+ */
+
+
+/*
 public class MControls extends Fragment {
     private LinkedList<Controller> controllers;
     private ImageButton play_button;
@@ -130,7 +211,7 @@ public class MControls extends Fragment {
         creation.setFilePath(creation.getNewModulateFile());
         MainActivity test = new MainActivity();
         //creation.setFilePath("/sdcard/Music/test.pcm"); // this the modulation file that we want to play duh
-        recordLogic.setFileData(creation);
+        //recordLogic.setFileData(creation);
         double[] params = new double[maxes.length];
         int finalLength = length;
         boolean activated = display.isActivated();
@@ -167,10 +248,10 @@ public class MControls extends Fragment {
             try {
                 //getActivity().runOnUiThread(() -> MainActivity.setDisplayStream(1000,creation.getNewRecordFile(),true,0));
                 creation.setFilePath(creation.getNewRecordFile());
-                recordLogic.setFileData(creation);
+               // recordLogic.setFileData(creation);
                 recordLogic.play_recording();
                 creation.setFilePath(creation.getNewModulateFile());
-                recordLogic.setFileData(creation);
+             //   recordLogic.setFileData(creation);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -183,6 +264,8 @@ public class MControls extends Fragment {
         return rootView; }
     static void invokeMethod(Method method) throws Exception { method.invoke(null); }
 }
+
+ */
 /*
 
                 getActivity().runOnUiThread(() -> {

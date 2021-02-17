@@ -29,8 +29,9 @@ public class Format {
             buff.put(wav_header);
             buff.put(raw_data);
             byte[] formatted_file = buff.array();
-            FileOutputStream out = AudioCon.IO_F.setFileOutputStream(data.getFilePath().replace(".pcm",".wav"));
-            AudioCon.IO_F.closeFileOutputStream(out,formatted_file);
+            AudioCon.IO_F con = new AudioCon.IO_F();
+            FileOutputStream out = con.setFileOutputStream(data.getFilePath().replace(".pcm",".wav"));
+            con.closeFileOutputStream(out,formatted_file);
         }
     }
     public static class aiff implements Runnable {

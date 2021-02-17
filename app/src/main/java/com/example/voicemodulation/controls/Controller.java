@@ -16,7 +16,7 @@ public class Controller extends LinearLayout {
     private String type;
     private double scale;
     private boolean zeroCase = true;
-    private RControls.seekers quantityToType;
+    private ControlCases.seekers quantityToType;
     public  Controller(Context context, @Nullable AttributeSet attrs,String type,double scale){
         super(context,attrs);
         this.scale = scale;
@@ -97,7 +97,7 @@ public class Controller extends LinearLayout {
     {
         //param.setActivated(false);
     }
-    public void setTypeSwitch(RControls.seekers runnable){
+    public void setTypeSwitch(ControlCases.seekers runnable){
         this.quantityToType = runnable;
         //(variable) -> switch statement
     }

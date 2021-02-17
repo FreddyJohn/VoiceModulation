@@ -28,7 +28,7 @@ public class RecordLogic {
     private boolean isRecording = false;
     private boolean isPaused = false;
     public int buffer_size;
-    private AudioFile file_data;
+    private AudioF file_data;
     private String file_path;
     //private int file_size;
     private DataOutputStream jack;
@@ -45,12 +45,12 @@ public class RecordLogic {
 
     }
 
-    public void setFileData(AudioFile file)
+    public void setFileData(AudioF file)
     {
         this.file_data = file;
         this.file_path = file.getFilePath();
     }
-    public void setFileObject(AudioFile creation,Boolean file_state) {
+    public void setFileObject(AudioF creation,Boolean file_state) {
         this.file_data = creation;
         this.file_path = creation.getFilePath();
         this.ioRAF = new AudioCon.IO_RAF(file_path);

@@ -1,42 +1,35 @@
 package com.example.voicemodulation;
 import android.Manifest;
-import android.annotation.TargetApi;
-import android.content.ContentUris;
 import android.content.Context;
-import android.content.Intent;
+
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.DocumentsContract;
-import android.provider.MediaStore;
 import android.view.Gravity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
+import android.widget.ImageButton;
 import android.widget.SeekBar;
-import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.example.voicemodulation.audio.AudioCon;
+import com.example.voicemodulation.audio.AudioF;
 import com.example.voicemodulation.audio.AudioFile;
+import com.example.voicemodulation.audio.ModulateLogic;
+import com.example.voicemodulation.audio.RecordLogic;
+import com.example.voicemodulation.controls.ControlCases;
 import com.example.voicemodulation.controls.MControls;
-import com.example.voicemodulation.controls.NControls;
 import com.example.voicemodulation.controls.RControls;
 import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.LinkedList;
 
 /*TODO remove AudioDisplay implementation from GraphLogic
     the idea is to have a ViewGroup within MainActivity so that we can
@@ -61,43 +54,65 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int[] phaser_progress = new int[] {1,10,10,0};
     private final int[] flanger_progress = new int[] {8,4,1};
     private final int record_gravity = Gravity.NO_GRAVITY;
+    private ImageButton play_button, stop_button, record_button, pause_button;
     private static AudioDisplay display;
     private static GraphLogic graph;
+    private Boolean file_state=true;
+    private double nyquist =0;
     private final String record_control_title = "Record Controls";
     private HorizontalScrollView modulations;
-    private RControls record_controls;
+    private FrameLayout record_controls;
     private FrameLayout seek_n_loader;
+    private HorizontalScrollView testing;
     private SeekBar the_seeker;
-    private NControls controls;
+    private RControls controls;
+    private RecordLogic record;
+    private AudioF noFrag;
+
+    private AudioF creation;
     int PERMISSION_ALL = 1;
     private final String[] PERMISSIONS = {
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     Manifest.permission.RECORD_AUDIO};
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        noFrag = new AudioF();
+        record = new RecordLogic();
         sharedPref = getPreferences(Context.MODE_PRIVATE);
         editor = sharedPref.edit();
+        record_controls = findViewById(R.id.record_controls);
+        record_button = findViewById(R.id.start_recording);
+        play_button = findViewById(R.id.play_recording);
+        pause_button = findViewById(R.id.pause_recording);
+        stop_button = findViewById(R.id.stop_recording);
+        play_button.setVisibility(View.INVISIBLE);
+        stop_button.setVisibility(View.INVISIBLE);
+        pause_button.setVisibility(View.INVISIBLE);
         //if (!hasPermissions(this, PERMISSIONS)) {
         //    requestPermissions( PERMISSIONS, PERMISSION_ALL);
         //}
+        /*
         record_controls = displayRFragment(record_control_titles,record_control_ranges,
                                                     record_control_scales,record_control_quantities,
                                                     record_gravity,record_control_title,record_control_progresses);
-        controls = new NControls(this,record_control_titles,record_control_ranges,
-                record_control_scales,record_control_quantities,
-                record_gravity,record_control_title,record_control_progresses);
-
-        modulations = findViewById(R.id.modulations);
-        //modulations.setVisibility(View.INVISIBLE);
-        display = findViewById(R.id.audio_display);
-        the_seeker = findViewById(R.id.seek);
+         */
         seek_n_loader = findViewById(R.id.seek_n_load);
+        testing = findViewById(R.id.fuckFragments);
+        display = findViewById(R.id.audio_display);
+        modulations = findViewById(R.id.modulations);
         graph = findViewById(R.id.display);
+        controls = new RControls(this,record_control_titles,record_control_ranges,
+                record_control_scales,record_control_quantities,
+                record_gravity,record_control_title,record_control_progresses,
+                record_controls,graph,seek_n_loader,modulations);
+        testing.addView(controls);
+        //modulations.setVisibility(View.INVISIBLE);
+        //display = findViewById(R.id.audio_display);
+        the_seeker = findViewById(R.id.seek);
         the_seeker.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -273,19 +288,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
      */
-    public RControls displayRFragment(String[] titles, int[] maxes, int[] scale, String[] quantity_type, int gravity, String name, int[] progress) {
-        RControls controls = RControls.newInstance(titles,maxes,scale,quantity_type,gravity,name,progress);
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager
-                .beginTransaction();
-        fragmentTransaction.add(R.id.user_controls,
-                controls).commit();
-        return controls; }
 
     //closeFragment has the effect of forcing a fragment through the rest of its lifecycle
     //part of that lifecycle is onPause
     //we can override this in the fragment to get the behavior we want for record and modulate fragments respectively
     //removing it in modulate case and hiding it in record case
+    /*
     public void closeFragment(int resource_id) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         Fragment controller_type = fragmentManager
@@ -305,98 +313,169 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 controls).commit();
         return controls; }
 
+     */
+
     @Override
     public void onClick(View v) {
-        Bundle record_parameters = record_controls.getArguments();
-        AudioFile creation = record_parameters.getParcelable("file");
-        int buff_size = record_parameters.getInt("buff_size");
-        double nyquist = (creation.getSampleRate() / 2) / 20;
+        //Bundle record_parameters = record_controls.getArguments();
+        //AudioFile creation = record_parameters.getParcelable("file");
+        //int buff_size = record_parameters.getInt("buff_size");
+       // double nyquist = (creation.getSampleRate() / 2) / 20;
         //closeFragment(R.id.user_controls,true);
         //display.setGraphState(true,1000,creation.getNewModulateFile());
         switch (v.getId()) {
+
             case R.id.backwards:
-                closeFragment(R.id.user_controls);
+                testing.removeAllViews();
+                ModulateLogic.backwards backwards = new ModulateLogic.backwards();
+                ModulateLogic.modulation Backwards = backwards::modulate;
                 String[] backwards_titles = new String[]{"Volume"};
                 int[] backwards_maxes = new int[]{10};
-                displayMFragment(backwards_titles, backwards_maxes, new double[]{.1},
-                        new String[]{"Volume"}, creation, "makeBackwardsCreation", Gravity.CENTER,
-                        "Backwards Effect", new int[]{10});
+                MControls backwards_view = new MControls(this,backwards_titles, backwards_maxes, new double[]{.1},
+                        new String[]{"Volume"}, noFrag, Backwards, Gravity.CENTER,
+                        "Backwards Effect", new int[]{10},play_button);
+                testing.addView(backwards_view);
+
                 break;
             case R.id.echo:
-                closeFragment(R.id.user_controls);
+                ModulateLogic.echo echo = new ModulateLogic.echo();
+                ModulateLogic.modulation Echo = echo::modulate;
+                testing.removeAllViews();
                 int[] echo_maxes = new int[]{10, 10};
-                displayMFragment(echo_titles, echo_maxes, new double[]{1, 1},
-                        new String[]{"S", "D"}, creation, "makeEchoCreation", Gravity.CENTER,
-                        "Echo Effect", new int[]{5, 6});
+                MControls echo_view = new MControls(this,echo_titles, echo_maxes, new double[]{1, 1},
+                        new String[]{"S", "D"}, noFrag, Echo, Gravity.CENTER,
+                        "Echo Effect", new int[]{5, 6},play_button);
+                testing.addView(echo_view);
+
                 break;
             case R.id.quantize:
-                closeFragment(R.id.user_controls);
+                ModulateLogic.quantized quantized = new ModulateLogic.quantized();
+                ModulateLogic.modulation Quantized = quantized::modulate;
+                testing.removeAllViews();
+                //TODO rename robotic shit
                 String[] robotic_titles = new String[]{"Quantize", "Amplitude"};
                 int[] robotic_maxes = new int[]{10, 10};
-                displayMFragment(robotic_titles, robotic_maxes, new double[]{1000, .1},
-                        new String[]{"C", "Amp"}, creation, "makeQuantizedCreation", Gravity.CENTER,
-                        "Quantize Audio Sample", new int[]{5, 10});
+                MControls robotic = new MControls(this,robotic_titles, robotic_maxes, new double[]{1000, .1},
+                        new String[]{"C", "Amp"}, noFrag, Quantized, Gravity.CENTER,
+                        "Quantize Audio Sample", new int[]{5, 10},play_button);
+                testing.addView(robotic);
                 break;
             case R.id.phaser:
-                closeFragment(R.id.user_controls);
+                testing.removeAllViews();
+                ModulateLogic.phaser phaser = new ModulateLogic.phaser();
+                ModulateLogic.modulation Phaser = phaser::modulate;
                 int[] phaser_maxes = new int[]{20, 10, 10, 20};
-                displayMFragment(phaser_titles, phaser_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
-                        phaser_quantities, creation, "makePhaserCreation", Gravity.NO_GRAVITY,
-                        "Phaser with Sine Wave", phaser_progress);
+                MControls phaser_view = new MControls(this,phaser_titles, phaser_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
+                        phaser_quantities, noFrag, Phaser, Gravity.NO_GRAVITY,
+                        "Phaser with Sine Wave", phaser_progress,play_button);
+                testing.addView(phaser_view);
                 break;
             case R.id.phaser_triangle:
-                closeFragment(R.id.user_controls);
+                testing.removeAllViews();
+                ModulateLogic.phaserTriangle phaserTriangle = new ModulateLogic.phaserTriangle();
+                ModulateLogic.modulation PhaserTriangle = phaserTriangle::modulate;
                 int[] alien_maxes = new int[]{20, 10, 10, 10};
-                displayMFragment(phaser_titles, alien_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
-                        phaser_quantities, creation, "makePhaserTriangleCreation", Gravity.NO_GRAVITY,
-                        "Phaser with Triangle Wave", phaser_progress);
+                MControls phaser_triangle_view = new MControls(this,phaser_titles, alien_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
+                        phaser_quantities, noFrag, PhaserTriangle, Gravity.NO_GRAVITY,
+                        "Phaser with Triangle Wave", phaser_progress,play_button);
+                testing.addView(phaser_triangle_view);
                 break;
             case R.id.phaser_square:
-                closeFragment(R.id.user_controls);
+                testing.removeAllViews();
+                ModulateLogic.phaserSquare phaserSquare = new ModulateLogic.phaserSquare();
+                ModulateLogic.modulation PhaserSquare = phaserSquare::modulate;
                 int[] square_maxes = new int[]{20, 10, 10, 10};
-                displayMFragment(phaser_titles, square_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
-                        phaser_quantities, creation, "makePhaserSquareCreation", Gravity.NO_GRAVITY,
-                        "Phaser with Square Wave", phaser_progress);
+                MControls phaser_square_view = new MControls(this,phaser_titles, square_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
+                        phaser_quantities, noFrag, PhaserSquare, Gravity.NO_GRAVITY,
+                        "Phaser with Square Wave", phaser_progress,play_button);
+                testing.addView(phaser_square_view);
                 break;
             case R.id.phaser_saw:
-                closeFragment(R.id.user_controls);
+                testing.removeAllViews();
+                ModulateLogic.phaserSaw phaserSaw = new ModulateLogic.phaserSaw();
+                ModulateLogic.modulation PhaserSaw = phaserSaw::modulate;
                 int[] saw_maxes = new int[]{20, 10, 10, 10};
-                displayMFragment(phaser_titles, saw_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
-                        phaser_quantities, creation, "makePhaserSawCreation", Gravity.NO_GRAVITY,
-                        "Phaser with Saw Wave", phaser_progress);
+                MControls phaser_saw_view = new MControls(this,phaser_titles, saw_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
+                        phaser_quantities, noFrag, PhaserSaw, Gravity.NO_GRAVITY,
+                        "Phaser with Saw Wave", phaser_progress,play_button);
+                testing.addView(phaser_saw_view);
                 break;
             case R.id.flanger:
-                closeFragment(R.id.user_controls);
+                testing.removeAllViews();
+                ModulateLogic.flanger flanger = new ModulateLogic.flanger();
+                ModulateLogic.modulation Flanger = flanger::modulate;
                 int[] flanger_maxes = new int[]{10, 10, 20};
-                displayMFragment(flanger_titles, flanger_maxes, new double[]{10, 10, nyquist},
-                        new String[]{"∧", "∨", "Hz"}, creation, "makeFlangerCreation", Gravity.NO_GRAVITY,
-                        "Flanger with Sine Wave", flanger_progress);
+                MControls flanger_view = new MControls(this,flanger_titles, flanger_maxes, new double[]{10, 10, nyquist},
+                        new String[]{"∧", "∨", "Hz"}, noFrag, Flanger, Gravity.NO_GRAVITY,
+                        "Flanger with Sine Wave", flanger_progress,play_button);
+                testing.addView(flanger_view);
                 break;
             case R.id.flanger_triangle:
-                closeFragment(R.id.user_controls);
+                testing.removeAllViews();
+                ModulateLogic.flangerTriangle flangerTriangle = new ModulateLogic.flangerTriangle();
+                ModulateLogic.modulation FlangerTriangle = flangerTriangle::modulate;
                 int[] flanger_triangle_maxes = new int[]{10, 10, 20};
-                displayMFragment(flanger_titles, flanger_triangle_maxes, new double[]{10, 10, nyquist},
-                        new String[]{"∧", "∨", "Hz"}, creation, "makeFlangerTriangleCreation", Gravity.NO_GRAVITY,
-                        "Flanger with Triangle Wave", flanger_progress);
+                MControls flanger_triangle_view = new MControls(this,flanger_titles, flanger_triangle_maxes, new double[]{10, 10, nyquist},
+                        new String[]{"∧", "∨", "Hz"}, noFrag, FlangerTriangle, Gravity.NO_GRAVITY,
+                        "Flanger with Triangle Wave", flanger_progress,play_button);
+                testing.addView(flanger_triangle_view);
                 break;
             case R.id.flanger_square:
-                closeFragment(R.id.user_controls);
+                testing.removeAllViews();
+                ModulateLogic.flangerSquare flangerSquare = new ModulateLogic.flangerSquare();
+                ModulateLogic.modulation FlangerSquare = flangerSquare::modulate;
                 int[] flanger_square_maxes = new int[]{10, 10, 20};
-                displayMFragment(flanger_titles, flanger_square_maxes, new double[]{10, 10, nyquist},
-                        new String[]{"∧", "∨", "Hz"}, creation, "makeFlangerSquareCreation", Gravity.NO_GRAVITY,
-                        "Flanger with Square Wave", flanger_progress);
+                MControls flanger_square_view = new MControls(this,flanger_titles, flanger_square_maxes, new double[]{10, 10, nyquist},
+                        new String[]{"∧", "∨", "Hz"}, noFrag, FlangerSquare, Gravity.NO_GRAVITY,
+                        "Flanger with Square Wave", flanger_progress,play_button);
+                testing.addView(flanger_square_view);
                 break;
-                /*
             case R.id.start_recording:
+                noFrag = controls.getCreationData();
+                nyquist = (noFrag.getSampleRate() / 2) / 20;
+                record = new RecordLogic();
+                the_seeker.setVisibility(View.GONE);
+                display.setVisibility(View.VISIBLE);
+                record.setFileObject(noFrag, file_state);
+                file_state = false;
+                record.setRecordingState(false);
+                record.startRecording();
+                setGraphStream(record.buffer_size,noFrag.getFilePath(),true);
+                setDisplayStream(record.buffer_size,noFrag.getFilePath(),true, 1,Short.MAX_VALUE*2+1);
+                record_button.setVisibility(View.INVISIBLE);
+                pause_button.setVisibility(View.VISIBLE);
                 break;
+
             case  R.id.pause_recording:
+                record.setRecordingState(true);
+                setGraphStream(record.buffer_size,noFrag.getNewRecordFile(),false);
+                setDisplayStream(record.buffer_size,noFrag.getNewRecordFile(),false, 1,Short.MAX_VALUE*2+1);
+                display.setVisibility(View.GONE);
+                AudioCon.IO_RAF readOnly = new AudioCon.IO_RAF(noFrag.getNewRecordFile());
+                RandomAccessFile f = readOnly.getReadObject();
+                int length =0;
+                try {
+                    length= (int) f.length();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                int max = length/2/noFrag.getSampleRate()*1000;
+                the_seeker.setMax(max);
+                modulations.setVisibility(View.VISIBLE);
+                the_seeker.setVisibility(View.VISIBLE);
+                play_button.setVisibility(View.VISIBLE);
+                stop_button.setVisibility(View.VISIBLE);
+                pause_button.setVisibility(View.INVISIBLE);
+                record_button.setVisibility(View.VISIBLE);
                 break;
             case  R.id.play_recording:
+                try { record.play_recording();}
+                catch (IOException e) { e.printStackTrace();}
                 break;
             case  R.id.stop_recording:
                 break;
 
-                 */
+
 
 
             }

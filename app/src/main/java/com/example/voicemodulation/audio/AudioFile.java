@@ -26,6 +26,8 @@ public final class AudioFile implements Parcelable {
     private String record_file = Environment.getExternalStorageDirectory().getPath()+"/rec.pcm";
     private String modulation_file = Environment.getExternalStorageDirectory().getPath()+"/mod.pcm";
     private final String format;
+
+
     public AudioFile(int sample_rate, int playback_rate, int bit_depth, int[] channels, String _format) {
         this.sample_rate = sample_rate;
         this.playback_rate = playback_rate;

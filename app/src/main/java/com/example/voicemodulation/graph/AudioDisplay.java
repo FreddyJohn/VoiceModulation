@@ -165,7 +165,7 @@ public class AudioDisplay extends View {
         short[] chunk = new short[bufferSize*2];
         try {
             jane.read(buffer);
-            chunk = Convert.shortsToBytes(buffer);
+            chunk = Convert.bytesToShorts(buffer);
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("FAILED TO READ BUFFER");

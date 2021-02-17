@@ -1,392 +1,142 @@
 package com.example.voicemodulation.controls;
+
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.media.AudioFormat;
-import android.os.Bundle;
-import android.os.Environment;
-import android.view.LayoutInflater;
+import android.util.AttributeSet;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import androidx.fragment.app.Fragment;
+
+import androidx.annotation.Nullable;
 
 import com.example.voicemodulation.MainActivity;
 import com.example.voicemodulation.R;
 import com.example.voicemodulation.audio.AudioCon;
-import com.example.voicemodulation.audio.AudioFile;
+import com.example.voicemodulation.audio.AudioF;
 import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.graph.AudioDisplay;
+import com.example.voicemodulation.graph.GraphLogic;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.LinkedList;
 
-public class RControls extends Fragment {
-    private SharedPreferences sharedPref;
-    private SharedPreferences.Editor editor;
-    private static int[] SELECTED_CHANNELS;
-    private static int SELECTED_NUM_CHANNELS;
-    private int dynamicEncoding;
-    private static String CHOSEN_FORMAT;
-    private static int SELECTED_AUDIO_ENCODING;
-    private LinkedList<Controller> controllers;
-    private ImageButton play_button, stop_button, record_button, pause_button;
-    private SeekBar seek_bar;
-    private Boolean file_state=true;
-    private AudioFile creation;
-    private HorizontalScrollView modulations;
+//TODO know why are you doing this? -> so i don't have to deal with fragment life cycles
+//  don't have to deal with back stack
+//  can get rid of implementation 'androidx.fragment:fragment:1.2.5'
+//  get more shit directly in activity scope so things are easier like adding removing views and getting data from them
+//      via getter/setters instead of Bundle or LiveData or more Google dev vomit
+
+//TODO another consequence is that we can now make a functional interface
+// and inner classes that implement that interface for all modulate
+// functions and pass by direct reference instead of invoking the method
+
+//TODO make this a horizontal view
+
+//TODO now you can automatically set the gravity if ?
+
+public class RControls extends LinearLayout {
+    private HorizontalScrollView mod;
     private AudioDisplay display;
+    private GraphLogic graph;
+    private ImageButton record, play, pause, stop;
+    private SeekBar seek;
+    private Controller playback;
+    private Controller sample;
+    private Controller format;
+    private Controller channel;
+    private Controller encoding;
+    private AudioF creation;
+    private String name;
+    private int gravity;
+    private int[] scale;
+    private String[] quantity_type;
+    private String[] titles;
+    private int[] maxes;
+    private int[] progresses;
+    private  RecordLogic recordLogic;
+    private boolean file_state = true;
 
-    public RControls(){}
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        getActivity().getSupportFragmentManager().beginTransaction().hide(this).commit();
-        System.out.println("record fragment has entered onPause. Now hiding fragment to keep listeners alive");
+    public RControls(Context context) {
+        super(context);
+        init(context,null);
     }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        System.out.println("record fragment has entered onResume.");
-        //getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
+    public RControls(Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+        init(context,attrs);
     }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        System.out.println("record fragment has entered onStop.");
+    public RControls(Context context, String[] _titles, int[] _maxes,
+                     int[] _scale, String[] _quantity_type, int _gravity,
+                     String _name, int[] _progresses, FrameLayout controls,
+                     GraphLogic graph, FrameLayout seek_n_load, HorizontalScrollView modulations){
+        super(context);
+        this.name= _name;
+        this.gravity=_gravity;
+        this.scale= _scale;
+        this.quantity_type=_quantity_type;
+        this.titles=_titles;
+        this.maxes=_maxes;
+        this.mod = modulations;
+        this.progresses=_progresses;
+        this.record = controls.findViewById(R.id.start_recording);
+        this.play = controls.findViewById(R.id.play_recording);
+        this.pause = controls.findViewById(R.id.pause_recording);
+        this.stop = controls.findViewById(R.id.stop_recording);
+        this.graph = graph;
+        this.display = seek_n_load.findViewById(R.id.audio_display);
+        this.seek = seek_n_load.findViewById(R.id.seek);
+        init(context,null);
     }
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        System.out.println("record fragment has entered onDestroy.");
-        //getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
-    }
+    public void init(Context context,@Nullable AttributeSet attrs)
+    {
+        //TextView type = new TextView(context);
+        //type.setText("Record Controls");
+        //addView(type);
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        System.out.println("record fragment has entered onStart.");
-        //getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
-    }
+        creation = new AudioF();
+        playback = new Controller(getContext(),null,quantity_type[0],scale[0]);
+        playback.setParam(titles[0],maxes[0],progresses[0]);
+        addView(playback);
 
-    public static RControls newInstance(String[] title, int[] maxes, int[] scale, String[]
-            quantity_type, int gravity, String name, int[] progress) {
-        RControls controls = new RControls();
-        Bundle args = new Bundle();
-        args.putString("name",name);
-        args.putInt("gravity",gravity);
-        args.putIntArray("scale",scale);
-        args.putStringArray("quantities",quantity_type);
-        args.putStringArray("titles",title);
-        args.putIntArray("maxes",maxes);
-        args.putIntArray("progress",progress);
-        controls.setArguments(args);
-        return controls; }
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup _container, Bundle savedInstanceState) {
-        super.onCreateView(inflater,_container,savedInstanceState);
-        Bundle args = getArguments();
-        modulations = getActivity().findViewById(R.id.modulations);
-        display = getActivity().findViewById(R.id.audio_display);
-        seek_bar = getActivity().findViewById(R.id.seek);
-        sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
-        editor = sharedPref.edit();
-        play_button = getActivity().findViewById(R.id.play_recording);
-        record_button = getActivity().findViewById(R.id.start_recording);
-        pause_button = getActivity().findViewById(R.id.pause_recording);
-        stop_button = getActivity().findViewById(R.id.stop_recording);
-        seek_bar = getActivity().findViewById(R.id.seek);
-        play_button.setVisibility(View.INVISIBLE);
-        stop_button.setVisibility(View.INVISIBLE);
-        pause_button.setVisibility(View.INVISIBLE);
-        String name = args.getString("name");
-        int gravity = args.getInt("gravity");
-        String[] quantities = args.getStringArray("quantities");
-        int[] scale = args.getIntArray("scale");
-        int[] maxes = args.getIntArray("maxes");
-        String[] titles = args.getStringArray("titles");
-        int[] progress = args.getIntArray("progress");
-        final View rootView = inflater.inflate(R.layout.user_controls, _container, false);
-        LinearLayout controls_view = rootView.findViewById(R.id.n_parameters);
-        FrameLayout.LayoutParams view_params = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,
-                                                                            FrameLayout.LayoutParams.MATCH_PARENT);
+        sample = new Controller(getContext(),null,quantity_type[1],scale[1]);
+        sample.setParam(titles[1],maxes[1],progresses[1]);
+        addView(sample);
 
-        view_params.gravity = gravity;
-        controls_view.setLayoutParams(view_params);
-        TextView modulation_type = rootView.findViewById(R.id.modulation_type);
-        modulation_type.setText(name);
-        controllers = new LinkedList<>();
-        RecordLogic record = new RecordLogic();
-        //GraphLogic graph = getActivity().findViewById(R.id.display);
-        //AudioDisplay audio_display = getActivity().findViewById(R.id.audio_display);
-        Controller playback = new Controller(getContext(),null,quantities[0],scale[0]);
-        playback.setParam(titles[0],maxes[0],progress[0]);
-        controllers.add(playback);
-        controls_view.addView(playback);
-
-        Controller sample = new Controller(getContext(),null,quantities[1],scale[1]);
-        sample.setParam(titles[1],maxes[1],progress[1]);
-        controllers.add(sample);
-        controls_view.addView(sample);
-
-        RControls.formatSeeker fo = new RControls.formatSeeker();
-        Controller format = new Controller(getContext(),null,quantities[2],scale[2]);
-        seekers format_seek = (a) -> String.valueOf(fo.quanToType(a));
+        ControlCases.formatSeeker fo = new ControlCases.formatSeeker();
+        format = new Controller(getContext(),null,quantity_type[2],scale[2]);
+        ControlCases.seekers format_seek = (a) -> String.valueOf(fo.quanToType(a));
         format.setTypeSwitch(format_seek);
         format.setZeroCase(false);
-        format.setParam(titles[2],maxes[2],progress[2]);
-        controllers.add(format);
-        controls_view.addView(format);
+        format.setParam(titles[2],maxes[2],progresses[2]);
+        addView(format);
 
-        RControls.channelSeeker ch = new RControls.channelSeeker();
-        Controller channel = new Controller(getContext(),null,quantities[3],scale[3]);
-        seekers channel_seek = (a) -> String.valueOf(ch.quanToType(a));
+        ControlCases.channelSeeker ch = new ControlCases.channelSeeker();
+        channel = new Controller(getContext(),null,quantity_type[3],scale[3]);
+        ControlCases.seekers channel_seek = (a) -> String.valueOf(ch.quanToType(a));
         channel.setTypeSwitch(channel_seek);
         channel.setZeroCase(false);
-        channel.setParam(titles[3],maxes[3],progress[3]);
-        controllers.add(channel);
-        controls_view.addView(channel);
+        channel.setParam(titles[3],maxes[3],progresses[3]);
+        addView(channel);
 
-        RControls.encodingSeeker en = new RControls.encodingSeeker();
-        Controller encoding = new Controller(getContext(),null,quantities[4],scale[4]);
-        seekers encoding_seek = (a) -> String.valueOf(en.quanToType(a));
+        ControlCases.encodingSeeker en = new ControlCases.encodingSeeker();
+        encoding = new Controller(getContext(),null,quantity_type[4],scale[4]);
+        ControlCases.seekers encoding_seek = (a) -> String.valueOf(en.quanToType(a));
         encoding.setTypeSwitch(encoding_seek);
         encoding.setZeroCase(false);
-        encoding.setParam(titles[4],maxes[4],progress[4]);
-        controllers.add(encoding);
-        controls_view.addView(encoding);
-
-        int[] params = new int[maxes.length];
-        record_button.setOnClickListener(//v -> new Thread(() -> {
-                v -> {
-            for (int i = 0; i < maxes.length; i++) {
-                params[i] = controllers.get(i).getProgress() * scale[i];
-            }
-            //TODO delete methods and replace with calls to respective functional interface, see upper todo ^
-            creation = new AudioFile(params[0],params[1],
-                                           encodingSeeker(params[4]),channelSeeker(params[3]),
-                                           formatSeeker(params[2]));
-            format.setSeekBarEnabled(false);
-            encoding.setSeekBarEnabled(false);
-            channel.setSeekBarEnabled(false);
-            int file_index = sharedPref.getInt("index", 1);
-            editor.putInt("index", file_index += 1);
-            seek_bar.setVisibility(View.GONE);
-            editor.apply();
-            creation.setFilePath(creation.getNewRecordFile());
-            record.setFileObject(creation, file_state);
-            file_state = false;
-            record.setRecordingState(false);
-            record.startRecording();
-            String nam = Environment.getExternalStorageDirectory().getPath()+"/data.0";
-            display.setVisibility(View.VISIBLE);
-            MainActivity.setGraphStream(record.buffer_size,creation.getNewRecordFile(),true);
-            MainActivity.setDisplayStream(record.buffer_size,creation.getNewRecordFile(),true, 1,dynamicEncoding);
-            record_button.setVisibility(View.INVISIBLE);
-            pause_button.setVisibility(View.VISIBLE);
-            //args.putParcelable("file",creation);
-        });
-        //TODO this was only removed to test length of file in seconds by creating wav
-        //stop_button.setOnClickListener(v -> {
-       //     record.stopRecording();
-       // });
-        pause_button.setOnClickListener(v -> {
-            display.setVisibility(View.GONE);
-            seek_bar.setVisibility(View.VISIBLE);
-            AudioCon.IO_RAF readOnly = new AudioCon.IO_RAF(creation.getNewRecordFile());
-            RandomAccessFile f = readOnly.getReadObject();
-            int length =0;
-            try {
-                length= (int) f.length();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            // length in bytes/encoding/sample rate*1000 = length in milliseconds
-            // pos of seek bar * (sample rate/1000) = file index in milliseconds
-            // with the only stipulation that we have one sample given rate
-            // otherwise x / (n>x) = > 1
-            int max = length/2/creation.getSampleRate()*1000;
-            seek_bar.setMax(max);
-            modulations.setVisibility(View.VISIBLE);
-            play_button.setVisibility(View.VISIBLE);
-            stop_button.setVisibility(View.VISIBLE);
-            System.out.println("YOU PRESSED PAUSE "+ length);
-            file_state=false;
-            record.setRecordingState(true);
-            pause_button.setVisibility(View.INVISIBLE);
-            record_button.setVisibility(View.VISIBLE);
-            args.putParcelable("file",creation);
-            args.putInt("buff_size",record.buffer_size);
-            //graph.setGraphState(false,record.buffer_size);
-            MainActivity.setGraphStream(record.buffer_size,creation.getNewRecordFile(),false);
-            MainActivity.setDisplayStream(record.buffer_size,creation.getNewRecordFile(),false, 1,dynamicEncoding);
-            });
-
-
-        play_button.setOnClickListener(v-> new Thread(()->{ try { record.play_recording();}
-        catch (IOException e) { e.printStackTrace();}}).start());
-
-        return rootView; }
-    public interface seekers{
-        String quanToType(int quan);
-    }
-    public static class encodingSeeker implements seekers{
-        @Override
-        public String quanToType(int quan) {
-            String type = "";
-            switch (quan) {
-                case 1:
-                    SELECTED_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
-                    type = "16Bit";
-                    break;
-                case 0:
-                    SELECTED_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_8BIT;
-                    type = "8Bit";
-                    break;
-                default:
-                    SELECTED_AUDIO_ENCODING = AudioFormat.ENCODING_DEFAULT;
-                    type = "16Bit";
-            }
-            return type;
-        }
-    }
-    public static class formatSeeker implements seekers {
-        @Override
-        public String quanToType(int quan) {
-            switch (quan) {
-                case 2:
-                    CHOSEN_FORMAT = ".wav";
-                    //chosen_format = new Format.wav(creation);
-                    //creation.setFormat(chosen_format);
-                    break;
-                case 1:
-                    CHOSEN_FORMAT = ".mp4";
-                    break;
-                case 0:
-                    CHOSEN_FORMAT = ".pcm";
-                    break;
-            }
-            return CHOSEN_FORMAT;
-        }
+        encoding.setParam(titles[4],maxes[4],progresses[4]);
+        addView(encoding);
 
     }
-    public static class channelSeeker implements seekers  {
-
-        @Override
-        public String quanToType(int quan) {
-            String channels="";
-            switch (quan) {
-                case 1:
-                    SELECTED_CHANNELS = new int[] {AudioFormat.CHANNEL_IN_STEREO, AudioFormat.CHANNEL_OUT_STEREO};
-                    channels="Stereo";
-                    break;
-                case 0:
-                    SELECTED_CHANNELS = new int[] {AudioFormat.CHANNEL_IN_MONO, AudioFormat.CHANNEL_OUT_MONO};
-                    channels="Mono";
-                    break;
-
-            }
-            return channels;
-        }
-
-    }
-    public int encodingSeeker(int progress) {
-        switch (progress) {
-            case 1:
-                SELECTED_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
-                this.dynamicEncoding = Short.MAX_VALUE*2+1;
-                break;
-            case 0:
-                SELECTED_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_8BIT;
-                this.dynamicEncoding = Byte.MAX_VALUE*2+1;
-                break;
-            default:
-                SELECTED_AUDIO_ENCODING = AudioFormat.ENCODING_DEFAULT;
-        }
-        return SELECTED_AUDIO_ENCODING;
+    public AudioF getCreationData(){
+        creation.setPlaybackRate(playback.getProgress()*scale[0]);
+        creation.setSampleRate(sample.getProgress()*scale[1]);
+        creation.setFormat(ControlCases.formatSeeker(format.getProgress()));
+        creation.setNumChannelsIn(ControlCases.channelSeeker(channel.getProgress()));
+        creation.setBitDepth(ControlCases.encodingSeeker(encoding.getProgress()));
+        creation.setFilePath(creation.getNewRecordFile());
+        return creation;
     }
 
-    public static String formatSeeker(int progress) {
-        switch (progress) {
-            case 2:
-                CHOSEN_FORMAT = ".wav";
-                //chosen_format = new Format.wav(creation);
-                //creation.setFormat(chosen_format);
-                break;
-            case 1:
-                CHOSEN_FORMAT = ".mp4";
-                break;
-            case 0:
-                CHOSEN_FORMAT = ".pcm";
-                break;
-        }
-        return CHOSEN_FORMAT;
-    }
-
-    public static int[] channelSeeker(int progress) {
-        switch (progress) {
-            case 1:
-                SELECTED_CHANNELS = new int[] {AudioFormat.CHANNEL_IN_STEREO, AudioFormat.CHANNEL_OUT_STEREO};
-                break;
-            case 0:
-                SELECTED_CHANNELS = new int[] {AudioFormat.CHANNEL_IN_MONO, AudioFormat.CHANNEL_OUT_MONO};
-                break;
-
-        }
-        return SELECTED_CHANNELS;
-    }
 }
-/*
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.start_recording:
-                boolean permission = hasPermissions(this, PERMISSIONS);
-                boolean selected = sharedPref.getBoolean("selected",false);
-                if (!permission) {
-                    ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
-                }
-                else if(permission){
-                    if (!selected) { getUserDirectorySelection(selected);}
-                    else if(selected) {
-                            //if (!file_state){ int file_pos = global_seek.getProgress()*creation.getSampleRate();}
-                            String directory = sharedPref.getString("directory", getFilesDir().toString());
-                            int file_index = sharedPref.getInt("index", 1);
-                            editor.putInt("index", file_index += 1);
-                            editor.apply();
-                            //SELECTED_FILE_NAME = directory + "/Recording " + file_index + formatSeeker(format.getProgress());;
-                            Toast.makeText(MainActivity.this, "Now Recording",
-                                    Toast.LENGTH_SHORT).show();
-                            SELECTED_SAMPLE_RATE = sample_rate.getProgress() * seeker_multiplier;
-                            encodingSeeker(encoding.getProgress());
-                            channelSeeker(num_channels.getProgress());
-                            SELECTED_PLAYBACK_RATE = playback_rate.getProgress() * seeker_multiplier;
-                            creation = new AudioFile(SELECTED_SAMPLE_RATE, SELECTED_PLAYBACK_RATE,
-                                    SELECTED_AUDIO_ENCODING, SELECTED_CHANNELS, formatSeeker(format.getProgress()));
-                            formatSeeker(format.getProgress());
-                            creation.setFilePath(creation.getNewRecordFile());
-                            record.setFileObject(creation, file_state);
-                            //TODO fix this bullshit right here
-                            record.setRecordingState(false);
-                            record.startRecording();
-                            graph.setGraphState(true,record.buffer_size);
-                            //graph.setGraphState(true,silentBob);
-                            //displayFragment();
-                            //graph.setGraphState(true, silentBob);
-                            play_button.setVisibility(View.VISIBLE);
-                            stop_button.setVisibility(View.VISIBLE);
-                            record_button.setVisibility(View.INVISIBLE);
-                            pause_button.setVisibility(View.VISIBLE);
-                            num_channels.setEnabled(false);
-                            format.setEnabled(false);
-                            encoding.setEnabled(false);
-                        }}
-                break;
- */

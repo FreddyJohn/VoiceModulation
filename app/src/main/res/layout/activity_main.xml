@@ -91,6 +91,13 @@
         android:orientation="vertical"
         android:visibility="visible">
 
+        <HorizontalScrollView
+            android:id="@+id/fuckFragments"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </HorizontalScrollView>
+
         <FrameLayout
             android:id="@+id/user_controls"
             android:layout_width="match_parent"

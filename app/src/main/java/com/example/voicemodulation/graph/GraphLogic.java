@@ -13,6 +13,7 @@ import android.widget.SeekBar;
 
 import com.example.voicemodulation.audio.util.Convert;
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -60,7 +61,7 @@ public class GraphLogic extends View {
         try {
             //TODO fix this shit
             String name = Environment.getExternalStorageDirectory().getPath()+"/rec.pcm";
-            //File i = new File(name);
+            File i = new File(name);
             this.jill = new DataInputStream(new FileInputStream(name));
 
         } catch (FileNotFoundException e) {
@@ -129,7 +130,7 @@ public class GraphLogic extends View {
             e.printStackTrace();
             System.out.println("FAILED TO READ BUFFER");
         }
-        short[] chunk = Convert.shortsToBytes(buffer);
+        short[] chunk = Convert.bytesToShorts(buffer);
         float[] test = new float[chunk.length * 4];
         iter += pixel_density;
         for (int i = 4; i < chunk.length; i += 4) {
