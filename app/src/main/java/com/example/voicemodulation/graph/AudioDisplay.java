@@ -75,10 +75,6 @@ public class AudioDisplay extends View {
         init(context, attrs);
     }
 
-    public AudioDisplay(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-        init(context, attrs);
-    }
 
     public void init(Context context, AttributeSet attributeSet) //,int graphID)
     {
@@ -87,7 +83,7 @@ public class AudioDisplay extends View {
         data = new LinkedList<>();
         paint = new Paint();
         paint.setColor(Color.RED);
-        pixel_density = Resources.getSystem().getDisplayMetrics().density;
+        pixel_density = Convert.numberToDp(context,1);
         paint.setDither(true);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(pixel_density);
@@ -129,10 +125,9 @@ public class AudioDisplay extends View {
     }
     public void setEncoding(int _dynamicRange){this.dynamicRange=_dynamicRange;}
     public void setGraphState(boolean state, int buffer_size,String in_file,int n) { //TODO we need to know about SeekBar position
-        //TODO there are two different ways in which this class will be used
-        //  1.) display input stream from n offset of memory location
-        //  2.) display the entire stream
-        //  both of these conditions can be described with one variable -> the offset 1.) = n , 2.) = 0
+        /*
+        TODO find the failed to release and close resource
+         */
         this.graphState=state;
         this.bufferSize=buffer_size;
         System.out.println("Buffer size: "+buffer_size);
@@ -146,8 +141,8 @@ public class AudioDisplay extends View {
             case 0:
                 skipBytes(0);
                 this.bufferSize= (int) view_width*2;
-                System.out.println("The potentially maximum buffer size: "+bufferSize);
-                System.out.println("The potentially maximum display rate: "+bufferSize*60);
+                //System.out.println("The potentially maximum buffer size: "+bufferSize);
+                //System.out.println("The potentially maximum display rate: "+bufferSize*60);
                 break;
             case 1:
                 AudioCon.IO_RAF con = new AudioCon.IO_RAF(in_file);
@@ -168,7 +163,7 @@ public class AudioDisplay extends View {
             chunk = Convert.bytesToShorts(buffer);
         } catch (IOException e) {
             e.printStackTrace();
-            System.out.println("FAILED TO READ BUFFER");
+            //System.out.println("FAILED TO READ BUFFER");
         }
         for(int i=0; i<chunk.length; i++) {
             graph_pos += iter;
@@ -184,7 +179,7 @@ public class AudioDisplay extends View {
             jane.read(buffer);
         } catch (IOException e) {
             e.printStackTrace();
-            System.out.println("FAILED TO READ BUFFER");
+            //System.out.println("FAILED TO READ BUFFER");
         }
         for(int i=0; i<buffer.length; i++) {
             graph_pos += iter;

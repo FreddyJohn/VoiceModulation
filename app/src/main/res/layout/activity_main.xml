@@ -91,22 +91,23 @@
         android:orientation="vertical"
         android:visibility="visible">
 
-        <HorizontalScrollView
-            android:id="@+id/fuckFragments"
+        <LinearLayout android:orientation="vertical"
+            android:id="@+id/n_pararmeters"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/control_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+            </TextView>
 
-        </HorizontalScrollView>
+            <HorizontalScrollView
+                android:id="@+id/fuckFragments"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:foregroundGravity="center_vertical|clip_horizontal"></HorizontalScrollView>
+        </LinearLayout>
 
-        <FrameLayout
-            android:id="@+id/user_controls"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"></FrameLayout>
-
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="20dp" />
 
         <HorizontalScrollView
             android:id="@+id/modulations"
@@ -199,10 +200,6 @@
             </LinearLayout>
         </HorizontalScrollView>
 
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="20dp" />
 
         <FrameLayout
             android:id="@+id/record_controls"

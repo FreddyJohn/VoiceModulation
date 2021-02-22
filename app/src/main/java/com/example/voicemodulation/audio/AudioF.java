@@ -10,10 +10,13 @@ public class AudioF {
     private int num_channels_in;
     private int num_channels_out;
     private String file_path;
+    private int buffer_size;
     //TODO make not fixed file but project file
     private String record_file = Environment.getExternalStorageDirectory().getPath()+"/rec.pcm";
     private String modulation_file = Environment.getExternalStorageDirectory().getPath()+"/mod.pcm";
     private  String format;
+    private int length;
+
     public AudioF(){}
 
     public int getSampleRate() {
@@ -48,26 +51,17 @@ public class AudioF {
     public int getNumChannelsOut() {
         return num_channels_out;
     }
-
-    public void setFormat(String _format)
-    {
-        this.format = _format;
-    }
-    public String getFormat()
-    {
-        return format;
-    }
-    public String getFilePath() {
-        return file_path;
-    }
-    public void setFilePath(String filePath) {
-        this.file_path = filePath;
-    }
+    public void setLength(int length){this.length= length;}
+    public int getLength(){return  length;}
+    public void setFormat(String _format) { this.format = _format; }
+    public String getFormat() { return format; }
+    public String getFilePath() { return file_path; }
+    public void setFilePath(String filePath) { this.file_path = filePath; }
     public String getNewRecordFile(){return this.record_file;}
     public String getNewModulateFile(){return this.modulation_file;}
     public void setNewModulateFile(String file_path){ this.modulation_file =file_path;}
     public void setNewRecordFile(String file_path){ this.record_file =file_path;}
-    public static int channelSeeker(int num_channels_in) {
+    private static int channelSeeker(int num_channels_in) {
         int out=0;
         switch (num_channels_in) {
             case AudioFormat.CHANNEL_IN_STEREO:
@@ -79,4 +73,6 @@ public class AudioF {
         }
         return out;
     }
+    public void setBufferSize(int bufferSize){this.buffer_size=bufferSize;}
+    public int getBufferSize(){ return  buffer_size;}
 }

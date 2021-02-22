@@ -54,7 +54,6 @@ public class RecordLogic {
         this.file_data = creation;
         this.file_path = creation.getFilePath();
         this.ioRAF = new AudioCon.IO_RAF(file_path);
-        System.out.println("THE FILE NAME IS: " + file_path);
         this.out = ioRAF.getWriteObject(file_state); //TODO instead of new file or not seekPos
     }
     public void setRecordingState(boolean state) {
@@ -72,6 +71,7 @@ public class RecordLogic {
         recorder.startRecording();
         isRecording = true;
         recordingThread = new Thread(() -> writeAudioDataToFile(), "AudioRecorder Thread");
+        recordingThread.setPriority(10);
         recordingThread.start();
     }
     public void stopRecording() {

@@ -90,7 +90,7 @@ public final class AudioFile implements Parcelable {
      */
     public void save()
     {
-        System.out.println("hello there the format is: "+ format);
+        //System.out.println("hello there the format is: "+ format);
         switch (format)
         {
             case ".wav":

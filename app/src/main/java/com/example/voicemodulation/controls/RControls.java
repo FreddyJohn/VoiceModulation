@@ -8,20 +8,12 @@ import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
-import android.widget.TextView;
-
 import androidx.annotation.Nullable;
-
-import com.example.voicemodulation.MainActivity;
 import com.example.voicemodulation.R;
-import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.AudioF;
 import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
-
-import java.io.IOException;
-import java.io.RandomAccessFile;
 
 //TODO know why are you doing this? -> so i don't have to deal with fragment life cycles
 //  don't have to deal with back stack
@@ -36,7 +28,6 @@ import java.io.RandomAccessFile;
 //TODO make this a horizontal view
 
 //TODO now you can automatically set the gravity if ?
-
 public class RControls extends LinearLayout {
     private HorizontalScrollView mod;
     private AudioDisplay display;
@@ -56,8 +47,7 @@ public class RControls extends LinearLayout {
     private String[] titles;
     private int[] maxes;
     private int[] progresses;
-    private  RecordLogic recordLogic;
-    private boolean file_state = true;
+
 
     public RControls(Context context) {
         super(context);
@@ -91,6 +81,7 @@ public class RControls extends LinearLayout {
     }
     public void init(Context context,@Nullable AttributeSet attrs)
     {
+        // TODO i need to set title for set of controls
         //TextView type = new TextView(context);
         //type.setText("Record Controls");
         //addView(type);

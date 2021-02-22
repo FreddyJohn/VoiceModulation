@@ -37,11 +37,18 @@ public class Generate {
         double[] d = new double[points];
         for (int i = 0; i < points; i++) {
             d[i] = min + i * (max - min) / (points - 1);
+            //System.out.println(d[i]);
         }
         return d;
     }
+    //t = np.linspace(0, length, sampleRate * int(length))
+    //e=generateSine(0,(2*np.pi)*2,48000,2000,10000,0)
+    //f=generateSine(0,(2*np.pi)*2,48000,2000,10000,0)
+    //c=np.concatenate([e,f])
+    //
+
     public static double[] sin(double a, double f, double p, int samples, int fps) {
-        int time = samples/fps;
+        double time = samples/fps;
         double[] t = linspace(0, time, samples);
         double[] y = new double[samples];
         for (int x = 0; x < t.length; x++) {

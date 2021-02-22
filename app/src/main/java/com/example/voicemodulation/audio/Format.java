@@ -20,7 +20,6 @@ public class Format {
             int bit_depth = data.getBitDepth();
             long sample_rate = data.getPlaybackRate();
             int num_channels_in = data.getNumChannelsIn();
-            System.out.println("num channels in "+num_channels_in);
             byte[] wav_header = Generate.wavHeader(total_bytes, total_bytes + 36,
                     sample_rate,
                     num_channels_in, (byte) (bit_depth * 8));

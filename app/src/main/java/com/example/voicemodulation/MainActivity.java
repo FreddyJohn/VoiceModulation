@@ -12,16 +12,10 @@ import android.widget.ImageButton;
 import android.widget.SeekBar;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-
 import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.AudioF;
-import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.audio.ModulateLogic;
 import com.example.voicemodulation.audio.RecordLogic;
-import com.example.voicemodulation.controls.ControlCases;
 import com.example.voicemodulation.controls.MControls;
 import com.example.voicemodulation.controls.RControls;
 import com.example.voicemodulation.graph.AudioDisplay;
@@ -29,7 +23,6 @@ import com.example.voicemodulation.graph.GraphLogic;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.LinkedList;
 
 /*TODO remove AudioDisplay implementation from GraphLogic
     the idea is to have a ViewGroup within MainActivity so that we can
@@ -103,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         seek_n_loader = findViewById(R.id.seek_n_load);
         testing = findViewById(R.id.fuckFragments);
         display = findViewById(R.id.audio_display);
+        //display = new AudioDisplay(this);
         modulations = findViewById(R.id.modulations);
         graph = findViewById(R.id.display);
         controls = new RControls(this,record_control_titles,record_control_ranges,
@@ -110,13 +104,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 record_gravity,record_control_title,record_control_progresses,
                 record_controls,graph,seek_n_loader,modulations);
         testing.addView(controls);
-        //modulations.setVisibility(View.INVISIBLE);
-        //display = findViewById(R.id.audio_display);
         the_seeker = findViewById(R.id.seek);
         the_seeker.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                System.out.println("progress in seconds "+progress);
+                graph.moveFileIndex(progress,noFrag.getSampleRate());
             }
 
             @Override
@@ -135,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         graph.setGraphState(state,buffsize);
     }
     public static void setDisplayStream(int buffsize, String file, boolean state, int length,int range) {
-        System.out.println("the dynamic range of this encoding is: "+range);
+        //System.out.println("the dynamic range of this encoding is: "+range);
         display.setEncoding(range);
         display.setGraphState(state, buffsize, file, length);
     }
@@ -288,43 +280,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
      */
-
-    //closeFragment has the effect of forcing a fragment through the rest of its lifecycle
-    //part of that lifecycle is onPause
-    //we can override this in the fragment to get the behavior we want for record and modulate fragments respectively
-    //removing it in modulate case and hiding it in record case
-    /*
-    public void closeFragment(int resource_id) {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        Fragment controller_type = fragmentManager
-                .findFragmentById(resource_id);
-        if (controller_type != null) {
-            FragmentTransaction fragmentTransaction =
-                    fragmentManager.beginTransaction();
-                fragmentTransaction.remove(controller_type).commit(); } }
-
-    public MControls displayMFragment(String[] titles, int[] maxes, double[] scale, String[] quantity_type,AudioFile creation,
-                                     String method, int gravity, String name, int[] progress) {
-        MControls controls = MControls.newInstance(titles,maxes,scale,quantity_type,creation,method,gravity,name,progress);
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager
-                .beginTransaction();
-        fragmentTransaction.add(R.id.user_controls,
-                controls).commit();
-        return controls; }
-
-     */
-
     @Override
     public void onClick(View v) {
-        //Bundle record_parameters = record_controls.getArguments();
-        //AudioFile creation = record_parameters.getParcelable("file");
-        //int buff_size = record_parameters.getInt("buff_size");
-       // double nyquist = (creation.getSampleRate() / 2) / 20;
-        //closeFragment(R.id.user_controls,true);
-        //display.setGraphState(true,1000,creation.getNewModulateFile());
         switch (v.getId()) {
-
             case R.id.backwards:
                 testing.removeAllViews();
                 ModulateLogic.backwards backwards = new ModulateLogic.backwards();
@@ -333,31 +291,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int[] backwards_maxes = new int[]{10};
                 MControls backwards_view = new MControls(this,backwards_titles, backwards_maxes, new double[]{.1},
                         new String[]{"Volume"}, noFrag, Backwards, Gravity.CENTER,
-                        "Backwards Effect", new int[]{10},play_button);
+                        "Backwards Effect", new int[]{10},play_button,seek_n_loader);
                 testing.addView(backwards_view);
-
                 break;
             case R.id.echo:
+                testing.removeAllViews();
                 ModulateLogic.echo echo = new ModulateLogic.echo();
                 ModulateLogic.modulation Echo = echo::modulate;
-                testing.removeAllViews();
                 int[] echo_maxes = new int[]{10, 10};
                 MControls echo_view = new MControls(this,echo_titles, echo_maxes, new double[]{1, 1},
                         new String[]{"S", "D"}, noFrag, Echo, Gravity.CENTER,
-                        "Echo Effect", new int[]{5, 6},play_button);
+                        "Echo Effect", new int[]{5, 6},play_button,seek_n_loader);
                 testing.addView(echo_view);
-
                 break;
             case R.id.quantize:
+                testing.removeAllViews();
                 ModulateLogic.quantized quantized = new ModulateLogic.quantized();
                 ModulateLogic.modulation Quantized = quantized::modulate;
-                testing.removeAllViews();
                 //TODO rename robotic shit
                 String[] robotic_titles = new String[]{"Quantize", "Amplitude"};
                 int[] robotic_maxes = new int[]{10, 10};
                 MControls robotic = new MControls(this,robotic_titles, robotic_maxes, new double[]{1000, .1},
                         new String[]{"C", "Amp"}, noFrag, Quantized, Gravity.CENTER,
-                        "Quantize Audio Sample", new int[]{5, 10},play_button);
+                        "Quantize Audio Sample", new int[]{5, 10},play_button,seek_n_loader);
                 testing.addView(robotic);
                 break;
             case R.id.phaser:
@@ -367,7 +323,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int[] phaser_maxes = new int[]{20, 10, 10, 20};
                 MControls phaser_view = new MControls(this,phaser_titles, phaser_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
                         phaser_quantities, noFrag, Phaser, Gravity.NO_GRAVITY,
-                        "Phaser with Sine Wave", phaser_progress,play_button);
+                        "Phaser with Sine Wave", phaser_progress,play_button,seek_n_loader);
                 testing.addView(phaser_view);
                 break;
             case R.id.phaser_triangle:
@@ -377,7 +333,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int[] alien_maxes = new int[]{20, 10, 10, 10};
                 MControls phaser_triangle_view = new MControls(this,phaser_titles, alien_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
                         phaser_quantities, noFrag, PhaserTriangle, Gravity.NO_GRAVITY,
-                        "Phaser with Triangle Wave", phaser_progress,play_button);
+                        "Phaser with Triangle Wave", phaser_progress,play_button,seek_n_loader);
                 testing.addView(phaser_triangle_view);
                 break;
             case R.id.phaser_square:
@@ -387,7 +343,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int[] square_maxes = new int[]{20, 10, 10, 10};
                 MControls phaser_square_view = new MControls(this,phaser_titles, square_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
                         phaser_quantities, noFrag, PhaserSquare, Gravity.NO_GRAVITY,
-                        "Phaser with Square Wave", phaser_progress,play_button);
+                        "Phaser with Square Wave", phaser_progress,play_button,seek_n_loader);
                 testing.addView(phaser_square_view);
                 break;
             case R.id.phaser_saw:
@@ -397,7 +353,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int[] saw_maxes = new int[]{20, 10, 10, 10};
                 MControls phaser_saw_view = new MControls(this,phaser_titles, saw_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
                         phaser_quantities, noFrag, PhaserSaw, Gravity.NO_GRAVITY,
-                        "Phaser with Saw Wave", phaser_progress,play_button);
+                        "Phaser with Saw Wave", phaser_progress,play_button,seek_n_loader);
                 testing.addView(phaser_saw_view);
                 break;
             case R.id.flanger:
@@ -407,7 +363,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int[] flanger_maxes = new int[]{10, 10, 20};
                 MControls flanger_view = new MControls(this,flanger_titles, flanger_maxes, new double[]{10, 10, nyquist},
                         new String[]{"∧", "∨", "Hz"}, noFrag, Flanger, Gravity.NO_GRAVITY,
-                        "Flanger with Sine Wave", flanger_progress,play_button);
+                        "Flanger with Sine Wave", flanger_progress,play_button,seek_n_loader);
                 testing.addView(flanger_view);
                 break;
             case R.id.flanger_triangle:
@@ -417,7 +373,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int[] flanger_triangle_maxes = new int[]{10, 10, 20};
                 MControls flanger_triangle_view = new MControls(this,flanger_titles, flanger_triangle_maxes, new double[]{10, 10, nyquist},
                         new String[]{"∧", "∨", "Hz"}, noFrag, FlangerTriangle, Gravity.NO_GRAVITY,
-                        "Flanger with Triangle Wave", flanger_progress,play_button);
+                        "Flanger with Triangle Wave", flanger_progress,play_button,seek_n_loader);
                 testing.addView(flanger_triangle_view);
                 break;
             case R.id.flanger_square:
@@ -427,7 +383,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int[] flanger_square_maxes = new int[]{10, 10, 20};
                 MControls flanger_square_view = new MControls(this,flanger_titles, flanger_square_maxes, new double[]{10, 10, nyquist},
                         new String[]{"∧", "∨", "Hz"}, noFrag, FlangerSquare, Gravity.NO_GRAVITY,
-                        "Flanger with Square Wave", flanger_progress,play_button);
+                        "Flanger with Square Wave", flanger_progress,play_button,seek_n_loader);
                 testing.addView(flanger_square_view);
                 break;
             case R.id.start_recording:
@@ -440,12 +396,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 file_state = false;
                 record.setRecordingState(false);
                 record.startRecording();
+                noFrag.setBufferSize(record.buffer_size);
                 setGraphStream(record.buffer_size,noFrag.getFilePath(),true);
                 setDisplayStream(record.buffer_size,noFrag.getFilePath(),true, 1,Short.MAX_VALUE*2+1);
                 record_button.setVisibility(View.INVISIBLE);
                 pause_button.setVisibility(View.VISIBLE);
                 break;
-
             case  R.id.pause_recording:
                 record.setRecordingState(true);
                 setGraphStream(record.buffer_size,noFrag.getNewRecordFile(),false);
@@ -453,14 +409,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 display.setVisibility(View.GONE);
                 AudioCon.IO_RAF readOnly = new AudioCon.IO_RAF(noFrag.getNewRecordFile());
                 RandomAccessFile f = readOnly.getReadObject();
-                int length =0;
+                double length =0;
                 try {
-                    length= (int) f.length();
+                    length= (double) f.length();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                int max = length/2/noFrag.getSampleRate()*1000;
+                noFrag.setLength((int) (length/2));
+                int max = (int) (length/2/noFrag.getSampleRate()*1000);
+                //System.out.println("length of file in bytes: "+ length +" and max is: "+ max);
                 the_seeker.setMax(max);
+                the_seeker.setProgress(max);
+                graph.setSeekBar(the_seeker);
                 modulations.setVisibility(View.VISIBLE);
                 the_seeker.setVisibility(View.VISIBLE);
                 play_button.setVisibility(View.VISIBLE);

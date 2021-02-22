@@ -55,8 +55,7 @@ public class AudioCon {
 
         public void setSeekToPointer(RandomAccessFile file, int offset) {
             try {
-                file.seek(file.length() + offset);
-                System.out.println("the file length is: " + file.length());
+                file.seek(offset);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -92,7 +91,7 @@ public class AudioCon {
         }
     }
     }
-
+    //TODO this needs to be RandomAccessFile with start stop
     public static class Data{
         public static short[] getShorts(String filePath){
             byte[] bytes =getBytes(filePath);
@@ -113,6 +112,14 @@ public class AudioCon {
                 e.printStackTrace();
             }
             return track;
+        }
+
+        public static long getMemory(){
+            final Runtime runtime = Runtime.getRuntime();
+            final long usedMemInMB=(runtime.totalMemory() - runtime.freeMemory()) / 1048576L;
+            final long maxHeapSizeInMB=runtime.maxMemory() / 1048576L;
+            final long availHeapSizeInMB = maxHeapSizeInMB - usedMemInMB;
+            return availHeapSizeInMB;
         }
     }
 }

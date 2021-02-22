@@ -8,24 +8,6 @@ import java.nio.ByteOrder;
 
 public class Convert {
 
-    public static int[] getBitsFromBytes(byte[] track) {
-        int size = track.length;
-        int[] bits = new int[size];
-        for (int i = 0; i < size; i++) {
-            bits[i] = track[i];
-        }
-        return bits;
-    }
-
-    public static byte[] getBytesFromBits(int[] bits) {
-        int size = bits.length;
-        byte[] bytes = new byte[size];
-        for (int i = 0; i < size; i++) {
-            bytes[i] = (byte) bits[i];
-        }
-        return bytes;
-    }
-
     public static short[] bytesToShorts(byte[] track) {
         short[] shorts = new short[track.length / 2];
         ByteBuffer.wrap(track).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shorts);
@@ -41,8 +23,7 @@ public class Convert {
     public static int numberToDp(final Context context,float num){
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         float fpixels = metrics.density * num;
-        int pixels = (int) (fpixels + 0.5f);
-        return pixels;
+        return (int) (fpixels + 0.5f);
     }
 
 
