@@ -30,7 +30,6 @@ public class RecordLogic {
     public int buffer_size;
     private AudioF file_data;
     private String file_path;
-    //private int file_size;
     private DataOutputStream jack;
 
     public RecordLogic() {
@@ -91,8 +90,6 @@ public class RecordLogic {
             //file_size+=sData.length/2;
             try {
                 out.write(sData, 0, buffer_size);
-                //jack.write(sData);
-                //jack.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -104,16 +101,26 @@ public class RecordLogic {
         }
     }
 
-    public void play_recording() throws IOException {
+    public void play_recording(int offset, int length) {
         AudioCon.IO_RAF ioRAF = new AudioCon.IO_RAF(file_path);
         byte[] byteData;
         File file;
         if (file_path != null) {
             file = new File(file_path);
-            byteData = new byte[(int) file.length()];
+            //byteData = new byte[(int) file.length()];
+            byteData = new byte[length];
             RandomAccessFile in = ioRAF.getReadObject();
-            in.read(byteData);
-            in.close();
+            try {
+                in.read(byteData,offset,length);
+                //in.read(byteData);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                in.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             int intSize = android.media.AudioTrack.getMinBufferSize(
                     file_data.getPlaybackRate(), file_data.getNumChannelsOut(), file_data.getBitDepth());
             AudioTrack at = new AudioTrack(

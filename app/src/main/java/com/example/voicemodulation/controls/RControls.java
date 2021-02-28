@@ -60,7 +60,7 @@ public class RControls extends LinearLayout {
     public RControls(Context context, String[] _titles, int[] _maxes,
                      int[] _scale, String[] _quantity_type, int _gravity,
                      String _name, int[] _progresses, FrameLayout controls,
-                     GraphLogic graph, FrameLayout seek_n_load, HorizontalScrollView modulations){
+                     GraphLogic graph, LinearLayout seek_n_load, HorizontalScrollView modulations){
         super(context);
         this.name= _name;
         this.gravity=_gravity;

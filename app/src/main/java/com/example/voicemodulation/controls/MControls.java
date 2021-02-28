@@ -45,7 +45,7 @@ public class MControls extends LinearLayout{
 
     public MControls(Context context, String[] title, int[] maxes, double[] scale,
                      String[] quantity_type, AudioF creation, ModulateLogic.modulation modulation,
-                     int gravity, String name, int[] progress, ImageButton play, FrameLayout seek_n_load){
+                     int gravity, String name, int[] progress, ImageButton play, LinearLayout seek_n_load){
         super(context);
         this.title=title;
         this.maxes=maxes;
@@ -65,7 +65,6 @@ public class MControls extends LinearLayout{
         LinkedList<Double> parameters = new LinkedList<>();
         for (int i = 0; i <title.length ; i++) {
             parameters.add((double) controllers.get(i).getProgress()*scale[i]);
-
         }
         return parameters;
     }
@@ -86,16 +85,13 @@ public class MControls extends LinearLayout{
             creation.setFilePath(creation.getNewModulateFile());
             recordLogic.setFileData(creation);
             method.modulate(getModulateParameters(),creation);
-            try {
-                recordLogic.play_recording();
+            System.out.println("NO NULL POINTER HAVE SCOPE "+seek.getProgress());
+                recordLogic.play_recording(0,creation.getLength());
                 ((Activity)context).runOnUiThread(() -> {
                     MainActivity.setDisplayStream(creation.getLength(),creation.getNewModulateFile(),false,0,Short.MAX_VALUE*2+1);
                     display.setVisibility(View.GONE);
                     seek.setVisibility(View.VISIBLE);
                 });
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }).start());
     }
 }

@@ -116,10 +116,10 @@ public class AudioCon {
 
         public static long getMemory(){
             final Runtime runtime = Runtime.getRuntime();
-            final long usedMemInMB=(runtime.totalMemory() - runtime.freeMemory()) / 1048576L;
-            final long maxHeapSizeInMB=runtime.maxMemory() / 1048576L;
-            final long availHeapSizeInMB = maxHeapSizeInMB - usedMemInMB;
-            return availHeapSizeInMB;
+            final long usedMem=(runtime.totalMemory() - runtime.freeMemory());
+            final long maxHeapSize=runtime.maxMemory();
+            final long availHeapSize = maxHeapSize - usedMem;
+            return availHeapSize;
         }
     }
 }

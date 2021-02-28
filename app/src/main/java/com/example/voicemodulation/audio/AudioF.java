@@ -75,4 +75,13 @@ public class AudioF {
     }
     public void setBufferSize(int bufferSize){this.buffer_size=bufferSize;}
     public int getBufferSize(){ return  buffer_size;}
+
+    public void save() {
+        switch (format)
+        {
+            case ".wav":
+                new Format.wav(this).run();
+                break;
+        }
+    }
 }

@@ -94,7 +94,7 @@ public final class AudioFile implements Parcelable {
         switch (format)
         {
             case ".wav":
-                new Format.wav(this).run();
+                //new Format.wav(this).run();
                 break;
         }
         //format.run();

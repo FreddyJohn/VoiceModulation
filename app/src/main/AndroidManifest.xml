@@ -12,6 +12,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:hardwareAccelerated="true"
+        android:largeHeap="true"
         android:theme="@style/Theme.VoiceModulation">
         <activity android:name=".MainActivity"
             android:screenOrientation="portrait">

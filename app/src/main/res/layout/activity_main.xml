@@ -55,14 +55,25 @@
     <com.example.voicemodulation.graph.GraphLogic
         android:id="@+id/display"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="300dp"
         android:layout_marginBottom="20dp"
         android:layout_weight="1" />
 
-    <FrameLayout
+    <LinearLayout
         android:id="@+id/seek_n_load"
         android:layout_width="match_parent"
-        android:layout_height="50dp">
+        android:layout_height="50dp"
+        android:layout_gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:textColor="#FFFFFF"
+            android:visibility="invisible" />
 
         <SeekBar
             android:id="@+id/seek"
@@ -79,7 +90,7 @@
             android:layout_height="match_parent"
             android:layout_marginBottom="10dp"
             android:visibility="gone" />
-    </FrameLayout>
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/controls"
@@ -200,11 +211,11 @@
             </LinearLayout>
         </HorizontalScrollView>
 
-
         <FrameLayout
             android:id="@+id/record_controls"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:layout_marginTop="20dp">
 
             <ImageButton
                 android:id="@+id/stop_recording"

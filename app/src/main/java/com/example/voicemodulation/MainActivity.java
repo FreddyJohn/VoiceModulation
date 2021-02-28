@@ -9,13 +9,16 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.AudioF;
 import com.example.voicemodulation.audio.ModulateLogic;
 import com.example.voicemodulation.audio.RecordLogic;
+import com.example.voicemodulation.audio.util.Convert;
 import com.example.voicemodulation.controls.MControls;
 import com.example.voicemodulation.controls.RControls;
 import com.example.voicemodulation.graph.AudioDisplay;
@@ -48,6 +51,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int[] flanger_progress = new int[] {8,4,1};
     private final int record_gravity = Gravity.NO_GRAVITY;
     private ImageButton play_button, stop_button, record_button, pause_button;
+    private TextView time;
     private static AudioDisplay display;
     private static GraphLogic graph;
     private Boolean file_state=true;
@@ -55,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final String record_control_title = "Record Controls";
     private HorizontalScrollView modulations;
     private FrameLayout record_controls;
-    private FrameLayout seek_n_loader;
+    private LinearLayout seek_n_loader;
     private HorizontalScrollView testing;
     private SeekBar the_seeker;
     private RControls controls;
@@ -68,6 +72,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     Manifest.permission.RECORD_AUDIO};
+    private int pos_select;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +90,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         play_button.setVisibility(View.INVISIBLE);
         stop_button.setVisibility(View.INVISIBLE);
         pause_button.setVisibility(View.INVISIBLE);
+        time = findViewById(R.id.time);
         //if (!hasPermissions(this, PERMISSIONS)) {
         //    requestPermissions( PERMISSIONS, PERMISSION_ALL);
         //}
@@ -108,23 +114,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         the_seeker.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                graph.moveFileIndex(progress,noFrag.getSampleRate());
+                graph.moveFileIndex(progress, the_seeker.getMax());
+                time.setText(String.format("%.2f",(double)progress/1000)); //.replace(".",":"));
             }
-
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-
+                System.out.println("onStartTrackingTouch FILE INDEX:"+the_seeker.getProgress()*2*(noFrag.getSampleRate()/1000));
+                //seekBar.setE
+                //graph.setT1(the_seeker.getProgress(), noFrag.getLength()/2/noFrag.getSampleRate()*1000);
             }
-
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
+                //graph.setT2(the_seeker.getProgress(), noFrag.getLength()/2/noFrag.getSampleRate()*1000);
+                pos_select =the_seeker.getProgress()*2*(noFrag.getSampleRate()/1000);
+                System.out.println("onStopTrackingTouch FILE INDEX:"+pos_select);
+                System.out.println("true length"+noFrag.getLength());
             }
         });
     }
     //TODO remove the file param
     public static void setGraphStream(int buffsize, String file, boolean state){
-        graph.setGraphState(state,buffsize);
+        graph.setGraphState(state);
     }
     public static void setDisplayStream(int buffsize, String file, boolean state, int length,int range) {
         //System.out.println("the dynamic range of this encoding is: "+range);
@@ -289,7 +299,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ModulateLogic.modulation Backwards = backwards::modulate;
                 String[] backwards_titles = new String[]{"Volume"};
                 int[] backwards_maxes = new int[]{10};
-                MControls backwards_view = new MControls(this,backwards_titles, backwards_maxes, new double[]{.1},
+                MControls backwards_view = new MControls(this, backwards_titles, backwards_maxes, new double[]{.1},
                         new String[]{"Volume"}, noFrag, Backwards, Gravity.CENTER,
                         "Backwards Effect", new int[]{10},play_button,seek_n_loader);
                 testing.addView(backwards_view);
@@ -387,25 +397,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 testing.addView(flanger_square_view);
                 break;
             case R.id.start_recording:
+                setGraphStream(record.buffer_size,noFrag.getFilePath(),true);
                 noFrag = controls.getCreationData();
                 nyquist = (noFrag.getSampleRate() / 2) / 20;
                 record = new RecordLogic();
                 the_seeker.setVisibility(View.GONE);
+                time.setVisibility(View.GONE);
                 display.setVisibility(View.VISIBLE);
                 record.setFileObject(noFrag, file_state);
                 file_state = false;
                 record.setRecordingState(false);
                 record.startRecording();
                 noFrag.setBufferSize(record.buffer_size);
-                setGraphStream(record.buffer_size,noFrag.getFilePath(),true);
-                setDisplayStream(record.buffer_size,noFrag.getFilePath(),true, 1,Short.MAX_VALUE*2+1);
                 record_button.setVisibility(View.INVISIBLE);
                 pause_button.setVisibility(View.VISIBLE);
+                setDisplayStream(record.buffer_size,noFrag.getFilePath(),true, 1,Short.MAX_VALUE*2+1);
                 break;
             case  R.id.pause_recording:
                 record.setRecordingState(true);
-                setGraphStream(record.buffer_size,noFrag.getNewRecordFile(),false);
+                graph.test(false);
+                //setGraphStream(record.buffer_size,noFrag.getNewRecordFile(),false);
                 setDisplayStream(record.buffer_size,noFrag.getNewRecordFile(),false, 1,Short.MAX_VALUE*2+1);
+                //record.setRecordingState(true);
                 display.setVisibility(View.GONE);
                 AudioCon.IO_RAF readOnly = new AudioCon.IO_RAF(noFrag.getNewRecordFile());
                 RandomAccessFile f = readOnly.getReadObject();
@@ -415,24 +428,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                noFrag.setLength((int) (length/2));
+                noFrag.setLength((int) length);
                 int max = (int) (length/2/noFrag.getSampleRate()*1000);
-                //System.out.println("length of file in bytes: "+ length +" and max is: "+ max);
+                System.out.println("length of file in bytes: "+ length +" and max is: "+ max);
+                //System.out.println(graph.getViewWidth()/);
+                //the_seeker.setMax((int) (graph.getViewWidth()/graph.getDensity()));
+                //the_seeker.setProgress(graph.getViewWidth()/);
+                time.setVisibility(View.VISIBLE);
                 the_seeker.setMax(max);
                 the_seeker.setProgress(max);
-                graph.setSeekBar(the_seeker);
+                //graph.setSeekBar(the_seeker);
                 modulations.setVisibility(View.VISIBLE);
                 the_seeker.setVisibility(View.VISIBLE);
                 play_button.setVisibility(View.VISIBLE);
                 stop_button.setVisibility(View.VISIBLE);
                 pause_button.setVisibility(View.INVISIBLE);
                 record_button.setVisibility(View.VISIBLE);
+                //setGraphStream(record.buffer_size,noFrag.getNewRecordFile(),false);
+                //setGraphStream(record.buffer_size,noFrag.getNewRecordFile(),true);
+                //setGraphStream(record.buffer_size,noFrag.getNewRecordFile(),false);
                 break;
             case  R.id.play_recording:
-                try { record.play_recording();}
-                catch (IOException e) { e.printStackTrace();}
+                pos_select=the_seeker.getProgress()*2*(noFrag.getSampleRate()/1000);
+                new Thread(() -> {
+                record.play_recording(0, pos_select);
+                System.out.println("pos_select is="+pos_select+" file length is ="+noFrag.getLength());}).start();
                 break;
             case  R.id.stop_recording:
+                noFrag.save();
                 break;
 
 
