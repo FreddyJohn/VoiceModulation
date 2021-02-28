@@ -4,21 +4,10 @@ import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
-import android.os.Environment;
-
-import com.example.voicemodulation.audio.util.Generate;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PipedWriter;
 import java.io.RandomAccessFile;
-//TODO fix implementation of play/pause on every call to setFileObject there's call to AudioCon.getWriteObject
-//TODO ^ this sets file length to zero for no reason.
+
 public class RecordLogic {
     private static final int AUDIO_SOURCE = MediaRecorder.AudioSource.MIC;
     private AudioRecord recorder;
@@ -30,17 +19,9 @@ public class RecordLogic {
     public int buffer_size;
     private AudioF file_data;
     private String file_path;
-    private DataOutputStream jack;
 
     public RecordLogic() {
 
-        try {
-            String name =Environment.getExternalStorageDirectory().getPath()+"/data.0";
-            File i = new File(name);
-            this.jack = new DataOutputStream(new FileOutputStream(name));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
 
     }
 
@@ -87,7 +68,6 @@ public class RecordLogic {
         byte[] sData = new byte[buffer_size];
         while (!isPaused && isRecording) {
             recorder.read(sData, 0, buffer_size);
-            //file_size+=sData.length/2;
             try {
                 out.write(sData, 0, buffer_size);
             } catch (IOException e) {
@@ -107,12 +87,10 @@ public class RecordLogic {
         File file;
         if (file_path != null) {
             file = new File(file_path);
-            //byteData = new byte[(int) file.length()];
             byteData = new byte[length];
             RandomAccessFile in = ioRAF.getReadObject();
             try {
                 in.read(byteData,offset,length);
-                //in.read(byteData);
             } catch (IOException e) {
                 e.printStackTrace();
             }

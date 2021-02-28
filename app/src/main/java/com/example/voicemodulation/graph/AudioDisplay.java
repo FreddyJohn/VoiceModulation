@@ -1,7 +1,6 @@
 package com.example.voicemodulation.graph;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -9,12 +8,9 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
-
 import androidx.annotation.Nullable;
-
 import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.util.Convert;
-
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -22,31 +18,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.LinkedList;
 
-/*
-the reason we need this class is because we want to change the dataInputStream of
-GraphLogic depending on the context of MainActivity
-for example: while the user is recording audio this class should display
-the real time audio
-    this is accomplished in RControls, RControls makes its own instance of GraphicLogic passing it the status,
-    the name of its dataOutputStream, and the size of the data buffer determined by AudioRecord android side
 
-   However, this data stream is being used by another graph at a different scale within the current code of GraphLogic.
-   GraphLogic needs to maintain a location in memory as it does with data.0
-   GraphLogic will be able to read and write byte buffers to any location within this place in memory
-        so will RecordLogic
-        and so will ModulateLogic
-   with these requirements, GraphLogic should be it's own dedicated class
-
-Now what should AudioDisplay be responsible for?
-AudioDisplay should just display any operations that involves data of n encoding being written or read in real time
-
-Now who and in where will AudioDisplay be called?
-
- */
-/*TODO you listen whore -> put this view back in GraphLogic so you only have the one data buffer
-    also, add a seek bar then dynamically display either this view or the seekbar based on context of MainActivity
-
- */
 public class AudioDisplay extends View {
     private float pixel_density;
     private Paint paint;
@@ -74,7 +46,6 @@ public class AudioDisplay extends View {
         super(context, attrs, defStyleAttr);
         init(context, attrs);
     }
-
 
     public void init(Context context, AttributeSet attributeSet) //,int graphID)
     {
@@ -116,8 +87,6 @@ public class AudioDisplay extends View {
     }
     private void skipBytes(int offset){
         try {
-            //System.out.println("Length in Bytes: "+ offset);
-            //System.out.println("Bytes skipped: "+jane.skipBytes(offset));
             jane.skipBytes(offset);
         } catch (IOException e) {
             e.printStackTrace();
@@ -125,13 +94,9 @@ public class AudioDisplay extends View {
     }
     public void setEncoding(int _dynamicRange){this.dynamicRange=_dynamicRange;}
     public void setGraphState(boolean state, int buffer_size,String in_file,int n) { //TODO we need to know about SeekBar position
-        /*
-        TODO find the failed to release and close resource
-         */
         this.graphState=state;
         this.bufferSize=buffer_size;
         System.out.println("Buffer size: "+buffer_size);
-        //File i = new File(in_file);
         try {
             this.jane = new DataInputStream(new FileInputStream(in_file));
         } catch (FileNotFoundException e) {
@@ -141,8 +106,6 @@ public class AudioDisplay extends View {
             case 0:
                 skipBytes(0);
                 this.bufferSize= (int) view_width*2;
-                //System.out.println("The potentially maximum buffer size: "+bufferSize);
-                //System.out.println("The potentially maximum display rate: "+bufferSize*60);
                 break;
             case 1:
                 AudioCon.IO_RAF con = new AudioCon.IO_RAF(in_file);
@@ -170,7 +133,6 @@ public class AudioDisplay extends View {
             canvas.drawLine(graph_pos, view_height / 2, graph_pos, (view_height / 2) - chunk[i] * (view_height / dynamicRange), paint);
             canvas.translate(+1, 0);
         }
-
         invalidate();
     }
     public void startGraphingBytes(Canvas canvas) {
@@ -184,8 +146,6 @@ public class AudioDisplay extends View {
         for(int i=0; i<buffer.length; i++) {
             graph_pos += iter;
             canvas.drawLine(graph_pos, view_height / 2, graph_pos, (view_height / 2) - buffer[i], paint);
-            //canvas.drawLine(graph_pos, view_height / 2, graph_pos, (view_height / 2) - buffer[i] * (view_height / dynamicRange), paint);
-
             canvas.translate(+1, 0);
         }
         invalidate();

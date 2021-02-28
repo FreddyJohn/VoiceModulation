@@ -67,6 +67,8 @@ public class GraphLogic extends View {
     private LinkedList<Bitmap> undo_redo_backStack;
     private int[] live_display_buffer;
     private Canvas newExtraCanvas;
+    private int bitmap_pos;
+    private boolean reset= false;
 
     /*
     TODO SIMPLIFICATION
@@ -237,34 +239,52 @@ public class GraphLogic extends View {
         // I only need to make sure live input is displayed within view width
         //canvas.drawBitmap(mExtraBitmap,position,0,paint);
         //startGraphing();
-        Canvas canvas1 =null;
-        Bitmap bitmap =null;
-        if(iter<=view_width) {
-            position=0;
-            canvas.drawLine(iter,view_height,iter,0, y_coordinate_axis);
-            canvas1= mExtraCanvas;
-            bitmap = mExtraBitmap;
+        //Canvas canvas1 =null;
+        //Bitmap bitmap =null;
+        if(iter<=view_width) { // iter is the current position of the waveform in pixels
+            position=0; // this is the position that we are drawing the bitmap
+            //canvas.drawLine(iter,view_height,iter,0, y_coordinate_axis);
+           // canvas1= mExtraCanvas;
+           // mExtraCanvas.translate(-.5f,0);
+          //  bitmap = mExtraBitmap;
+            canvas.drawBitmap(mExtraBitmap,position,0,paint);
+            startGraphing(mExtraCanvas);
             //canvas.drawBitmap(mExtraBitmap,position,0,paint);
             //startGraphing(canvas);
         }
         if(iter>=view_width) {
             //scale(canvas, .5f);
             position=view_width-iter;
+            if(!reset){
+                bitmap_pos=0;
+                mExtraBitmapp = Bitmap.createBitmap((int) view_width*2, (int)view_height,
+                        Bitmap.Config.ALPHA_8);
+                newExtraCanvas = new Canvas(mExtraBitmapp);
+                reset = true;
+
+            }
+            if(iter>view_width*2)
+            {
+                mExtraBitmap.recycle();
+                canvas.drawBitmap(mExtraBitmapp, position + view_width, 0, paint);
+                startGraphing(newExtraCanvas);
+                System.out.println("iter: " + iter + " position: " + position + " view_width: " + view_width);
+            }
             //mExtraCanvas.translate(-pixel_density,0);
-            System.out.println("POSITION IS: "+position);
+            //System.out.println("POSITION IS: "+position);
             //iter=0;
             //giveMeBitMap();
-            /*
-            RESETS POS
-            mExtraCanvas.translate(-pixel_density,0);
-            iter=0;
-             */
-            mExtraBitmapp = Bitmap.createBitmap((int) view_width, (int)view_height,
-                    Bitmap.Config.ALPHA_8);
-            newExtraCanvas = new Canvas(mExtraBitmapp);
-            canvas1 =newExtraCanvas;
-            bitmap=mExtraBitmapp;
-            newExtraCanvas.translate(-view_width,0);
+
+            //RESETS POS
+            //mExtraCanvas.translate(-pixel_density,0);
+
+            //iter=0;
+            //mExtraBitmapp = Bitmap.createBitmap((int) view_width, (int)view_height,
+           //         Bitmap.Config.ALPHA_8);
+          //  newExtraCanvas = new Canvas(mExtraBitmapp);
+            //canvas1 =newExtraCanvas;
+           // bitmap=mExtraBitmapp;
+            //mExtraCanvas.translate(-pixel_density,0);
             //mExtraBitmap.recycle();
             //iter=view_width-pixel_density;
             //position=-pixel_density;
@@ -272,15 +292,21 @@ public class GraphLogic extends View {
 
             //position=0;
             //canvas.translate(view_width,0);
-            canvas.drawLine(position,view_height,position,0, y_coordinate_axis);
+           // canvas.drawLine(position,view_height,position,0, y_coordinate_axis);
+            if(iter<view_width*2) {
+                canvas.drawBitmap(mExtraBitmap, position, 0, paint);
+                canvas.drawBitmap(mExtraBitmapp, position + view_width, 0, paint);
+                startGraphing(newExtraCanvas);
+                System.out.println("iter: " + iter + " position: " + position + " view_width: " + view_width);
+            }
             //TODO this right here this is the solution to your live display memory problem
             // mExtraBitmap.recycle();
             // even though canvas' have a very large space we must not iterate until we find out how much this is the solution
             //
             //canvas.drawBitmap(mExtraBitmap,position,0,paint);
         }
-        canvas.drawBitmap(bitmap,position,0,paint);
-        startGraphing(canvas1);
+        //canvas.drawBitmap(mExtraBitmap,position,0,paint);
+        //startGraphing(canvas);
     }
 
     private void makeBitMap() {
@@ -340,16 +366,24 @@ public class GraphLogic extends View {
             short[] chunk = Convert.bytesToShorts(buffer);
             float[] test = new float[chunk.length * 4];
             iter += pixel_density;
+            bitmap_pos+=pixel_density;
             for (int i = 4; i < chunk.length; i += 4) {
-                test[i - 4] = iter;
+                //test[i - 4] = iter;
+               // test[i - 3] = view_height / 2;
+               // test[i - 2] = iter;
+               // test[i - 1] = (view_height / 2) - chunk[i] * (view_height / 65535);
+                test[i - 4] = bitmap_pos;
                 test[i - 3] = view_height / 2;
-                test[i - 2] = iter;
+                test[i - 2] = bitmap_pos;
                 test[i - 1] = (view_height / 2) - chunk[i] * (view_height / 65535);
             }
             //mExtraBitmap.setPixels();
             canvas.drawLines(test, paint);
+            //refreshDrawableState();
+            //canvas.translate(1,0);
             //mExtraCanvas.drawLines(test, paint);
             this.ballSack = length;
+            //mExtraCanvas.save();
             invalidate();
     }
     public void moveFileIndex(int progres, int len){
