@@ -40,6 +40,7 @@ public class GraphLogic extends View {
     private float view_width;
     private int count;
     private boolean graphState = false;
+    private Bitmap mExtraBitmapp;
     private Bitmap mExtraBitmap;
     private Bitmap SelectBitmap;
     private Canvas mExtraCanvas;
@@ -57,7 +58,7 @@ public class GraphLogic extends View {
     private RandomAccessFile jacob;
     private Paint x_coordinate_axis;
     private Paint y_coordinate_axis;
-    private int ballSack;
+    private long ballSack;
     private int[] selection;
     private float density;
     private boolean cock = false;
@@ -187,12 +188,12 @@ public class GraphLogic extends View {
         if(graphState) {
             doLiveGraphing(canvas);
         }
-        if(!graphState){
-            beEditableGraph(canvas);
+        //if(!graphState){
+        //    beEditableGraph(canvas);
             //mExtraBitmap.getPixels(live_display_buffer, (int) 0, (int) view_width, (int) T2, 0, (int) view_width, mExtraBitmap.getHeight());
             //live_display_buffer[]
 
-        }
+        //}
     }
 
     private void beEditableGraph(Canvas canvas) {
@@ -236,21 +237,39 @@ public class GraphLogic extends View {
         // I only need to make sure live input is displayed within view width
         //canvas.drawBitmap(mExtraBitmap,position,0,paint);
         //startGraphing();
-        if(iter<view_width) {
+        Canvas canvas1 =null;
+        Bitmap bitmap =null;
+        if(iter<=view_width) {
             position=0;
             canvas.drawLine(iter,view_height,iter,0, y_coordinate_axis);
+            canvas1= mExtraCanvas;
+            bitmap = mExtraBitmap;
             //canvas.drawBitmap(mExtraBitmap,position,0,paint);
-           // startGraphing(canvas);
+            //startGraphing(canvas);
         }
-        if(iter>view_width) {
+        if(iter>=view_width) {
             //scale(canvas, .5f);
             position=view_width-iter;
             //mExtraCanvas.translate(-pixel_density,0);
             System.out.println("POSITION IS: "+position);
-            //mExtraCanvas.translate(-pixel_density*2,0);
+            //iter=0;
+            //giveMeBitMap();
+            /*
+            RESETS POS
+            mExtraCanvas.translate(-pixel_density,0);
+            iter=0;
+             */
+            mExtraBitmapp = Bitmap.createBitmap((int) view_width, (int)view_height,
+                    Bitmap.Config.ALPHA_8);
+            newExtraCanvas = new Canvas(mExtraBitmapp);
+            canvas1 =newExtraCanvas;
+            bitmap=mExtraBitmapp;
+            newExtraCanvas.translate(-view_width,0);
+            //mExtraBitmap.recycle();
             //iter=view_width-pixel_density;
             //position=-pixel_density;
             //iter=0;
+
             //position=0;
             //canvas.translate(view_width,0);
             canvas.drawLine(position,view_height,position,0, y_coordinate_axis);
@@ -259,10 +278,9 @@ public class GraphLogic extends View {
             // even though canvas' have a very large space we must not iterate until we find out how much this is the solution
             //
             //canvas.drawBitmap(mExtraBitmap,position,0,paint);
-            //startGraphing(canvas);
         }
-        canvas.drawBitmap(mExtraBitmap,position,0,paint);
-        startGraphing(canvas);
+        canvas.drawBitmap(bitmap,position,0,paint);
+        startGraphing(canvas1);
     }
 
     private void makeBitMap() {
@@ -297,6 +315,7 @@ public class GraphLogic extends View {
         invalidate();
     }
     public void startGraphing(Canvas canvas) {
+
             try {
                 jacob.seek(ballSack);
             } catch (IOException e) {
@@ -309,7 +328,7 @@ public class GraphLogic extends View {
                 e.printStackTrace();
             }
             //System.out.println("ballSack=" + ballSack + "  length=" + length);
-            byte[] buffer = new byte[length - ballSack];
+            byte[] buffer = new byte[(int) (length - ballSack)];
             try {
                 count += jacob.read(buffer);
             } catch (IOException e) {
@@ -317,6 +336,7 @@ public class GraphLogic extends View {
             } catch (IndexOutOfBoundsException e) {
                 e.printStackTrace();
             }
+
             short[] chunk = Convert.bytesToShorts(buffer);
             float[] test = new float[chunk.length * 4];
             iter += pixel_density;
@@ -327,8 +347,8 @@ public class GraphLogic extends View {
                 test[i - 1] = (view_height / 2) - chunk[i] * (view_height / 65535);
             }
             //mExtraBitmap.setPixels();
-            //canvas.drawLines(test, paint);
-            mExtraCanvas.drawLines(test, paint);
+            canvas.drawLines(test, paint);
+            //mExtraCanvas.drawLines(test, paint);
             this.ballSack = length;
             invalidate();
     }
