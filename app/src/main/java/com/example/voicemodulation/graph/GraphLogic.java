@@ -4,31 +4,24 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.os.Environment;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-
 import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.util.Convert;
-
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.Buffer;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 public class GraphLogic extends View {
     private static float T1;
     private static float T2;
     private float pixel_density;
-    //private SeekBar seeker;
     private Paint paint;
     private float view_height;
     private float view_width;
     private int count;
-    private boolean graphState = false;
+    private boolean graphState;
     private Bitmap mExtraBitmapp;
     private Bitmap mExtraBitmap;
     private Bitmap SelectBitmap;
@@ -37,10 +30,7 @@ public class GraphLogic extends View {
     private LinkedList<Short> data;
     private int graph_pos=0;
     private boolean liveAudioState =false;
-    private float testing;
-    //private int length;
     private float position=0;
-    private float progress;
     private boolean seeking = false;
     private boolean made = false;
     private boolean scaled = false;
@@ -53,19 +43,11 @@ public class GraphLogic extends View {
     private boolean T1_onScren = false;
     private boolean T2_onScren = false;
     private LinkedList<Bitmap> undo_redo_backStack;
-    private HashMap<Bitmap, Integer> graph_stream;
-    private int[] live_display_buffer;
     private Canvas newExtraCanvas;
+    private LinkedList<Integer> pos;
     private int bitmap_pos;
     private boolean reset= false;
 
-    /*
-    TODO SIMPLIFICATION
-        "because they are not the default canvas and bitmap used in the onDraw() method."
-        -https://developer.android.com/codelabs/advanced-android-training-draw-on-canvas#2
-            so use the default canvas and bitmap in the onDraw
-
-     */
     public GraphLogic(Context context) {
         super(context);
         init(context, null);
@@ -78,11 +60,10 @@ public class GraphLogic extends View {
         super(context, attrs, defStyleAttr);
         init(context, attrs);
     }
-    public void init(Context context, AttributeSet attributeSet) //,int graphID)
+    public void init(Context context, AttributeSet attributeSet)
     {
-        //setFocusable(false);
         undo_redo_backStack = new LinkedList<>();
-        graph_stream = new HashMap<>();
+        pos = new LinkedList<Integer>();
         density = Convert.numberToDp(context,1);
         data = new LinkedList<>();
         paint = new Paint();
@@ -95,17 +76,13 @@ public class GraphLogic extends View {
         x_coordinate_axis.setStrokeWidth(2-.05f/pixel_density);
         y_coordinate_axis.setStrokeWidth(density);
         paint.setColor(Color.RED);
-        //pixel_density = Resources.getSystem().getDisplayMetrics().density;
         pixel_density = Convert.numberToDp(context,1);
-        //paint.setDither(true);
         paint.setStyle(Paint.Style.STROKE);
         String name = Environment.getExternalStorageDirectory().getPath()+"/rec.pcm";
         paint.setStrokeWidth(density);
         AudioCon.IO_RAF funky = new AudioCon.IO_RAF(name);
-        //selection =new int[mExtraBitmap.getHeight()*mExtraBitmap.getWidth()];
         jacob = funky.getReadObject();
-//        graph_stream.push(giveMeBitMap());
-       // graph_stream.push(giveMeBitMap());
+
     }
 
     @Override
@@ -125,6 +102,7 @@ public class GraphLogic extends View {
                     T2_onScren=true;
                 }
                 break;
+                /*
             case MotionEvent.ACTION_UP:
                 if(evt.getX()>=T2+20 && evt.getX() <= T1-20) {
                     System.out.println("CLICKED INSIDE");
@@ -149,6 +127,8 @@ public class GraphLogic extends View {
                         System.out.println("FAIL"+e); }
                 }
                 break;
+
+                 */
             case MotionEvent.ACTION_MOVE:
                 if (T1-evt.getX()<=20 && evt.getX()>=T2+20) {
                     T1 = evt.getX();
@@ -180,50 +160,60 @@ public class GraphLogic extends View {
         canvas.drawLine(0, view_height, view_width, view_height, y_coordinate_axis);
         canvas.drawLine(0, 0, view_width, 0, y_coordinate_axis);
         if(graphState) {
-            //doLiveGraphing(canvas);
+            //reset=false;
             doGraphing(canvas);
         }
-        if(!graphState){
+        if(!graphState & pos.size()==2){
             beEditableGraph(canvas);
-            //mExtraBitmap.getPixels(live_display_buffer, (int) 0, (int) view_width, (int) T2, 0, (int) view_width, mExtraBitmap.getHeight());
-            //live_display_buffer[]
+       }
+    }
+    public void startGraphingg(Canvas canvas) {
+        if(pos.size()==2) {
+            if (pos.get(0) - pos.get(1) != 0 && pos.get(0)-pos.get(1)>0) {
+                int[] pixels = new int[(int) ((view_width-pixel_density)*view_height)];
+                try {
+                    jacob.seek(pos.get(0));
+                } catch (IOException | IndexOutOfBoundsException e) {
+                    e.printStackTrace();
+                }
+                byte[] buffer = new byte[pos.get(0) - pos.get(1)];
+                try {
+                    count += jacob.read(buffer);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (IndexOutOfBoundsException e) {
+                    e.printStackTrace();
+                }
+                short[] chunk = Convert.bytesToShorts(buffer);
+                float[] test = new float[chunk.length * 4];
+                bitmap_pos += pixel_density;
+                for (int i = 4; i < chunk.length; i += 4) {
+                     test[i - 4] = bitmap_pos;
+                     test[i - 3] = view_height / 2;
+                     test[i - 2] = bitmap_pos;
+                     test[i - 1] = (view_height / 2) - chunk[i] * (view_height / 65535);
+                     //for (int j = 0; j < chunk[i]; j ++) {
+                    //    mExtraBitmap.setPixel(bitmap_pos, (int) ((view_height / 2) - i * (view_height / 65535)),75);
+                    }
+                canvas.drawLines(test, paint);
+                mExtraBitmapp.getPixels(pixels, 0,(int)(view_width-pixel_density), (int)pixel_density,0,(int)(view_width-pixel_density),(int)view_height);
+                mExtraBitmapp.setPixels(pixels, 0, (int)(view_width-pixel_density), 0,0,(int)(view_width-pixel_density),(int)view_height);
+            }
         }
     }
-
     private void beEditableGraph(Canvas canvas) {
-        //TODO I need to care about display back stack
+        //TODO
         // but i do not need to care about how to graph was originally rendered in doLiveGraphing
         // I will recreate the entire graph a display stack at a time being entirely I control of its new coordinate system in respect to file indexing
-
-        //undo_redo_backStack.add(mExtraBitmap);
-        if(position<view_width) {
-            canvas.drawBitmap(mExtraBitmap,0,0,paint);
-        }
-        if(position>view_width) {
-            canvas.drawBitmap(mExtraBitmap,view_width-position,0,paint);
-        }
-        canvas.drawLine(position,view_height,position,0, y_coordinate_axis);
+        makeBitMapp();
+       // canvas.drawLine(position,view_height,position,0, y_coordinate_axis);
+        canvas.drawBitmap(mExtraBitmapp, 0, 0, paint);
         canvas.drawLine(T1, view_height, T1, 0, y_coordinate_axis);
         canvas.drawLine(T2, view_height, T2, 0, y_coordinate_axis);
-
-        //try {
-            //    java.lang.IllegalArgumentException: abs(stride) must be >= width
-            //    java.lang.IllegalArgumentException: y + height must be <= bitmap.height()
-            //mExtraBitmap.getPixels(selection, 0, (int) iter, (int) 0, 0, (int) iter, mExtraBitmap.getHeight());
-            //mExtraBitmap.getPixels(selection, (int) 0, (int)(T1-T2), (int) T2, 0, (int) (T1-T2), mExtraBitmap.getHeight());
-            //mExtraBitmap.setPixel((int)T1,(int)T2,255);
-            //for (int i = 0; i <selection.length ; i++) {
-            //    selection[i]=selection[i]*0;
-            //}
-            //SelectBitmap.setPixels(selection, 0, (int)(T1-T2), (int) position, 0, (int) (T1-T2), mExtraBitmap.getHeight());
-         //   canvas.drawBitmap(SelectBitmap,position,0,paint);
-            //Bitmap bitmap = Bitmap.createBitmap(selection,mExtraBitmap.getHeight(),(int)(T1-T2), Bitmap.Config.ALPHA_8);
-            //mExtraBitmap.setPixels(selection, 0, (int)(T1-T2), (int) position, 0, (int) (T1-T2), mExtraBitmap.getHeight());
-            //mExtraBitmap.setPixels(selection, 0, (int) iter, (int) iter, 0, (int) iter, mExtraBitmap.getHeight());
-      //  } catch (IndexOutOfBoundsException | NullPointerException | IllegalArgumentException e){
-     //       System.out.println("FAIL"+e);
-
-      //  }
+        if(T1_onScren==false & T2_onScren==false) {
+            bitmap_pos = (int) (view_width-(pixel_density*50));
+            startGraphingg(newExtraCanvas);
+        }
     }
     private void doGraphing(Canvas canvas)
     {
@@ -231,13 +221,15 @@ public class GraphLogic extends View {
         if(iter<=view_width){
             startGraphing(mExtraCanvas);
         }
-        if(iter>=view_width)
+        if(iter>=view_width-(pixel_density*10))
         {
-            bitmap_pos = (int) (view_width-(pixel_density*50)); // TODO you almost did it -> this puts the next drawing operation within the bounds of this next get and set
-                                                               //  perhaps we could reserve space for this operation to ensure we always in bounds, much cleaner
+            bitmap_pos = (int) (view_width-(pixel_density*10));
+           // bitmap_pos = (int) (view_width-(pixel_density*50));
             int[] pixels = new int[(int) ((view_width-pixel_density)*view_height)];
             mExtraBitmap.getPixels(pixels, 0,(int)(view_width-pixel_density), (int) pixel_density,0,(int)(view_width-pixel_density),(int)view_height);
             mExtraBitmap.setPixels(pixels, 0, (int)(view_width-pixel_density), 0,0,(int)(view_width-pixel_density),(int)view_height);
+           // mExtraBitmap.getPixels(pixels, 0,(int)(view_width-pixel_density), 0,0,(int)(view_width-pixel_density),(int)view_height);
+           // mExtraBitmap.setPixels(pixels, 0, (int)(view_width-pixel_density), (int)pixel_density,0,(int)(view_width-pixel_density),(int)view_height);
             startGraphing(mExtraCanvas);
         }
     }
@@ -260,6 +252,18 @@ public class GraphLogic extends View {
             made=true;
         }
     }
+
+    private void makeBitMapp() {
+        if (!reset){
+            //(383143x621, max=16384x16384)
+            //int width = 16384;
+            mExtraBitmapp = Bitmap.createBitmap((int) view_width, (int)view_height,
+                    Bitmap.Config.ALPHA_8);
+            newExtraCanvas = new Canvas(mExtraBitmapp);
+            reset=true;
+        }
+    }
+
     public void setGraphState(boolean state) {
         //startGraphing();
         this.graphState=state;
@@ -278,7 +282,6 @@ public class GraphLogic extends View {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            //System.out.println("ballSack=" + ballSack + "  length=" + length);
             byte[] buffer = new byte[(int) (length - ballSack)];
             try {
                 count += jacob.read(buffer);
@@ -293,33 +296,74 @@ public class GraphLogic extends View {
             iter += pixel_density;
             bitmap_pos+=pixel_density;
             for (int i = 4; i < chunk.length; i += 4) {
-                //test[i - 4] = iter;
-               // test[i - 3] = view_height / 2;
-               // test[i - 2] = iter;
-               // test[i - 1] = (view_height / 2) - chunk[i] * (view_height / 65535);
                 test[i - 4] = bitmap_pos;
                 test[i - 3] = view_height / 2;
                 test[i - 2] = bitmap_pos;
                 test[i - 1] = (view_height / 2) - chunk[i] * (view_height / 65535);
             }
-            //mExtraBitmap.setPixels();
-            //canvas.drawLines(test, paint);
-            //refreshDrawableState();
-            //canvas.translate(1,0);
             canvas.drawLines(test, paint);
             this.ballSack = length;
-            //mExtraCanvas.save();
             invalidate();
     }
     public void moveFileIndex(int progres, int len){
-        this.position = progres*(iter/len);
+        //TODO do the drawing operations before you call invalidate
+       // this.position = progres*(iter/len);
+        this.position= progres * (48000.0f/1000.0f)*2; //back to byte land
+        //this.position= progres * 40 * (48000.0f/1000.0f)*2;
+        pos.add((int)position);
+        if(pos.size()>2){
+            pos.removeFirst();
+        }
         System.out.println("position="+position);
         System.out.println("iter="+iter);
         System.out.println("progres="+progres);
         System.out.println("len="+len);
-        //System.out.println("amount of bytes read="+count);
+        System.out.println("pos track: "+pos);
         invalidate();
-    }
+        /*
+        makeBitMapp();
+        // canvas.drawLine(position,view_height,position,0, y_coordinate_axis);
+        mExtraCanvas.drawBitmap(mExtraBitmapp, 0, 0, paint);
+        mExtraCanvas.drawLine(T1, view_height, T1, 0, y_coordinate_axis);
+        mExtraCanvas.drawLine(T2, view_height, T2, 0, y_coordinate_axis);
+        if(T1_onScren==false & T2_onScren==false) {
+            bitmap_pos = (int) (view_width-(pixel_density*50));
+        if(pos.size()==2) {
+            if (pos.get(0) - pos.get(1) != 0 && pos.get(0)-pos.get(1)>0) {
+                int[] pixels = new int[(int) ((view_width-pixel_density)*view_height)];
+                try {
+                    jacob.seek(pos.get(0));
+                } catch (IOException | IndexOutOfBoundsException e) {
+                    e.printStackTrace();
+                }
+                byte[] buffer = new byte[pos.get(0) - pos.get(1)];
+                try {
+                    count += jacob.read(buffer);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (IndexOutOfBoundsException e) {
+                    e.printStackTrace();
+                }
+                short[] chunk = Convert.bytesToShorts(buffer);
+                float[] test = new float[chunk.length * 4];
+                bitmap_pos += pixel_density;
+                 for (int i = 4; i < chunk.length; i += 4) {
+                    test[i - 4] = bitmap_pos;
+                    test[i - 3] = view_height / 2;
+                    test[i - 2] = bitmap_pos;
+                    test[i - 1] = (view_height / 2) - chunk[i] * (view_height / 65535);
+                    //for (int j = 0; j < chunk[i]; j ++) {
+                    //    mExtraBitmap.setPixel(bitmap_pos, (int) ((view_height / 2) - i * (view_height / 65535)),75);
+                }
+                newExtraCanvas.drawLines(test, paint);
+                mExtraBitmapp.getPixels(pixels, 0,(int)(view_width-pixel_density), (int)pixel_density,0,(int)(view_width-pixel_density),(int)view_height);
+                mExtraBitmapp.setPixels(pixels, 0, (int)(view_width-pixel_density), 0,0,(int)(view_width-pixel_density),(int)view_height);
+                invalidate();
+            }
+
+         */
+        }
+
     public float getByteCount() {
         return iter;
     }
@@ -329,60 +373,14 @@ public class GraphLogic extends View {
 
     public void setT1(int i,int len) {
         T1 = i*(iter/len);
-        //T2= len;
-        //selection = new int[(int) (mExtraBitmap.getHeight()*iter)];
-        //selection = new int[(int) (mExtraBitmap.getHeight()*(T2-T1))];
-        //selection = new int[mExtraBitmap.getHeight()*mExtraBitmap.getWidth()];
-        //selection = new int[500];
-        //invalidate();
+
     }
     public void setT2(int i, int len) {
         T2 = i*(iter/len);
-        //selection = new int[(int) (mExtraBitmap.getHeight()*iter)];
         selection = new int[(int) (mExtraBitmap.getHeight()*(T1-T2))];
-        //selection = new int[500];
         invalidate();
     }
 
-    private void scale(Canvas canvas, float v) {
-        if(!scaled){
-            pixel_density=pixel_density/2;
-            canvas.scale(v,v);
-            scaled= true;}
-    }
     public void test(boolean b) {
         this.graphState=b; }
-
 }
-
-/*
-TODO know this like the back of your hand ->
- --- THIS CUSTOM VIEWS ---
-        $-Can be defined in xml or java code. Different constructors are called based on this context.
-            -what are the consequences of each definition?
-        $-Why use init method and constructors for each case besides you can declare instances variables with getters and
-            setters unlike with a fragment, are each of these constructors called?
-            because this way no matter who calls it in any context the same init method is called
-        -Why use another canvas then define a bitmap to put inside this canvas?
-            then draw on the mExtraCanvas and not the mExtraBitMap?
-       -OnMeasure:
-            i think this is called if you define the view from java code
-        -OnSizeChanged:
-            called when size of view has changed -> what changes the size of view?
-            i think this is called when the view is defined in xml
-        -invalidate:
-        -post:
-            this causes the runnable action to be added to message queue and run on UI thread
-        -postInvalidate:
-        -onDraw:
-        -runOnUIThread:
-        -drawLine vs drawLines:
-        -translate:
-        -Bitmap:
-        -canvas:
-        -Path:
-        -ValueAnimator:
-        -Animator APIs:
-        -best practices for decoding DataInputStream
-
- */

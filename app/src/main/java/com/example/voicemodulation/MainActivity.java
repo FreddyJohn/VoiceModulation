@@ -416,9 +416,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case  R.id.pause_recording:
                 record.setRecordingState(true);
                 graph.test(false);
-                //setGraphStream(record.buffer_size,noFrag.getNewRecordFile(),false);
                 setDisplayStream(record.buffer_size,noFrag.getNewRecordFile(),false, 1,Short.MAX_VALUE*2+1);
-                //record.setRecordingState(true);
                 display.setVisibility(View.GONE);
                 AudioCon.IO_RAF readOnly = new AudioCon.IO_RAF(noFrag.getNewRecordFile());
                 RandomAccessFile f = readOnly.getReadObject();
@@ -430,6 +428,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 noFrag.setLength((int) length);
                 int max = (int) (length/2/noFrag.getSampleRate()*1000);
+               // int max = (int) (length/2/noFrag.getSampleRate()*1000)/40;
                 System.out.println("length of file in bytes: "+ length +" and max is: "+ max);
                 //System.out.println(graph.getViewWidth()/);
                 //the_seeker.setMax((int) (graph.getViewWidth()/graph.getDensity()));
@@ -444,9 +443,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 stop_button.setVisibility(View.VISIBLE);
                 pause_button.setVisibility(View.INVISIBLE);
                 record_button.setVisibility(View.VISIBLE);
-                //setGraphStream(record.buffer_size,noFrag.getNewRecordFile(),false);
-                //setGraphStream(record.buffer_size,noFrag.getNewRecordFile(),true);
-                //setGraphStream(record.buffer_size,noFrag.getNewRecordFile(),false);
                 break;
             case  R.id.play_recording:
                 pos_select=the_seeker.getProgress()*2*(noFrag.getSampleRate()/1000);
