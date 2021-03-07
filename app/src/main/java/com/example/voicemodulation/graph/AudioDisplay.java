@@ -93,7 +93,7 @@ public class AudioDisplay extends View {
         }
     }
     public void setEncoding(int _dynamicRange){this.dynamicRange=_dynamicRange;}
-    public void setGraphState(boolean state, int buffer_size,String in_file,int n) { //TODO we need to know about SeekBar position
+    public void setGraphState(boolean state, int buffer_size,String in_file,int n) {
         this.graphState=state;
         this.bufferSize=buffer_size;
         System.out.println("Buffer size: "+buffer_size);
@@ -130,7 +130,8 @@ public class AudioDisplay extends View {
         }
         for(int i=0; i<chunk.length; i++) {
             graph_pos += iter;
-            canvas.drawLine(graph_pos, view_height / 2, graph_pos, (view_height / 2) - chunk[i] * (view_height / dynamicRange), paint);
+            //canvas.drawLine(graph_pos, view_height / 2, graph_pos, (view_height / 2) - chunk[i] * (view_height / dynamicRange), paint);
+            canvas.drawPoint(graph_pos, (view_height / 2) - chunk[i] * (view_height / dynamicRange), paint);
             canvas.translate(+1, 0);
         }
         invalidate();

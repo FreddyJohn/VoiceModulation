@@ -13,6 +13,7 @@ import com.example.voicemodulation.audio.util.Convert;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.LinkedList;
+import com.paramsen.noise.Noise;
 public class GraphLogic extends View {
     private static float T1;
     private static float T2;
@@ -45,8 +46,11 @@ public class GraphLogic extends View {
     private LinkedList<Bitmap> undo_redo_backStack;
     private Canvas newExtraCanvas;
     private LinkedList<Integer> pos;
-    private int bitmap_pos;
+    private float bitmap_pos;
     private boolean reset= false;
+    private int[] pixels;
+    private float[] fft;
+    private float x_resolution;
 
     public GraphLogic(Context context) {
         super(context);
@@ -150,74 +154,110 @@ public class GraphLogic extends View {
         super.onMeasure(width, height);
         this.view_width = MeasureSpec.getSize(width);
         this.view_height = MeasureSpec.getSize(height);
+        this.pixels = new int[(int) ((view_width-pixel_density)*view_height)];
+        this.x_resolution = (4096/view_width);
         setMeasuredDimension(width, height);
     }
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         makeBitMap();
-        canvas.drawLine(0, view_height / 2, view_width, view_height / 2, x_coordinate_axis);
         canvas.drawLine(0, view_height, view_width, view_height, y_coordinate_axis);
         canvas.drawLine(0, 0, view_width, 0, y_coordinate_axis);
         if(graphState) {
             //reset=false;
-            doGraphing(canvas);
+           // doGraphing(canvas);
+            //mExtraBitmap.eraseColor(Color.TRANSPARENT);
+            doLiveFFT(canvas);
+            //mExtraCanvas.drawColor(Color.BLACK);
+           // bitmap_pos=0;
         }
         if(!graphState & pos.size()==2){
             beEditableGraph(canvas);
        }
     }
-    public void startGraphingg(Canvas canvas) {
-        if(pos.size()==2) {
-            if (pos.get(0) - pos.get(1) != 0 && pos.get(0)-pos.get(1)>0) {
-                int[] pixels = new int[(int) ((view_width-pixel_density)*view_height)];
-                try {
-                    jacob.seek(pos.get(0));
-                } catch (IOException | IndexOutOfBoundsException e) {
-                    e.printStackTrace();
-                }
-                byte[] buffer = new byte[pos.get(0) - pos.get(1)];
-                try {
-                    count += jacob.read(buffer);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (IndexOutOfBoundsException e) {
-                    e.printStackTrace();
-                }
-                short[] chunk = Convert.bytesToShorts(buffer);
-                float[] test = new float[chunk.length * 4];
-                bitmap_pos += pixel_density;
-                for (int i = 4; i < chunk.length; i += 4) {
-                     test[i - 4] = bitmap_pos;
-                     test[i - 3] = view_height / 2;
-                     test[i - 2] = bitmap_pos;
-                     test[i - 1] = (view_height / 2) - chunk[i] * (view_height / 65535);
-                     //for (int j = 0; j < chunk[i]; j ++) {
-                    //    mExtraBitmap.setPixel(bitmap_pos, (int) ((view_height / 2) - i * (view_height / 65535)),75);
-                    }
-                canvas.drawLines(test, paint);
-                mExtraBitmapp.getPixels(pixels, 0,(int)(view_width-pixel_density), (int)pixel_density,0,(int)(view_width-pixel_density),(int)view_height);
-                mExtraBitmapp.setPixels(pixels, 0, (int)(view_width-pixel_density), 0,0,(int)(view_width-pixel_density),(int)view_height);
-            }
+
+    private void doLiveFFT(Canvas canvas) {
+        canvas.drawBitmap(mExtraBitmap,0,0,paint);
+        mExtraBitmap.eraseColor(Color.TRANSPARENT);
+        try {
+            jacob.seek(ballSack);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        byte[] fft_buffer = new byte[4096*2];
+        try {
+            jacob.read(fft_buffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (IndexOutOfBoundsException e) {
+            e.printStackTrace();
+        }
+        float[] chunk = Convert.bytesToFloats(fft_buffer);
+        Noise noise = Noise.real(4096);
+        float[] dst = new float[chunk.length+2];
+        fft = noise.fft(chunk, dst);
+        float[] test = new float[chunk.length * 4];
+        //TODO increase speed
+        //TODO increase data displayed this is 4096/2=2048 * (1/4) = 512 which is a fourth of all information contained within 2048
+        for (int i = 4; i < fft.length/2; i +=4) {
+            bitmap_pos+=x_resolution;
+            test[i - 4] = bitmap_pos;
+            test[i - 3] = view_height;
+            test[i - 2] = bitmap_pos;
+           try{
+               test[i - 1] = view_height - Math.abs(fft[i*2]) * (view_height / 65535);
+               System.out.printf("index: %d, real: %.5f, imaginary: %.5f\n", i, fft[i*2] , fft[i*2+1]);
+            }
+           catch(IndexOutOfBoundsException e){}
+        }
+        mExtraCanvas.drawLines(test, paint);
+        bitmap_pos=0;
+        this.ballSack +=4096;
+        invalidate();
     }
     private void beEditableGraph(Canvas canvas) {
-        //TODO
-        // but i do not need to care about how to graph was originally rendered in doLiveGraphing
-        // I will recreate the entire graph a display stack at a time being entirely I control of its new coordinate system in respect to file indexing
         makeBitMapp();
        // canvas.drawLine(position,view_height,position,0, y_coordinate_axis);
         canvas.drawBitmap(mExtraBitmapp, 0, 0, paint);
         canvas.drawLine(T1, view_height, T1, 0, y_coordinate_axis);
         canvas.drawLine(T2, view_height, T2, 0, y_coordinate_axis);
-        if(T1_onScren==false & T2_onScren==false) {
-            bitmap_pos = (int) (view_width-(pixel_density*50));
-            startGraphingg(newExtraCanvas);
+        generateScaledStaticGraph(newExtraCanvas);
+    }
+    private void generateScaledStaticGraph(Canvas canvas){
+        long length = 0;
+        try {
+            length = jacob.length();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        byte[] buffer = new byte[(int) length];
+        try {
+            jacob.read(buffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        short[] data = Convert.bytesToShorts(buffer);
+        float spacing = (view_width/data.length);
+        //float spacing = data.length/view_width;
+        System.out.println("Spacing: "+spacing+" view_width: "+view_width+" data.length: "+data.length);
+        float[] test = new float[data.length * 4];
+        bitmap_pos=0;
+        for (int i = 0; i <data.length ; i++) {
+            bitmap_pos+=spacing*7;
+            test[i * 4] = bitmap_pos;
+            test[i * 4 + 1] = view_height / 2;
+            test[i * 4 + 2] = bitmap_pos;
+            test[i * 4 + 3] = (view_height / 2) - data[i] * (view_height / 65535);
+        }
+        System.out.println("bitmap_pos: "+bitmap_pos);
+        canvas.drawLines(test,paint);
     }
     private void doGraphing(Canvas canvas)
     {
-       canvas.drawBitmap(mExtraBitmap,0,0,paint);
+        canvas.drawLine(0, view_height / 2, view_width, view_height / 2, x_coordinate_axis);
+
+        canvas.drawBitmap(mExtraBitmap,0,0,paint);
         if(iter<=view_width){
             startGraphing(mExtraCanvas);
         }
@@ -290,7 +330,6 @@ public class GraphLogic extends View {
             } catch (IndexOutOfBoundsException e) {
                 e.printStackTrace();
             }
-
             short[] chunk = Convert.bytesToShorts(buffer);
             float[] test = new float[chunk.length * 4];
             iter += pixel_density;
@@ -314,54 +353,7 @@ public class GraphLogic extends View {
         if(pos.size()>2){
             pos.removeFirst();
         }
-        System.out.println("position="+position);
-        System.out.println("iter="+iter);
-        System.out.println("progres="+progres);
-        System.out.println("len="+len);
-        System.out.println("pos track: "+pos);
-        invalidate();
-        /*
-        makeBitMapp();
-        // canvas.drawLine(position,view_height,position,0, y_coordinate_axis);
-        mExtraCanvas.drawBitmap(mExtraBitmapp, 0, 0, paint);
-        mExtraCanvas.drawLine(T1, view_height, T1, 0, y_coordinate_axis);
-        mExtraCanvas.drawLine(T2, view_height, T2, 0, y_coordinate_axis);
-        if(T1_onScren==false & T2_onScren==false) {
-            bitmap_pos = (int) (view_width-(pixel_density*50));
-        if(pos.size()==2) {
-            if (pos.get(0) - pos.get(1) != 0 && pos.get(0)-pos.get(1)>0) {
-                int[] pixels = new int[(int) ((view_width-pixel_density)*view_height)];
-                try {
-                    jacob.seek(pos.get(0));
-                } catch (IOException | IndexOutOfBoundsException e) {
-                    e.printStackTrace();
-                }
-                byte[] buffer = new byte[pos.get(0) - pos.get(1)];
-                try {
-                    count += jacob.read(buffer);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (IndexOutOfBoundsException e) {
-                    e.printStackTrace();
-                }
-                short[] chunk = Convert.bytesToShorts(buffer);
-                float[] test = new float[chunk.length * 4];
-                bitmap_pos += pixel_density;
-                 for (int i = 4; i < chunk.length; i += 4) {
-                    test[i - 4] = bitmap_pos;
-                    test[i - 3] = view_height / 2;
-                    test[i - 2] = bitmap_pos;
-                    test[i - 1] = (view_height / 2) - chunk[i] * (view_height / 65535);
-                    //for (int j = 0; j < chunk[i]; j ++) {
-                    //    mExtraBitmap.setPixel(bitmap_pos, (int) ((view_height / 2) - i * (view_height / 65535)),75);
-                }
-                newExtraCanvas.drawLines(test, paint);
-                mExtraBitmapp.getPixels(pixels, 0,(int)(view_width-pixel_density), (int)pixel_density,0,(int)(view_width-pixel_density),(int)view_height);
-                mExtraBitmapp.setPixels(pixels, 0, (int)(view_width-pixel_density), 0,0,(int)(view_width-pixel_density),(int)view_height);
-                invalidate();
-            }
 
-         */
         }
 
     public float getByteCount() {

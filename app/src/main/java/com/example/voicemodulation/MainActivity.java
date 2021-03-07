@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-                System.out.println("onStartTrackingTouch FILE INDEX:"+the_seeker.getProgress()*2*(noFrag.getSampleRate()/1000));
+                //System.out.println("onStartTrackingTouch FILE INDEX:"+the_seeker.getProgress()*2*(noFrag.getSampleRate()/1000));
                 //seekBar.setE
                 //graph.setT1(the_seeker.getProgress(), noFrag.getLength()/2/noFrag.getSampleRate()*1000);
             }
@@ -127,8 +127,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onStopTrackingTouch(SeekBar seekBar) {
                 //graph.setT2(the_seeker.getProgress(), noFrag.getLength()/2/noFrag.getSampleRate()*1000);
                 pos_select =the_seeker.getProgress()*2*(noFrag.getSampleRate()/1000);
-                System.out.println("onStopTrackingTouch FILE INDEX:"+pos_select);
-                System.out.println("true length"+noFrag.getLength());
+                //System.out.println("onStopTrackingTouch FILE INDEX:"+pos_select);
+               // System.out.println("true length"+noFrag.getLength());
             }
         });
     }
