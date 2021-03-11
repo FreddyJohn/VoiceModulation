@@ -18,7 +18,6 @@ import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.AudioF;
 import com.example.voicemodulation.audio.ModulateLogic;
 import com.example.voicemodulation.audio.RecordLogic;
-import com.example.voicemodulation.audio.util.Convert;
 import com.example.voicemodulation.controls.MControls;
 import com.example.voicemodulation.controls.RControls;
 import com.example.voicemodulation.graph.AudioDisplay;
@@ -32,7 +31,6 @@ import java.io.RandomAccessFile;
     remove or add the SeekBar or AudioDisplay based on context
 
  */
-
 //TODO you could have a boolean variable for any i of n controller that allows for
 //     scaling of scale based on user feedback to allow for very very very very very fine Hz
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -65,15 +63,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private RControls controls;
     private RecordLogic record;
     private AudioF noFrag;
-
+    private int pos_select;
     private AudioF creation;
     int PERMISSION_ALL = 1;
     private final String[] PERMISSIONS = {
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     Manifest.permission.RECORD_AUDIO};
-    private int pos_select;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,8 +93,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         /*
         record_controls = displayRFragment(record_control_titles,record_control_ranges,
                                                     record_control_scales,record_control_quantities,
-                                                    record_gravity,record_control_title,record_control_progresses);
-         */
+                                                    record_gravity,record_control_title,record_control_progresses);*/
         seek_n_loader = findViewById(R.id.seek_n_load);
         testing = findViewById(R.id.fuckFragments);
         display = findViewById(R.id.audio_display);

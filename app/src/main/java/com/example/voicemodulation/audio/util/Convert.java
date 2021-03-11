@@ -19,7 +19,7 @@ public class Convert {
         ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(track);
         return bytes;
     }
-    public static float[] bytesToFloats(byte[] track) {
+    public static float[] shortBytesToFloats(byte[] track) {
         float[] floatyShorts = new float[track.length / 2];
         for (int i = 0; i < track.length/2; i++) {
             //TODO reduce nesting
