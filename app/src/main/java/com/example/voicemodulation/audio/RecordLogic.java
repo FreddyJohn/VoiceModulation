@@ -87,18 +87,8 @@ public class RecordLogic {
         File file;
         if (file_path != null) {
             file = new File(file_path);
-            byteData = new byte[length];
             RandomAccessFile in = ioRAF.getReadObject();
-            try {
-                in.read(byteData,offset,length);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try {
-                in.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            byteData = AudioCon.Data.getAudioChunk(offset,length-offset,0,in);
             int intSize = android.media.AudioTrack.getMinBufferSize(
                     file_data.getPlaybackRate(), file_data.getNumChannelsOut(), file_data.getBitDepth());
             AudioTrack at = new AudioTrack(

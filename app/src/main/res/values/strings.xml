@@ -10,4 +10,5 @@
     <string name="selected_playback_rate">48000 F/s</string>
     <string name="num_channels">Channels</string>
     <string name="selected_num_channels">Mono</string>
+    <string name="record_title">Record Controls</string>
 </resources>

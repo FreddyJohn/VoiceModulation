@@ -4,6 +4,7 @@ import android.content.Context;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Pair;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -37,16 +38,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
     private final String[] record_control_titles = new String[] {"PlayBack Rate","Sample Rate","Format","Channels","Encoding"};
-    private final String[] phaser_titles = new String[] {"Frequency","Carrier Amp","Modulator Amp","Theta"};
+    private final String[] phaser_titles = new String[] {"Frequency","Carrier Amp","Modulator Amp","Theta","Operation"};
     private final String[] record_control_quantities = new String[]{"Hz","Hz",null,null,null};
-    private final String[] phaser_quantities = new String[] {"Hz","Amp","Amp","θ"};
-    private final String[] flanger_titles = new String[] {"Min","Max","Frequency"};
+    private final String[] phaser_quantities = new String[] {"Hz","Amp","Amp","θ",null};
+    private final String[] flanger_titles = new String[] {"Min","Max","Frequency","Operation"};
     private final String[] echo_titles = new String[] {"Signals","Delay"};
     private final int[] record_control_ranges = new int[]{10,10,2,1,1};
     private final int[] record_control_scales = new int[]{4800,4800,1,1,1};
     private final int[] record_control_progresses = new int[]{10,10,2,0,1};
-    private final int[] phaser_progress = new int[] {1,10,10,0};
-    private final int[] flanger_progress = new int[] {8,4,1};
+    private final int[] phaser_progress = new int[] {1,10,10,0,1};
+    private final int[] flanger_progress = new int[] {8,4,1,1};
     private final int record_gravity = Gravity.NO_GRAVITY;
     private ImageButton play_button, stop_button, record_button, pause_button;
     private TextView time;
@@ -97,7 +98,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         seek_n_loader = findViewById(R.id.seek_n_load);
         testing = findViewById(R.id.fuckFragments);
         display = findViewById(R.id.audio_display);
-        //display = new AudioDisplay(this);
         modulations = findViewById(R.id.modulations);
         graph = findViewById(R.id.display);
         controls = new RControls(this,record_control_titles,record_control_ranges,
@@ -110,7 +110,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 graph.moveFileIndex(progress, the_seeker.getMax());
-                time.setText(String.format("%.2f",(double)progress/1000)); //.replace(".",":"));
+                //time.setText(String.format("%.2f",(double)progress/1000)); //.replace(".",":"));
+                time.setText(String.format("%.2f",(double)progress*2/noFrag.getSampleRate()));
             }
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
@@ -136,6 +137,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         display.setEncoding(range);
         display.setGraphState(state, buffsize, file, length);
     }
+    public static Pair<Integer,Integer> getSelectionPoints(){
+        return graph.getSelectionPoints();
+    }
+
     /*
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -391,8 +396,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         "Flanger with Square Wave", flanger_progress,play_button,seek_n_loader);
                 testing.addView(flanger_square_view);
                 break;
+            case R.id.low_pass:
+                testing.removeAllViews();
+                ModulateLogic.lowPass lowPass = new ModulateLogic.lowPass();
+                ModulateLogic.modulation LowPass = lowPass::modulate;
+                MControls low_pass_view = new MControls(this,new String[]{"Smoothing"}, new int[]{25}, new double[]{5},
+                        new String[]{" "}, noFrag, LowPass, Gravity.CENTER,
+                        "Low Pass Filter", flanger_progress,play_button,seek_n_loader);
+                testing.addView(low_pass_view);
+                break;
             case R.id.start_recording:
-                setGraphStream(record.buffer_size,noFrag.getFilePath(),true);
                 noFrag = controls.getCreationData();
                 nyquist = (noFrag.getSampleRate() / 2) / 20;
                 record = new RecordLogic();
@@ -406,6 +419,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 noFrag.setBufferSize(record.buffer_size);
                 record_button.setVisibility(View.INVISIBLE);
                 pause_button.setVisibility(View.VISIBLE);
+                setGraphStream(record.buffer_size,noFrag.getFilePath(),true);
                 setDisplayStream(record.buffer_size,noFrag.getFilePath(),true, 1,Short.MAX_VALUE*2+1);
                 break;
             case  R.id.pause_recording:
@@ -415,19 +429,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 display.setVisibility(View.GONE);
                 AudioCon.IO_RAF readOnly = new AudioCon.IO_RAF(noFrag.getNewRecordFile());
                 RandomAccessFile f = readOnly.getReadObject();
-                double length =0;
+                long length =0;
                 try {
-                    length= (double) f.length();
+                    length= f.length();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                noFrag.setLength((int) length);
-                int max = (int) (length/2/noFrag.getSampleRate()*1000);
-               // int max = (int) (length/2/noFrag.getSampleRate()*1000)/40;
+                noFrag.setLength((int)length);
+                //int max = (int) (length/2/noFrag.getSampleRate()*1000);
+                int max = (int) (length/2);
                 System.out.println("length of file in bytes: "+ length +" and max is: "+ max);
-                //System.out.println(graph.getViewWidth()/);
-                //the_seeker.setMax((int) (graph.getViewWidth()/graph.getDensity()));
-                //the_seeker.setProgress(graph.getViewWidth()/);
                 time.setVisibility(View.VISIBLE);
                 the_seeker.setMax(max);
                 the_seeker.setProgress(max);
@@ -440,10 +451,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 record_button.setVisibility(View.VISIBLE);
                 break;
             case  R.id.play_recording:
+                Pair<Integer,Integer> pair = getSelectionPoints();
+                System.out.println("Selection Points: "+pair);
                 pos_select=the_seeker.getProgress()*2*(noFrag.getSampleRate()/1000);
                 new Thread(() -> {
-                record.play_recording(0, pos_select);
-                System.out.println("pos_select is="+pos_select+" file length is ="+noFrag.getLength());}).start();
+                    System.out.println("pos_select is="+pos_select+" file length is ="+noFrag.getLength());
+                    record.play_recording(pair.first, pair.second);
+                    //record.play_recording(0, pos_select);
+                    }).start();
                 break;
             case  R.id.stop_recording:
                 noFrag.save();

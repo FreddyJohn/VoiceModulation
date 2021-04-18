@@ -106,17 +106,21 @@
             android:id="@+id/n_pararmeters"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
+
             <TextView
                 android:id="@+id/control_title"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-            </TextView>
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/record_title"
+                android:textColor="#FFFFFF"></TextView>
 
             <HorizontalScrollView
                 android:id="@+id/fuckFragments"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:foregroundGravity="center_vertical|clip_horizontal"></HorizontalScrollView>
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center">
+            </HorizontalScrollView>
         </LinearLayout>
 
 
@@ -129,6 +133,14 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent">
+
+                <ImageView
+                    android:id="@+id/low_pass"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:onClick="onClick"
+                    app:srcCompat="@drawable/flangersine" />
 
                 <ImageButton
                     android:id="@+id/backwards"

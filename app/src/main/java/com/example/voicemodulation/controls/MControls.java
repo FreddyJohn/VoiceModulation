@@ -2,11 +2,16 @@ package com.example.voicemodulation.controls;
 import android.app.Activity;
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Pair;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.TextView;
+
 import androidx.annotation.Nullable;
 import com.example.voicemodulation.MainActivity;
 import com.example.voicemodulation.R;
@@ -31,6 +36,7 @@ public class MControls extends LinearLayout{
     private int gravity;
     private String name;
     private int[] progress;
+    private Pair<Integer,Integer> position;
 
     public MControls(Context context) {
         super(context);
@@ -61,6 +67,10 @@ public class MControls extends LinearLayout{
         this.seek = seek_n_load.findViewById(R.id.seek);
         init(context,null);
     }
+    //TODO we keep running into this problem.
+    // see now we want to have variable control over not only numerical types but also operation types such as +,-,/,*
+    // because these are different types we cannot use a LinkedList, Pair, HashMap, etc
+    // we can create an object
     public LinkedList<Double> getModulateParameters(){
         LinkedList<Double> parameters = new LinkedList<>();
         for (int i = 0; i <title.length ; i++) {
@@ -68,8 +78,13 @@ public class MControls extends LinearLayout{
         }
         return parameters;
     }
+
     public void init(Context context, @Nullable AttributeSet attrs){
         controllers = new LinkedList<>();
+        TextView control_title = ((Activity)context).findViewById(R.id.control_title);
+        control_title.setText(name);
+        //setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        //setOrientation(HORIZONTAL);
         for (int i = 0; i <title.length ; i++) {
             Controller controller = new Controller(getContext(),null,quantity_type[i],scale[i]);
             controller.setParam(title[i],maxes[i],progress[i]);
@@ -81,10 +96,11 @@ public class MControls extends LinearLayout{
                 display.setVisibility(View.VISIBLE);
                 MainActivity.setDisplayStream(creation.getLength(),creation.getNewModulateFile(),true,0,Short.MAX_VALUE*2+1);
             });
+            position = MainActivity.getSelectionPoints();
             RecordLogic recordLogic = new RecordLogic();
             creation.setFilePath(creation.getNewModulateFile());
             recordLogic.setFileData(creation);
-            method.modulate(getModulateParameters(),creation);
+            method.modulate(getModulateParameters(),creation, position);
             System.out.println("NO NULL POINTER HAVE SCOPE "+seek.getProgress());
                 recordLogic.play_recording(0,creation.getLength());
                 ((Activity)context).runOnUiThread(() -> {

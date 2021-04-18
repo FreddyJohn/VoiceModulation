@@ -9,7 +9,9 @@ import android.util.AttributeSet;
 import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.View;
-import com.example.voicemodulation.audio.AudioCon;
+
+import com.example.voicemodulation.audio.AudioCon.Data;
+import com.example.voicemodulation.audio.AudioCon.IO_RAF;
 import com.example.voicemodulation.audio.util.Convert;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -24,7 +26,7 @@ public class GraphLogic extends View {
     private float view_width;
     private boolean graphState = false;
     private Pair<Canvas,Bitmap> editable;
-    private float editable_pos;
+    private int seek_position;
     private Pair<Canvas,Bitmap> liveGraph;
     private float graph_pos;
     private Pair<Canvas,Bitmap> liveFFT;
@@ -46,6 +48,8 @@ public class GraphLogic extends View {
     private float x_resolution;
     private boolean graph_type = true;
     private boolean editable_graph;
+    private int a;
+
     public GraphLogic(Context context) {
         super(context);
         init(context, null);
@@ -76,9 +80,8 @@ public class GraphLogic extends View {
         paint.setStyle(Paint.Style.STROKE);
         String name = Environment.getExternalStorageDirectory().getPath()+"/rec.pcm";
         paint.setStrokeWidth(density);
-        AudioCon.IO_RAF funky = new AudioCon.IO_RAF(name);
+        IO_RAF funky = new IO_RAF(name);
         jacob = funky.getReadObject();
-
     }
     @Override
     public boolean onTouchEvent(MotionEvent evt) {
@@ -97,7 +100,23 @@ public class GraphLogic extends View {
                     invalidate();
                     T2_onScren=true;
                 }}
-                if(graphState){
+                break;
+            case MotionEvent.ACTION_UP:
+                if(!graphState){
+                if(evt.getX()>=T2+20 && evt.getX() <= T1-20) {
+                    System.out.println("CLICKED INSIDE");
+                    selection = new int[(int) (editable.second.getHeight()*(T1-T2))];
+                    //SelectBitmap = Bitmap.createBitmap((int)(T1-T2),editable.second.getHeight(), Bitmap.Config.ALPHA_8);
+                    editable.second.getPixels(selection, 0, (int)(T1-T2), (int) T2, 0, (int) (T1-T2), editable.second.getHeight());
+                    SelectBitmap = Bitmap.createBitmap(selection,(int)(T1-T2),editable.second.getHeight(), Bitmap.Config.ALPHA_8);
+                    invalidate();
+                    //for (int i = 0; i < selection.length; i++) {
+                    //    selection[i]=0;
+                   // }
+                    //editable.second.setPixels(selection, 0, (int)(T1-T2), (int) T2, 0, (int) (T1-T2),editable.second.getHeight());
+                    //TODO implement undo / redo back stack save and compress but then also where was it
+                }}
+                else if(graphState){
                     if(graph_type!=true){
                         graph_type=true;
                         System.out.println("graph_type: "+graph_type);
@@ -108,33 +127,6 @@ public class GraphLogic extends View {
                     }
                 }
                 break;
-                /*
-            case MotionEvent.ACTION_UP:
-                if(evt.getX()>=T2+20 && evt.getX() <= T1-20) {
-                    System.out.println("CLICKED INSIDE");
-                    //TODO implement undo / redo back stack save and compress but then also where was it
-                    try{
-                        //live_display_buffer = new int[(int)(view_width*view_height)];
-                        //mExtraBitmap.getPixels(live_display_buffer, (int) 0, (int) view_width, (int) 0, 0, (int) view_width, mExtraBitmap.getHeight());
-                        selection = new int[(int) (mExtraBitmap.getHeight()*(T1-T2))];
-                        SelectBitmap = Bitmap.createBitmap((int)(T1-T2),mExtraBitmap.getHeight(), Bitmap.Config.ALPHA_8);
-                        mExtraBitmap.getPixels(selection, (int) 0, (int)(T1-T2), (int) T2, 0, (int) (T1-T2), mExtraBitmap.getHeight());
-                        for (int i = 0; i < selection.length; i++) {
-                           System.out.println(selection[i]);
-
-                        }
-                        SelectBitmap.setPixels(selection, 0, (int)(T1-T2), 0, 0, (int) (T1-T2), mExtraBitmap.getHeight());
-                        System.out.println("selection info: "+selection.length+ " "+ Arrays.toString(selection));
-                        //TODO store the offsets!!
-                        //undo_redo_backStack.put(T1,T2);
-                        // you do not need to create more bitmaps
-                        // we will use the original memory location since read only
-                    } catch (IndexOutOfBoundsException | NullPointerException | IllegalArgumentException e){
-                        System.out.println("FAIL"+e); }
-                }
-                break;
-
-                 */
             case MotionEvent.ACTION_MOVE:
                 if(!graphState){
                 if (T1-evt.getX()<=20 && evt.getX()>=T2+20) {
@@ -173,9 +165,11 @@ public class GraphLogic extends View {
             if (graph_type) {
                 doLiveFFT(canvas);}
        }
-       // if (editable_graph) {
         if (!graphState & (liveGraph!=null || liveFFT!=null)) {
             beEditableGraph(canvas);
+            if(SelectBitmap!=null){
+                canvas.drawBitmap(SelectBitmap,T2,view_height/2,paint);
+            }
         }
     }
     private void doLiveFFT(Canvas canvas) {
@@ -184,18 +178,19 @@ public class GraphLogic extends View {
         }
         canvas.drawBitmap(liveFFT.second,0,0,paint);
         liveFFT.second.eraseColor(Color.TRANSPARENT);
-        byte[] fft_buffer = getAudioChunk(audio_length,2048*2,0);
+        byte[] fft_buffer = Data.getAudioChunk(audio_length,2048*2,0,jacob);
         float[] chunk = Convert.shortBytesToFloats(fft_buffer);
         Noise noise = Noise.real(2048);
         float[] dst = new float[chunk.length+2];
         fft = noise.fft(chunk, dst);
         float[] test = new float[chunk.length * 4];
+        float norm = (view_height / 65535);
         for (int i = 0; i < fft.length/2; i ++) {
             fft_pos+=x_resolution;
             test[i * 4] = fft_pos;
             test[i * 4 + 1] = view_height;
             test[i * 4 + 2] = fft_pos;
-            test[i * 4 + 3] = view_height - Math.abs(fft[i*2]) * (view_height / 65535);
+            test[i * 4 + 3] = view_height - Math.abs(fft[i*2]) * norm;
 
         }
         liveFFT.first.drawLines(test, paint);
@@ -204,35 +199,50 @@ public class GraphLogic extends View {
         invalidate();
     }
     private void beEditableGraph(Canvas canvas) {
-        System.out.println("parent canvas density: "+canvas.getDensity());
         if(editable==null){
-            //makeBitMapp();
-            editable = makeDrawable((int) view_width*2, (int)view_height/2);
+            //editable = makeDrawable((int) view_width*2, (int)view_height/2);
+            editable = makeDrawable((int) view_width, (int)view_height);
             generateScaledStaticGraph(editable.first);
         }
-        canvas.drawBitmap(editable.second, editable_pos, 0, paint);
-        canvas.drawLine(0, view_height/8, view_width, view_height/8, y_coordinate_axis);
+        canvas.drawBitmap(editable.second, seek_position, 0, paint);
+        //canvas.drawLine(0, view_height/8, view_width, view_height/8, y_coordinate_axis);
         canvas.drawLine(T1, view_height/2, T1, 0, y_coordinate_axis);
         canvas.drawLine(T2, view_height/2, T2, 0, y_coordinate_axis);
     }
     //TODO make me threaded and buffered so that the user can perform modulations while the display is loading
     private void generateScaledStaticGraph(Canvas canvas){
-        byte[] buffer = getAudioChunk(0,0,1);
+        byte[] buffer = Data.getAudioChunk(0,0,1,jacob);
         short[] data = Convert.bytesToShorts(buffer);
         float[] test = new float[data.length * 4];
-        float m = (view_width*2)/data.length;
+        //float m = (view_width*2)/data.length;
+        float m = view_width/data.length;
+        //int m = (int) (data.length/view_width);
         float norm = ((view_height/2) / 65535);
         float mid_line = view_height/4;
-        float pos;
-        for (int i = 0; i <data.length ; i++) {
+        float pos = 0;
+        for (int i = 0; i <data.length; i++) {
             pos=i*m;
             test[i * 4] = pos;
             test[i * 4 + 1] = mid_line;
             test[i * 4 + 2] = pos;
-            test[i * 4 + 3] = mid_line - data[i] * norm;
-        }
-        canvas.drawLines(test,0, data.length*4,paint);
+            test[i * 4 + 3] = mid_line - data[i] * norm; }
+        canvas.drawLines(test,paint);
     }
+
+    /*
+    private float pieceWise(int i,int f) {
+        int pos =0;
+        if (i%f==0){
+            pos=i;
+            a=0; }
+        else{
+            pos=i%f+a;
+            a+=1; }
+        return pos;
+    }
+
+     */
+
     private void doGraphing(Canvas canvas,Boolean invalidate)
     {
         if(liveGraph==null){
@@ -279,17 +289,17 @@ public class GraphLogic extends View {
             canvas.drawLines(test, paint);
             invalidate();
     }
-    public void moveFileIndex(int progres, int len){
-        //TODO do the drawing operations before you call invalidate
-       // this.position = progres*(iter/len);
-        //this.position= progres * (48000.0f/1000.0f)*2; //back to byte land
-        //this.position= progres * 40 * (48000.0f/1000.0f)*2;
+    public void moveFileIndex(int progress, int len){
+        //this.seek_position = seek_position + seek_position; // from sample land to byte land ?
+        //this.seek_position = (int) (progress*(view_width*2)/(len/2));
+       // invalidate();
         }
     public void test(boolean b) {
         this.graphState=b;
         //if (!b){editable_graph=true;
        // this.graphState=true;}
         }
+        //TODO move somewhere else other people use same code
     private byte[] getAudioChunk(long file_position,int chunk_size, int n){
         try {
             jacob.seek(file_position);
@@ -313,5 +323,14 @@ public class GraphLogic extends View {
         this.audio_length = length;
         return  buffer;
     }
+    public Pair<Integer,Integer> getSelectionPoints(){
+        float norm = view_width/audio_length;
+        int first = (int) (T2/norm);
+        if (first%2==1){first-=1;}
+        int second = (int) (T1/norm);
+        if (second%2==1){second-=1;}
+        return new Pair<>(first,second);
+    }
+
 
 }

@@ -8,7 +8,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-
 public class AudioCon {
 
     public static class IO_RAF {
@@ -113,7 +112,29 @@ public class AudioCon {
             }
             return track;
         }
+        public static byte[] getAudioChunk(long file_position,int chunk_size, int n,RandomAccessFile file) {
+            try {
+                file.seek(file_position);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
+            int length = 0;
+            try {
+                length = (int) file.length();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            byte[] buffer = new byte[Math.abs((length * n) - chunk_size)];
+            try {
+                file.read(buffer);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (IndexOutOfBoundsException e) {
+                e.printStackTrace();
+            }
+            return buffer;
+        }
         public static long getMemory(){
             final Runtime runtime = Runtime.getRuntime();
             final long usedMem=(runtime.totalMemory() - runtime.freeMemory());
