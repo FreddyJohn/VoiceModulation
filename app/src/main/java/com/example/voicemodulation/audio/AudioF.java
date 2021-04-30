@@ -11,13 +11,16 @@ public class AudioF {
     private int num_channels_out;
     private String file_path;
     private int buffer_size;
+    private PieceTable pieceTable;
     //TODO make not fixed file but project file
     private String record_file = Environment.getExternalStorageDirectory().getPath()+"/rec.pcm";
     private String modulation_file = Environment.getExternalStorageDirectory().getPath()+"/mod.pcm";
+    private String edit_track_file = Environment.getExternalStorageDirectory().getPath()+"/edits.pcm";
     private  String format;
     private int length;
 
-    public AudioF(){}
+    public AudioF(){
+    }
 
     public int getSampleRate() {
         return sample_rate;
@@ -61,6 +64,7 @@ public class AudioF {
     public String getNewModulateFile(){return this.modulation_file;}
     public void setNewModulateFile(String file_path){ this.modulation_file =file_path;}
     public void setNewRecordFile(String file_path){ this.record_file =file_path;}
+    public String getEditTrackFile() { return edit_track_file; }
     private static int channelSeeker(int num_channels_in) {
         int out=0;
         switch (num_channels_in) {
@@ -83,5 +87,10 @@ public class AudioF {
                 new Format.wav(this).run();
                 break;
         }
+    }
+
+    public void setPieceTable(PieceTable pieceTable) {
+        this.pieceTable = pieceTable;
+
     }
 }

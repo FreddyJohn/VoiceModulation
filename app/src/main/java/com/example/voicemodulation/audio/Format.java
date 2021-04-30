@@ -34,8 +34,8 @@ public class Format {
         }
     }
     public static class aiff implements Runnable {
-        private final AudioFile data;
-        public aiff(AudioFile _data) {
+        private final AudioF data;
+        public aiff(AudioF _data) {
             this.data=_data;
         }
         @Override

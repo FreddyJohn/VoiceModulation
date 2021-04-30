@@ -90,7 +90,6 @@ public class AudioCon {
         }
     }
     }
-    //TODO this needs to be RandomAccessFile with start stop
     public static class Data{
         public static short[] getShorts(String filePath){
             byte[] bytes =getBytes(filePath);
@@ -118,7 +117,6 @@ public class AudioCon {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
             int length = 0;
             try {
                 length = (int) file.length();

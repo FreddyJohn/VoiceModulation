@@ -17,14 +17,17 @@ public class RecordLogic {
     private boolean isRecording = false;
     private boolean isPaused = false;
     public int buffer_size;
+    public long record_size;
     private AudioF file_data;
     private String file_path;
+    private PieceTable pieceTable;
 
     public RecordLogic() {
 
-
     }
-
+    public void setPieceTable(PieceTable pieceTable){
+        this.pieceTable = pieceTable;
+    }
     public void setFileData(AudioF file)
     {
         this.file_data = file;
@@ -61,6 +64,7 @@ public class RecordLogic {
             recorder.release();
             recorder = null;
             recordingThread = null;
+            record_size=0;
         }
     }
 
@@ -69,7 +73,9 @@ public class RecordLogic {
         while (!isPaused && isRecording) {
             recorder.read(sData, 0, buffer_size);
             try {
+                //record_size+=sData.length;
                 out.write(sData, 0, buffer_size);
+                record_size+=sData.length;
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -88,7 +94,10 @@ public class RecordLogic {
         if (file_path != null) {
             file = new File(file_path);
             RandomAccessFile in = ioRAF.getReadObject();
-            byteData = AudioCon.Data.getAudioChunk(offset,length-offset,0,in);
+            if (pieceTable==null){
+            byteData = AudioCon.Data.getAudioChunk(offset,length-offset,0,in);}
+            else{
+            byteData = pieceTable.get_text();}
             int intSize = android.media.AudioTrack.getMinBufferSize(
                     file_data.getPlaybackRate(), file_data.getNumChannelsOut(), file_data.getBitDepth());
             AudioTrack at = new AudioTrack(

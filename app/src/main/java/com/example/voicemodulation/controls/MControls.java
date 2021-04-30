@@ -17,12 +17,14 @@ import com.example.voicemodulation.MainActivity;
 import com.example.voicemodulation.R;
 import com.example.voicemodulation.audio.AudioF;
 import com.example.voicemodulation.audio.ModulateLogic;
+import com.example.voicemodulation.audio.PieceTable;
 import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.graph.AudioDisplay;
 import java.io.IOException;
 import java.util.LinkedList;
 
 public class MControls extends LinearLayout{
+    private PieceTable pieceTable;
     private SeekBar seek;
     private AudioDisplay display;
     private ImageButton play;
@@ -51,7 +53,8 @@ public class MControls extends LinearLayout{
 
     public MControls(Context context, String[] title, int[] maxes, double[] scale,
                      String[] quantity_type, AudioF creation, ModulateLogic.modulation modulation,
-                     int gravity, String name, int[] progress, ImageButton play, LinearLayout seek_n_load){
+                     int gravity, String name, int[] progress, ImageButton play,
+                     LinearLayout seek_n_load, PieceTable pieceTable){
         super(context);
         this.title=title;
         this.maxes=maxes;
@@ -65,6 +68,7 @@ public class MControls extends LinearLayout{
         this.play = play;
         this.display = seek_n_load.findViewById(R.id.audio_display);
         this.seek = seek_n_load.findViewById(R.id.seek);
+        this.pieceTable =pieceTable;
         init(context,null);
     }
     //TODO we keep running into this problem.
@@ -98,11 +102,14 @@ public class MControls extends LinearLayout{
             });
             position = MainActivity.getSelectionPoints();
             RecordLogic recordLogic = new RecordLogic();
+            recordLogic.setPieceTable(null);
             creation.setFilePath(creation.getNewModulateFile());
             recordLogic.setFileData(creation);
-            method.modulate(getModulateParameters(),creation, position);
-            System.out.println("NO NULL POINTER HAVE SCOPE "+seek.getProgress());
-                recordLogic.play_recording(0,creation.getLength());
+            method.modulate(getModulateParameters(),creation, position,pieceTable);
+            //System.out.println("NO NULL POINTER HAVE SCOPE "+seek.getProgress());
+                //recordLogic.play_recording(0,creation.getLength());
+                recordLogic.play_recording(0,position.second-position.first);
+                System.out.println("WE WILL PLAY AUDIO OF LENGTH "+(position.second-position.first)+" AT OFFSET "+position.first);
                 ((Activity)context).runOnUiThread(() -> {
                     MainActivity.setDisplayStream(creation.getLength(),creation.getNewModulateFile(),false,0,Short.MAX_VALUE*2+1);
                     display.setVisibility(View.GONE);
