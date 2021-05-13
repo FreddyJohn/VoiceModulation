@@ -1,5 +1,4 @@
 package com.example.voicemodulation.audio;
-import com.example.voicemodulation.audio.util.Generate;
 import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 //TODO read below and implement. padding has reason

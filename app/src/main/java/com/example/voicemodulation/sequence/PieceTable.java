@@ -1,21 +1,21 @@
-package com.example.voicemodulation.audio;
-import android.os.Build;
+package com.example.voicemodulation.sequence;
 import android.util.Pair;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
 public class PieceTable implements Serializable {
-    public long _text_len;
-    private static ArrayList<_Piece> pieces;
-    private static RandomAccessFile _edits;
+    public int _text_len;
+    public ArrayList<_Piece> pieces;
+    public RandomAccessFile _edits;
+
     public PieceTable(String editPath){
         pieces = new ArrayList<>();
         try {
@@ -37,22 +37,29 @@ public class PieceTable implements Serializable {
         }
         return length;
     }
-    private ArrayList filter(ArrayList<_Piece> pieces){
-        ArrayList<_Piece> filtered =new ArrayList<>();
+    public void print_pieces(){
         for(_Piece piece: pieces){
-            if(piece.length > 0){
+            System.out.println(piece.in_added+","+piece.length+","+piece.offset);
+        }
+    }
+    public ArrayList filter(ArrayList<_Piece> pieces){
+        ArrayList<_Piece> filtered =new ArrayList<>();
+        for (int i = 0, piecesSize = pieces.size(); i < piecesSize; i++) {
+            _Piece piece = pieces.get(i);
+            if (piece.length > 0) {
                 filtered.add(piece);
             }
         }
         return filtered;
     }
 
-    private ArrayList splice(int start, int count, ArrayList<_Piece> items){
+    public ArrayList splice(int start, int count, ArrayList<_Piece> items){
         ArrayList<_Piece> list = new ArrayList<>();
         for(int i=0;i<start;i++){
             list.add(pieces.get(i));
         }
-        for (_Piece piece : items){
+        for (int i = 0, itemsSize = items.size(); i < itemsSize; i++) {
+            _Piece piece = items.get(i);
             list.add(piece);
         }
         for(int i =start+count; i<pieces.size(); i++){
@@ -60,7 +67,7 @@ public class PieceTable implements Serializable {
         }
         return list;
     }
-    private Pair get_pieces_and_offset(long index){
+    public Pair get_pieces_and_offset(long index){
         if (index<0){
             return null;
         }
@@ -78,12 +85,11 @@ public class PieceTable implements Serializable {
         return null;
     }
     public void add_original(long length){
-        _text_len = length;
+        _text_len = (int) length;
         pieces.add(new _Piece(false,0,length));
     }
-    //public int add(String data, int index){
-    public void add(long len, long index){
-        if (len==0){
+    public void add(int length,int index){
+        if (length==0){
             return;
         }
         Pair pair = get_pieces_and_offset(index);
@@ -91,49 +97,42 @@ public class PieceTable implements Serializable {
         _Piece curr_piece = pieces.get(piece_index);
         long piece_offset= (long) pair.second;
         long added_offset = _text_len;
-        //try {
-        //    _edits.seek(_text_len);
-        //    _edits.write(find(index,len));
-        //} catch (IOException ex) {
-        //    Logger.getLogger(PieceTable.class.getName()).log(Level.SEVERE, null, ex);
-       // }
-        _text_len += len;
+        _text_len += length;
         if (curr_piece.in_added && piece_offset == curr_piece.offset + (curr_piece.length == added_offset ? 1:0)){
-            curr_piece.length += len;
+            curr_piece.length += length;
             return;
         }
         ArrayList<_Piece> insert_pieces = new ArrayList<>();
         insert_pieces.add(new _Piece(curr_piece.in_added,curr_piece.offset, piece_offset - curr_piece.offset));
-        insert_pieces.add(new _Piece(true, added_offset, len));
+        insert_pieces.add(new _Piece(true, added_offset, length));
         insert_pieces.add(new _Piece(curr_piece.in_added,piece_offset,curr_piece.length-(piece_offset - curr_piece.offset)));
-
-        insert_pieces = filter(insert_pieces);
+        insert_pieces =filter(insert_pieces);
         pieces = splice(piece_index,1,insert_pieces);
-
-        return;
     }
     public byte[] get_text(){
-        ByteBuffer doc = ByteBuffer.allocate((int) _text_len);
-        for(_Piece piece: pieces){
-            doc.put(get_chunk(_edits,piece.offset,piece.offset+piece.length));
+        ByteBuffer doc = ByteBuffer.allocate(_text_len);
+        for (int i = 0, piecesSize = pieces.size(); i < piecesSize; i++) {
+            _Piece piece = pieces.get(i);
+            doc.put(get_chunk(piece.offset, piece.offset + piece.length));
         }
         return doc.array();
     }
-    private byte[] get_chunk(RandomAccessFile file,long start,long stop){
+    private byte[] get_chunk(long start,long stop){
         long length = stop-start;
         byte[] bytes = new byte[(int)length];
         try {
-            file.seek(start);
-            file.read(bytes,0, (int) length);
+            _edits.seek(start);
+            _edits.read(bytes,0, (int) length);
         } catch (IOException ex) {
+            System.out.println("WHAT IS HAPPENING GOD WHY ARE YOU DOING THIS TO ME FUCKKKKKKKKK");
+
             Logger.getLogger(PieceTable.class.getName()).log(Level.SEVERE, null, ex);
         }
         return bytes;
     }
-
     public byte[] find(long index,long length){
         if(length<0){
-            return null;
+            return find(index+length, -length);
         }
         ByteBuffer doc = ByteBuffer.allocate((int) length);
         Pair start_pair = get_pieces_and_offset(index);
@@ -143,26 +142,23 @@ public class PieceTable implements Serializable {
         int stop_piece_index=(int)stop_pair.first;
         long stop_piece_offset=(long)stop_pair.second;
         _Piece start_piece = pieces.get(start_piece_index);
-        //RandomAccessFile buffer = start_piece.in_added ? _edits : _original;
-        RandomAccessFile buffer = _edits;
         if(start_piece_index==stop_piece_index){
-            doc.put(get_chunk(buffer,start_piece_offset,start_piece_offset + length));
+            doc.put(get_chunk(start_piece_offset,start_piece_offset + length));
         }
         else{
-            doc.put(get_chunk(buffer,start_piece_offset,start_piece_offset + length));
+            doc.put(get_chunk(start_piece_offset,start_piece.offset + start_piece.length));
             for(int i =start_piece_index+1;i<stop_piece_index+1;i++){
                 _Piece cur_piece=pieces.get(i);
-                //buffer = cur_piece.in_added ? _edits : _original;
-                doc = ByteBuffer.allocate((int) length);
                 if (i==stop_piece_index){
-                    doc.put(get_chunk(buffer,start_piece_offset,start_piece_offset + length));
+                    doc.put(get_chunk(cur_piece.offset,stop_piece_offset));
                 }
                 else{
-                    doc.put(get_chunk(buffer,cur_piece.offset,cur_piece.offset+cur_piece.length));
+                    doc.put(get_chunk(cur_piece.offset,cur_piece.offset+cur_piece.length));
                 }
             }
 
-        }return doc.array();
+        }
+        return doc.array();
     }
 
     public void remove(long index, long length) {
@@ -207,15 +203,16 @@ public class PieceTable implements Serializable {
         int delete_count = stop_piece_index - start_piece_index + 1;
         pieces = splice(start_piece_index,delete_count,delete_pieces);
     }
-}
 
-class _Piece{
-    public boolean in_added;
-    public long offset;
-    public long length;
-    public _Piece(boolean in_added, long offset, long length){
-        this.in_added=in_added;
-        this.offset=offset;
-        this.length=length;
+    public class _Piece{
+        public boolean in_added;
+        public long offset;
+        public long length;
+        public _Piece(boolean in_added, long offset, long length){
+            this.in_added=in_added;
+            this.offset=offset;
+            this.length=length;
+        }
     }
 }
+

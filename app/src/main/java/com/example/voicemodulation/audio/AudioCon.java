@@ -1,6 +1,6 @@
 package com.example.voicemodulation.audio;
 
-import com.example.voicemodulation.audio.util.Convert;
+import com.example.voicemodulation.util.Convert;
 
 import java.io.File;
 import java.io.FileInputStream;

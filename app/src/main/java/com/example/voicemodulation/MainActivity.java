@@ -4,6 +4,7 @@ import android.content.Context;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Pair;
 import android.view.Gravity;
 import android.view.View;
@@ -18,13 +19,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.AudioF;
 import com.example.voicemodulation.audio.ModulateLogic;
-import com.example.voicemodulation.audio.PieceTable;
+import com.example.voicemodulation.sequence.BitmapPieceTable;
+import com.example.voicemodulation.sequence.PieceTable;
 import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.controls.MControls;
 import com.example.voicemodulation.controls.RControls;
 import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
-//import com.example.voicemodulation.audio.PieceTable;
+//import com.example.voicemodulation.sequence.PieceTable;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -62,21 +64,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FrameLayout record_controls;
     private LinearLayout seek_n_loader;
     private HorizontalScrollView testing;
+    private HorizontalScrollView graph_scroll;
+
     private SeekBar the_seeker;
     private RControls controls;
     private RecordLogic record;
     private AudioF noFrag;
     private int pos_select;
     private PieceTable pieceTable;
+    private RandomAccessFile jennifer;
     int PERMISSION_ALL = 1;
     private final String[] PERMISSIONS = {
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     Manifest.permission.RECORD_AUDIO};
+    private BitmapPieceTable bitmapPieceTable;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        String namer= Environment.getExternalStorageDirectory().getPath()+"/coochie";
+        bitmapPieceTable = new BitmapPieceTable(namer);
+        AudioCon.IO_RAF groovy = new AudioCon.IO_RAF(namer);
+        jennifer = groovy.getWriteObject(false);
         noFrag = new AudioF();
         record = new RecordLogic();
         sharedPref = getPreferences(Context.MODE_PRIVATE);
@@ -107,6 +118,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         the_seeker = findViewById(R.id.seek);
         pieceTable = new PieceTable(noFrag.getNewRecordFile());
         noFrag.setPieceTable(pieceTable);
+        graph.setTables(pieceTable,bitmapPieceTable);
         the_seeker.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -264,7 +276,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 noFrag.setBufferSize(record.buffer_size);
                 record_button.setVisibility(View.INVISIBLE);
                 pause_button.setVisibility(View.VISIBLE);
-                graph.setTable(pieceTable);
+                graph.setTables(pieceTable,bitmapPieceTable);
                 setGraphStream(record.buffer_size,noFrag.getFilePath(),true);
                 setDisplayStream(record.buffer_size,noFrag.getFilePath(),true, 1,Short.MAX_VALUE*2+1);
                 break;
@@ -272,16 +284,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 AudioCon.IO_RAF readOnly = new AudioCon.IO_RAF(noFrag.getNewRecordFile());
                 RandomAccessFile f = readOnly.getReadObject();
                 long length =0;
+                long blength=0;
                 try {
                     length= f.length();
+                    blength = jennifer.length();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 if (pieceTable._text_len == 0){
                     pieceTable.add_original(record.record_size);
-                }else{
-                    pieceTable.add(record.record_size,pieceTable._text_len);}
-                graph.setTable(pieceTable);
+                    bitmapPieceTable.add_original(blength);
+               }else{
+                    pieceTable.add((int) record.record_size,pieceTable._text_len);
+                    bitmapPieceTable.add((int)blength-bitmapPieceTable._text_len, (int) bitmapPieceTable._text_len);
+                }
+                graph.setTables(pieceTable,bitmapPieceTable);
                 record.setRecordingState(true);
                 graph.test(false);
                 setDisplayStream(record.buffer_size,noFrag.getNewRecordFile(),false, 1,Short.MAX_VALUE*2+1);

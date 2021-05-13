@@ -10,7 +10,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import androidx.annotation.Nullable;
 import com.example.voicemodulation.audio.AudioCon;
-import com.example.voicemodulation.audio.util.Convert;
+import com.example.voicemodulation.util.Convert;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -96,7 +96,7 @@ public class AudioDisplay extends View {
     public void setGraphState(boolean state, int buffer_size,String in_file,int n) {
         this.graphState=state;
         this.bufferSize=buffer_size;
-        System.out.println("Buffer size: "+buffer_size);
+        //System.out.println("Buffer size: "+buffer_size);
         try {
             this.jane = new DataInputStream(new FileInputStream(in_file));
         } catch (FileNotFoundException e) {

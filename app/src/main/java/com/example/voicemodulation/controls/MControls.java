@@ -3,10 +3,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Pair;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -17,10 +14,10 @@ import com.example.voicemodulation.MainActivity;
 import com.example.voicemodulation.R;
 import com.example.voicemodulation.audio.AudioF;
 import com.example.voicemodulation.audio.ModulateLogic;
-import com.example.voicemodulation.audio.PieceTable;
+import com.example.voicemodulation.sequence.PieceTable;
 import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.graph.AudioDisplay;
-import java.io.IOException;
+
 import java.util.LinkedList;
 
 public class MControls extends LinearLayout{

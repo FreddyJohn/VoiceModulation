@@ -4,6 +4,9 @@ import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
+
+import com.example.voicemodulation.sequence.PieceTable;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;

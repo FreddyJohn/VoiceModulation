@@ -1,10 +1,8 @@
 package com.example.voicemodulation.audio;
 import android.util.Pair;
 
-import com.example.voicemodulation.audio.util.Convert;
-import com.example.voicemodulation.audio.util.Generate;
-import com.example.voicemodulation.audio.AudioCon.Data;
-import com.example.voicemodulation.audio.AudioCon.IO_RAF;
+import com.example.voicemodulation.util.Convert;
+import com.example.voicemodulation.sequence.PieceTable;
 
 import java.io.FileOutputStream;
 import java.util.LinkedList;
@@ -18,7 +16,7 @@ TODO
 public class ModulateLogic {
     private static  double n;
     public interface modulation{
-        void modulate(LinkedList<Double> _params, AudioF data, Pair<Integer,Integer> position,PieceTable pieceTable);
+        void modulate(LinkedList<Double> _params, AudioF data, Pair<Integer,Integer> position, PieceTable pieceTable);
     }
     public static void writeToFile(short[] result,AudioF data){
         Convert.shortsToBytes(result);
@@ -31,7 +29,7 @@ public class ModulateLogic {
     }
     public static class backwards implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioF data,Pair<Integer,Integer> position,PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioF data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double volume = _params.get(0);
             short[] frontwards = AudioCon.Data.getShorts(data.getNewRecordFile());
             short[] backwards = new short[frontwards.length];
@@ -44,7 +42,7 @@ public class ModulateLogic {
     }
     public static class echo implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioF data,Pair<Integer,Integer> position,PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioF data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double num_signals = _params.get(0);
             double delay = _params.get(1);
             short[] carrier_wave = readFromFile(position,pieceTable);
@@ -66,7 +64,7 @@ public class ModulateLogic {
     }
     public static class quantized implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioF data,Pair<Integer,Integer> position,PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioF data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double C = _params.get(0);
             short[] carrier_wave = readFromFile(position,pieceTable);
             //short[] carrier_wave = AudioCon.Data.getShorts(data.getNewRecordFile());
@@ -85,7 +83,7 @@ public class ModulateLogic {
     }
     public static class phaser implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioF data,Pair<Integer,Integer> position,PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioF data, Pair<Integer,Integer> position, PieceTable pieceTable) {
                 double frequency = _params.get(0);
                 double carrier_amplitude = _params.get(1);
                 double modulator_amplitude = _params.get(2);
@@ -101,7 +99,7 @@ public class ModulateLogic {
     }
     public static class phaserTriangle implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioF data,Pair<Integer,Integer> position,PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioF data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double frequency = _params.get(0);
             double carrier_amplitude = _params.get(1);
             double modulator_amplitude = _params.get(2);
@@ -118,7 +116,7 @@ public class ModulateLogic {
     }
     public static class phaserSaw implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioF data,Pair<Integer,Integer> position,PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioF data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double frequency = _params.get(0);
             double carrier_amplitude = _params.get(1);
             double modulator_amplitude = _params.get(2);
@@ -135,7 +133,7 @@ public class ModulateLogic {
     }
     public static class phaserSquare implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioF data,Pair<Integer,Integer> position,PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioF data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double frequency = _params.get(0);
             double carrier_amplitude = _params.get(1);
             double modulator_amplitude = _params.get(2);
@@ -153,7 +151,7 @@ public class ModulateLogic {
 
     public static class flanger implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioF data,Pair<Integer,Integer> position,PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioF data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double min = _params.get(0);
             double max = _params.get(1);
             double frequency = _params.get(2);
@@ -173,7 +171,7 @@ public class ModulateLogic {
     }
     public static class flangerTriangle implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioF data,Pair<Integer,Integer> position,PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioF data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double min = _params.get(0);
             double max = _params.get(1);
             double frequency = _params.get(2);
@@ -194,7 +192,7 @@ public class ModulateLogic {
     }
     public static class flangerSquare implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioF data,Pair<Integer,Integer> position,PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioF data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double min = _params.get(0);
             double max = _params.get(1);
             double frequency = _params.get(2);
@@ -215,7 +213,7 @@ public class ModulateLogic {
     }
     public static class lowPass implements modulation {
         @Override
-        public void modulate(LinkedList<Double> _params, AudioF data,Pair<Integer,Integer> position,PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioF data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double smooth = _params.get(0);
             //short[] carrier_wave = AudioCon.Data.getShorts(data.getNewRecordFile());
             short[] carrier_wave = readFromFile(position,pieceTable);

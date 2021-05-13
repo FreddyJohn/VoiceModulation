@@ -1,4 +1,4 @@
-package com.example.voicemodulation.audio.util;
+package com.example.voicemodulation.audio;
 
 //TODO my assumption is that the more modulations you stack onto a given series the faster
 //    the output of normalization algorithm should approach one
@@ -28,6 +28,8 @@ package com.example.voicemodulation.audio.util;
 // More thoughts here, much of this is driven through the framework of thinking a constant modulation amplitude of 1
 //  ^perhaps consider instead, the maximum amplitude of given segment within carrier signal
 //  this as parameter
+
+import com.example.voicemodulation.util.Convert;
 
 //TODO test all _t single point in time output functions against desmos graphs
 //  first plot the series in its continuous form and ensure you are traveling about this form with any x input into given _t function
@@ -112,7 +114,7 @@ public class Generate {
         return (max/65535)/1.7;
     }
     public static short getAbsoluteMax(byte[] buffer){
-        short[] data=Convert.bytesToShorts(buffer);
+        short[] data= Convert.bytesToShorts(buffer);
         short max=0;
         for (int counter = 1; counter < data.length; counter++)
         {

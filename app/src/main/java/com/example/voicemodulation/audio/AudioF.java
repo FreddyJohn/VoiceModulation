@@ -3,6 +3,8 @@ package com.example.voicemodulation.audio;
 import android.media.AudioFormat;
 import android.os.Environment;
 
+import com.example.voicemodulation.sequence.PieceTable;
+
 public class AudioF {
     private int sample_rate;
     private int playback_rate;
