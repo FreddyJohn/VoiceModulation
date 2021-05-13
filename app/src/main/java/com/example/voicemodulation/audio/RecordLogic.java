@@ -62,9 +62,9 @@ public class RecordLogic {
     }
     public void stopRecording() {
         if (null != recorder) {
-            isRecording = false;
             recorder.stop();
             recorder.release();
+            isRecording = false;
             recorder = null;
             recordingThread = null;
             record_size=0;
@@ -114,6 +114,7 @@ public class RecordLogic {
             }
         }
     }
+
 }
 
 

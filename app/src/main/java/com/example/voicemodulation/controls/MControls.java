@@ -65,7 +65,7 @@ public class MControls extends LinearLayout{
         this.play = play;
         this.display = seek_n_load.findViewById(R.id.audio_display);
         this.seek = seek_n_load.findViewById(R.id.seek);
-        this.pieceTable =pieceTable;
+        this.pieceTable = pieceTable;
         init(context,null);
     }
     //TODO we keep running into this problem.

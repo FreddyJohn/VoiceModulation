@@ -2,7 +2,6 @@ package com.example.voicemodulation.util;
 
 import android.content.Context;
 import android.util.DisplayMetrics;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
@@ -25,7 +24,7 @@ public class Convert {
         return ints;
     }
 
-    public static byte[] IntsToBytes(int[] ints) {
+    public static byte[] intsToBytes(int[] ints) {
         byte[] bytes = new byte[ints.length * 4];
         ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().put(ints);
         return bytes;
@@ -42,13 +41,19 @@ public class Convert {
         return floatyShorts;
     }
 
-    public static int numberToDp(final Context context,float num){
+    public static float numberToDp(final Context context,float num){
+        /*
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         float fpixels = metrics.density * num;
         return (int) (fpixels + 0.5f);
+         */
+        return context.getResources().getDisplayMetrics().density*num;
     }
     public static float dpToPixel(float dp, Context context){
         return dp * ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
     }
 
+    public static float pixelsToDp(float px, Context context) {
+        return px / ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+    }
 }

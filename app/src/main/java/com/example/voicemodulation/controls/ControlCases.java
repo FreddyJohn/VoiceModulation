@@ -59,8 +59,6 @@ public class ControlCases {
                 case 0:
                     type = "8Bit";
                     break;
-                default:
-                    type = "16Bit";
             }
             return type;
         }
@@ -96,7 +94,6 @@ public class ControlCases {
                 case 0:
                     channels="Mono";
                     break;
-
             }
             return channels;
         }

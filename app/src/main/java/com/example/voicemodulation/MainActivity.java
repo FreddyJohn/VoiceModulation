@@ -19,25 +19,36 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.voicemodulation.audio.AudioCon;
 import com.example.voicemodulation.audio.AudioF;
 import com.example.voicemodulation.audio.ModulateLogic;
-import com.example.voicemodulation.sequence.BitmapPieceTable;
 import com.example.voicemodulation.sequence.PieceTable;
 import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.controls.MControls;
 import com.example.voicemodulation.controls.RControls;
 import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
-//import com.example.voicemodulation.sequence.PieceTable;
-
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Stack;
 
-/*TODO remove AudioDisplay implementation from GraphLogic
-    the idea is to have a ViewGroup within MainActivity so that we can
-    remove or add the SeekBar or AudioDisplay based on context
+// TODO USER CONTROLLED VARIABILITY (support for N languages and N finger sizes)
+//  (1) consider the case when the user has a finger size above or below 50dp
+//  if we were to allow the user to vary the view sizes based on the upper and lower human finger diameters
+//  then the calculations used by GraphLogic would all vary with this finger size selection
+//  also  consider the case when the user would like to resize the waveform
+//  if we change the true column height
+//  then the calculations used by GraphLogic will have to be modified,
+//  this is unfavorable.
+//  a solution is to maintain a constant column height and use canvas.scale(x,y) in a way that is proportional to the finger selection and or resize.
+//  (2) consider the case when the user would like to resize the true column height for better memory performance on their device
+//  let column height = x
+//  lower <= x <= upper
+//  where lower and upper are dependent on the finger size selection
+//  (3) language
 
- */
-//TODO you could have a boolean variable for any i of n controller that allows for
-//     scaling of scale based on user feedback to allow for very very very very very fine Hz
+//TODO UI IMPROVEMENTS
+//  (1) find a way to remove the boxes around the vector images for each modulation and make them look more professional
+//  (2) I would like modulation selection to be interactive. By this I mean the vector image should resize and shake providing some noticeable feedback
+//  (3) Piggyback off of (2) make it optional and default for all user actions to be interactive to add support for disabled
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
@@ -73,19 +84,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int pos_select;
     private PieceTable pieceTable;
     private RandomAccessFile jennifer;
+    private Stack<Long> audioLength;
     int PERMISSION_ALL = 1;
     private final String[] PERMISSIONS = {
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     Manifest.permission.RECORD_AUDIO};
-    private BitmapPieceTable bitmapPieceTable;
+    private PieceTable bitmapPieceTable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        String namer= Environment.getExternalStorageDirectory().getPath()+"/coochie";
-        bitmapPieceTable = new BitmapPieceTable(namer);
+        String namer= Environment.getExternalStorageDirectory().getPath()+"/bitmap";
+        String namer1= Environment.getExternalStorageDirectory().getPath()+"/bitmap_piece_table";
+        String namer2= Environment.getExternalStorageDirectory().getPath()+"/audio_piece_table";
+        audioLength = new Stack<>();
+        // Data.getMemory()/x ? instead of static 1MB
+        bitmapPieceTable = new PieceTable(namer1,namer,1000000);
         AudioCon.IO_RAF groovy = new AudioCon.IO_RAF(namer);
         jennifer = groovy.getWriteObject(false);
         noFrag = new AudioF();
@@ -116,9 +132,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 record_controls,graph,seek_n_loader,modulations);
         testing.addView(controls);
         the_seeker = findViewById(R.id.seek);
-        pieceTable = new PieceTable(noFrag.getNewRecordFile());
+        pieceTable = new PieceTable(namer2,noFrag.getNewRecordFile(),1000000);
         noFrag.setPieceTable(pieceTable);
-        graph.setTables(pieceTable,bitmapPieceTable);
+        graph.setTables(bitmapPieceTable, pieceTable);
         the_seeker.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -136,7 +152,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
     //TODO remove the file param
     public static void setGraphStream(int buffsize, String file, boolean state){
-        graph.setGraphState(state);
+        graph.setGraphState(buffsize,state);
     }
     public static void setDisplayStream(int buffsize, String file, boolean state, int length,int range) {
         //System.out.println("the dynamic range of this encoding is: "+range);
@@ -144,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         display.setGraphState(state, buffsize, file, length);
     }
     public static Pair<Integer,Integer> getSelectionPoints(){
-        return graph.getSelectionPoints();
+        return new Pair<>(graph.getSelectionPoints().audio_start,graph.getSelectionPoints().audio_stop);
     }
 
     @Override
@@ -274,33 +290,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 record.setRecordingState(false);
                 record.startRecording();
                 noFrag.setBufferSize(record.buffer_size);
-                record_button.setVisibility(View.INVISIBLE);
-                pause_button.setVisibility(View.VISIBLE);
-                graph.setTables(pieceTable,bitmapPieceTable);
                 setGraphStream(record.buffer_size,noFrag.getFilePath(),true);
                 setDisplayStream(record.buffer_size,noFrag.getFilePath(),true, 1,Short.MAX_VALUE*2+1);
+                record_button.setVisibility(View.INVISIBLE);
+                pause_button.setVisibility(View.VISIBLE);
                 break;
             case  R.id.pause_recording:
                 AudioCon.IO_RAF readOnly = new AudioCon.IO_RAF(noFrag.getNewRecordFile());
                 RandomAccessFile f = readOnly.getReadObject();
                 long length =0;
                 long blength=0;
+                record.setRecordingState(true);
                 try {
                     length= f.length();
+                    audioLength.push(length);
                     blength = jennifer.length();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 if (pieceTable._text_len == 0){
-                    pieceTable.add_original(record.record_size);
-                    bitmapPieceTable.add_original(blength);
+                    pieceTable.add_original((int) length);
+                    bitmapPieceTable.add_original((int) blength);
                }else{
-                    pieceTable.add((int) record.record_size,pieceTable._text_len);
-                    bitmapPieceTable.add((int)blength-bitmapPieceTable._text_len, (int) bitmapPieceTable._text_len);
+                    pieceTable.add((int) (length-pieceTable._text_len), pieceTable._text_len);
+                    bitmapPieceTable.print_pieces();
+                    bitmapPieceTable.add((int)blength-bitmapPieceTable._text_len, bitmapPieceTable._text_len);
+                    audioLength.remove(0);
                 }
-                graph.setTables(pieceTable,bitmapPieceTable);
-                record.setRecordingState(true);
-                graph.test(false);
+                graph.catchUp(false);
+                graph.setTables(bitmapPieceTable, pieceTable);
                 setDisplayStream(record.buffer_size,noFrag.getNewRecordFile(),false, 1,Short.MAX_VALUE*2+1);
                 display.setVisibility(View.GONE);
                 noFrag.setLength((int)length);
@@ -327,8 +345,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case  R.id.stop_recording:
                 noFrag.save();
                 break;
-
-
 
 
             }
