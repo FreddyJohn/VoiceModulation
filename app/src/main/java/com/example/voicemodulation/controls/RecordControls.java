@@ -2,7 +2,6 @@ package com.example.voicemodulation.controls;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
@@ -10,8 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import androidx.annotation.Nullable;
 import com.example.voicemodulation.R;
-import com.example.voicemodulation.audio.AudioF;
-import com.example.voicemodulation.audio.RecordLogic;
+import com.example.voicemodulation.audio.AudioFile;
 import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
 
@@ -28,7 +26,7 @@ import com.example.voicemodulation.graph.GraphLogic;
 //TODO make this a horizontal view
 
 //TODO now you can automatically set the gravity if ?
-public class RControls extends LinearLayout {
+public class RecordControls extends LinearLayout {
     private HorizontalScrollView mod;
     private AudioDisplay display;
     private GraphLogic graph;
@@ -39,7 +37,7 @@ public class RControls extends LinearLayout {
     private Controller format;
     private Controller channel;
     private Controller encoding;
-    private AudioF creation;
+    private AudioFile creation;
     private String name;
     private int gravity;
     private int[] scale;
@@ -49,18 +47,18 @@ public class RControls extends LinearLayout {
     private int[] progresses;
 
 
-    public RControls(Context context) {
+    public RecordControls(Context context) {
         super(context);
         init(context,null);
     }
-    public RControls(Context context, @Nullable AttributeSet attrs) {
+    public RecordControls(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init(context,attrs);
     }
-    public RControls(Context context, String[] _titles, int[] _maxes,
-                     int[] _scale, String[] _quantity_type, int _gravity,
-                     String _name, int[] _progresses, FrameLayout controls,
-                     GraphLogic graph, LinearLayout seek_n_load, HorizontalScrollView modulations){
+    public RecordControls(Context context, String[] _titles, int[] _maxes,
+                          int[] _scale, String[] _quantity_type, int _gravity,
+                          String _name, int[] _progresses, FrameLayout controls,
+                          GraphLogic graph, LinearLayout seek_n_load, HorizontalScrollView modulations){
         super(context);
         this.name= _name;
         this.gravity=_gravity;
@@ -86,7 +84,7 @@ public class RControls extends LinearLayout {
         //type.setText("Record Controls");
         //addView(type);
 
-        creation = new AudioF();
+        creation = new AudioFile();
         playback = new Controller(getContext(),null,quantity_type[0],scale[0]);
         playback.setParam(titles[0],maxes[0],progresses[0]);
         addView(playback);
@@ -120,7 +118,7 @@ public class RControls extends LinearLayout {
         addView(encoding);
 
     }
-    public AudioF getCreationData(){
+    public AudioFile getCreationData(){
         creation.setPlaybackRate(playback.getProgress()*scale[0]);
         creation.setSampleRate(sample.getProgress()*scale[1]);
         creation.setFormat(ControlCases.formatSeeker(format.getProgress()));

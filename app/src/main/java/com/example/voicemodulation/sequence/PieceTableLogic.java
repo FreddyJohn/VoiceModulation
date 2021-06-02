@@ -19,6 +19,7 @@ public class PieceTableLogic implements Serializable {
         this.pieces = new ArrayList<>();
         this.max_piece_length = max;
     }
+
     private ArrayList filter(ArrayList<_Piece> pieces){
         ArrayList<_Piece> filtered =new ArrayList<>();
         for (int i = 0, piecesSize = pieces.size(); i < piecesSize; i++) {
@@ -89,8 +90,7 @@ public class PieceTableLogic implements Serializable {
 
 
     public PieceTableLogic add(int length, int index){
-    //public void _add(int length,int index){
-        if (length==0){
+        if (length<=0){
             return this;
         }
         Pair pair = get_pieces_and_offset(index);
@@ -205,15 +205,7 @@ public class PieceTableLogic implements Serializable {
         pieces = splice(start_piece_index,delete_count,delete_pieces);
         return this;
     }
-    public long get_length(RandomAccessFile f){
-        long length=0;
-        try {
-            length= f.length();
-        } catch (IOException ex) {
-            Logger.getLogger(PieceTableLogic.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return length;
-    }
+
     public void print_pieces(){
         for(_Piece piece: pieces){
             System.out.println(piece.in_added+","+piece.length+","+piece.offset);

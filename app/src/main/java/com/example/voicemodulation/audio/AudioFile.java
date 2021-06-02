@@ -5,7 +5,7 @@ import android.os.Environment;
 
 import com.example.voicemodulation.sequence.PieceTable;
 
-public class AudioF {
+public class AudioFile {
     private int sample_rate;
     private int playback_rate;
     private int bit_depth;
@@ -21,7 +21,7 @@ public class AudioF {
     private  String format;
     private int length;
 
-    public AudioF(){
+    public AudioFile(){
     }
 
     public int getSampleRate() {

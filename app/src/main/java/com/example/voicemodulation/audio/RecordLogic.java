@@ -21,7 +21,7 @@ public class RecordLogic {
     private boolean isPaused = false;
     public int buffer_size;
     public long record_size;
-    private AudioF file_data;
+    private AudioFile file_data;
     private String file_path;
     private PieceTable pieceTable;
 
@@ -31,12 +31,12 @@ public class RecordLogic {
     public void setPieceTable(PieceTable pieceTable){
         this.pieceTable = pieceTable;
     }
-    public void setFileData(AudioF file)
+    public void setFileData(AudioFile file)
     {
         this.file_data = file;
         this.file_path = file.getFilePath();
     }
-    public void setFileObject(AudioF creation,Boolean file_state) {
+    public void setFileObject(AudioFile creation, Boolean file_state) {
         this.file_data = creation;
         this.file_path = creation.getFilePath();
         this.ioRAF = new AudioCon.IO_RAF(file_path);

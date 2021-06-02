@@ -17,12 +17,12 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.voicemodulation.audio.AudioCon;
-import com.example.voicemodulation.audio.AudioF;
-import com.example.voicemodulation.audio.ModulateLogic;
+import com.example.voicemodulation.audio.AudioFile;
+import com.example.voicemodulation.modulate.timeDomain;
 import com.example.voicemodulation.sequence.PieceTable;
 import com.example.voicemodulation.audio.RecordLogic;
-import com.example.voicemodulation.controls.MControls;
-import com.example.voicemodulation.controls.RControls;
+import com.example.voicemodulation.controls.ModulateControls;
+import com.example.voicemodulation.controls.RecordControls;
 import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
 import java.io.IOException;
@@ -78,9 +78,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private HorizontalScrollView graph_scroll;
 
     private SeekBar the_seeker;
-    private RControls controls;
+    private RecordControls controls;
     private RecordLogic record;
-    private AudioF noFrag;
+    private AudioFile noFrag;
     private int pos_select;
     private PieceTable pieceTable;
     private RandomAccessFile jennifer;
@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         bitmapPieceTable = new PieceTable(namer1,namer,1000000);
         AudioCon.IO_RAF groovy = new AudioCon.IO_RAF(namer);
         jennifer = groovy.getWriteObject(false);
-        noFrag = new AudioF();
+        noFrag = new AudioFile();
         record = new RecordLogic();
         sharedPref = getPreferences(Context.MODE_PRIVATE);
         editor = sharedPref.edit();
@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         display = findViewById(R.id.audio_display);
         modulations = findViewById(R.id.modulations);
         graph = findViewById(R.id.display);
-        controls = new RControls(this,record_control_titles,record_control_ranges,
+        controls = new RecordControls(this,record_control_titles,record_control_ranges,
                 record_control_scales,record_control_quantities,
                 record_gravity,record_control_title,record_control_progresses,
                 record_controls,graph,seek_n_loader,modulations);
@@ -160,7 +160,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         display.setGraphState(state, buffsize, file, length);
     }
     public static Pair<Integer,Integer> getSelectionPoints(){
-        return new Pair<>(graph.getSelectionPoints().audio_start,graph.getSelectionPoints().audio_stop);
+        return new Pair<>(graph.points.audio_start,graph.points.audio_stop);
+
     }
 
     @Override
@@ -168,112 +169,112 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()) {
             case R.id.backwards:
                 testing.removeAllViews();
-                ModulateLogic.backwards backwards = new ModulateLogic.backwards();
-                ModulateLogic.modulation Backwards = backwards::modulate;
+                timeDomain.backwards backwards = new timeDomain.backwards();
+                timeDomain.modulation Backwards = backwards::modulate;
                 String[] backwards_titles = new String[]{"Volume"};
                 int[] backwards_maxes = new int[]{10};
-                MControls backwards_view = new MControls(this, backwards_titles, backwards_maxes, new double[]{.1},
+                ModulateControls backwards_view = new ModulateControls(this, backwards_titles, backwards_maxes, new double[]{.1},
                         new String[]{"Volume"}, noFrag, Backwards, Gravity.CENTER,
                         "Backwards Effect", new int[]{10},play_button,seek_n_loader,pieceTable);
                 testing.addView(backwards_view);
                 break;
             case R.id.echo:
                 testing.removeAllViews();
-                ModulateLogic.echo echo = new ModulateLogic.echo();
-                ModulateLogic.modulation Echo = echo::modulate;
+                timeDomain.echo echo = new timeDomain.echo();
+                timeDomain.modulation Echo = echo::modulate;
                 int[] echo_maxes = new int[]{10, 10};
-                MControls echo_view = new MControls(this,echo_titles, echo_maxes, new double[]{1, 1},
+                ModulateControls echo_view = new ModulateControls(this,echo_titles, echo_maxes, new double[]{1, 1},
                         new String[]{"S", "D"}, noFrag, Echo, Gravity.CENTER,
                         "Echo Effect", new int[]{5, 6},play_button,seek_n_loader,pieceTable);
                 testing.addView(echo_view);
                 break;
             case R.id.quantize:
                 testing.removeAllViews();
-                ModulateLogic.quantized quantized = new ModulateLogic.quantized();
-                ModulateLogic.modulation Quantized = quantized::modulate;
+                timeDomain.quantized quantized = new timeDomain.quantized();
+                timeDomain.modulation Quantized = quantized::modulate;
                 //TODO rename robotic shit
                 String[] robotic_titles = new String[]{"Quantize", "Amplitude"};
                 int[] robotic_maxes = new int[]{10, 10};
-                MControls robotic = new MControls(this,robotic_titles, robotic_maxes, new double[]{1000, .1},
+                ModulateControls robotic = new ModulateControls(this,robotic_titles, robotic_maxes, new double[]{1000, .1},
                         new String[]{"C", "Amp"}, noFrag, Quantized, Gravity.CENTER,
                         "Quantize Audio Sample", new int[]{5, 10},play_button,seek_n_loader,pieceTable);
                 testing.addView(robotic);
                 break;
             case R.id.phaser:
                 testing.removeAllViews();
-                ModulateLogic.phaser phaser = new ModulateLogic.phaser();
-                ModulateLogic.modulation Phaser = phaser::modulate;
+                timeDomain.phaser phaser = new timeDomain.phaser();
+                timeDomain.modulation Phaser = phaser::modulate;
                 int[] phaser_maxes = new int[]{20, 10, 10, 20};
-                MControls phaser_view = new MControls(this,phaser_titles, phaser_maxes, new double[]{nyquist, .1, .1, 0}, //.1 * Math.PI
+                ModulateControls phaser_view = new ModulateControls(this,phaser_titles, phaser_maxes, new double[]{nyquist, .1, .1, 0}, //.1 * Math.PI
                         phaser_quantities, noFrag, Phaser, Gravity.NO_GRAVITY,
                         "Phaser with Sine Wave", phaser_progress,play_button,seek_n_loader,pieceTable);
                 testing.addView(phaser_view);
                 break;
             case R.id.phaser_triangle:
                 testing.removeAllViews();
-                ModulateLogic.phaserTriangle phaserTriangle = new ModulateLogic.phaserTriangle();
-                ModulateLogic.modulation PhaserTriangle = phaserTriangle::modulate;
+                timeDomain.phaserTriangle phaserTriangle = new timeDomain.phaserTriangle();
+                timeDomain.modulation PhaserTriangle = phaserTriangle::modulate;
                 int[] alien_maxes = new int[]{20, 10, 10, 10};
-                MControls phaser_triangle_view = new MControls(this,phaser_titles, alien_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
+                ModulateControls phaser_triangle_view = new ModulateControls(this,phaser_titles, alien_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
                         phaser_quantities, noFrag, PhaserTriangle, Gravity.NO_GRAVITY,
                         "Phaser with Triangle Wave", phaser_progress,play_button,seek_n_loader,pieceTable);
                 testing.addView(phaser_triangle_view);
                 break;
             case R.id.phaser_square:
                 testing.removeAllViews();
-                ModulateLogic.phaserSquare phaserSquare = new ModulateLogic.phaserSquare();
-                ModulateLogic.modulation PhaserSquare = phaserSquare::modulate;
+                timeDomain.phaserSquare phaserSquare = new timeDomain.phaserSquare();
+                timeDomain.modulation PhaserSquare = phaserSquare::modulate;
                 int[] square_maxes = new int[]{20, 10, 10, 10};
-                MControls phaser_square_view = new MControls(this,phaser_titles, square_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
+                ModulateControls phaser_square_view = new ModulateControls(this,phaser_titles, square_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
                         phaser_quantities, noFrag, PhaserSquare, Gravity.NO_GRAVITY,
                         "Phaser with Square Wave", phaser_progress,play_button,seek_n_loader,pieceTable);
                 testing.addView(phaser_square_view);
                 break;
             case R.id.phaser_saw:
                 testing.removeAllViews();
-                ModulateLogic.phaserSaw phaserSaw = new ModulateLogic.phaserSaw();
-                ModulateLogic.modulation PhaserSaw = phaserSaw::modulate;
+                timeDomain.phaserSaw phaserSaw = new timeDomain.phaserSaw();
+                timeDomain.modulation PhaserSaw = phaserSaw::modulate;
                 int[] saw_maxes = new int[]{20, 10, 10, 10};
-                MControls phaser_saw_view = new MControls(this,phaser_titles, saw_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
+                ModulateControls phaser_saw_view = new ModulateControls(this,phaser_titles, saw_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
                         phaser_quantities, noFrag, PhaserSaw, Gravity.NO_GRAVITY,
                         "Phaser with Saw Wave", phaser_progress,play_button,seek_n_loader,pieceTable);
                 testing.addView(phaser_saw_view);
                 break;
             case R.id.flanger:
                 testing.removeAllViews();
-                ModulateLogic.flanger flanger = new ModulateLogic.flanger();
-                ModulateLogic.modulation Flanger = flanger::modulate;
+                timeDomain.flanger flanger = new timeDomain.flanger();
+                timeDomain.modulation Flanger = flanger::modulate;
                 int[] flanger_maxes = new int[]{10, 10, 20};
-                MControls flanger_view = new MControls(this,flanger_titles, flanger_maxes, new double[]{10, 10, nyquist},
+                ModulateControls flanger_view = new ModulateControls(this,flanger_titles, flanger_maxes, new double[]{10, 10, nyquist},
                         new String[]{"∧", "∨", "Hz"}, noFrag, Flanger, Gravity.NO_GRAVITY,
                         "Flanger with Sine Wave", flanger_progress,play_button,seek_n_loader,pieceTable);
                 testing.addView(flanger_view);
                 break;
             case R.id.flanger_triangle:
                 testing.removeAllViews();
-                ModulateLogic.flangerTriangle flangerTriangle = new ModulateLogic.flangerTriangle();
-                ModulateLogic.modulation FlangerTriangle = flangerTriangle::modulate;
+                timeDomain.flangerTriangle flangerTriangle = new timeDomain.flangerTriangle();
+                timeDomain.modulation FlangerTriangle = flangerTriangle::modulate;
                 int[] flanger_triangle_maxes = new int[]{10, 10, 20};
-                MControls flanger_triangle_view = new MControls(this,flanger_titles, flanger_triangle_maxes, new double[]{10, 10, nyquist},
+                ModulateControls flanger_triangle_view = new ModulateControls(this,flanger_titles, flanger_triangle_maxes, new double[]{10, 10, nyquist},
                         new String[]{"∧", "∨", "Hz"}, noFrag, FlangerTriangle, Gravity.NO_GRAVITY,
                         "Flanger with Triangle Wave", flanger_progress,play_button,seek_n_loader,pieceTable);
                 testing.addView(flanger_triangle_view);
                 break;
             case R.id.flanger_square:
                 testing.removeAllViews();
-                ModulateLogic.flangerSquare flangerSquare = new ModulateLogic.flangerSquare();
-                ModulateLogic.modulation FlangerSquare = flangerSquare::modulate;
+                timeDomain.flangerSquare flangerSquare = new timeDomain.flangerSquare();
+                timeDomain.modulation FlangerSquare = flangerSquare::modulate;
                 int[] flanger_square_maxes = new int[]{10, 10, 20};
-                MControls flanger_square_view = new MControls(this,flanger_titles, flanger_square_maxes, new double[]{10, 10, nyquist},
+                ModulateControls flanger_square_view = new ModulateControls(this,flanger_titles, flanger_square_maxes, new double[]{10, 10, nyquist},
                         new String[]{"∧", "∨", "Hz"}, noFrag, FlangerSquare, Gravity.NO_GRAVITY,
                         "Flanger with Square Wave", flanger_progress,play_button,seek_n_loader,pieceTable);
                 testing.addView(flanger_square_view);
                 break;
             case R.id.low_pass:
                 testing.removeAllViews();
-                ModulateLogic.lowPass lowPass = new ModulateLogic.lowPass();
-                ModulateLogic.modulation LowPass = lowPass::modulate;
-                MControls low_pass_view = new MControls(this,new String[]{"Smoothing"}, new int[]{25}, new double[]{5},
+                timeDomain.lowPass lowPass = new timeDomain.lowPass();
+                timeDomain.modulation LowPass = lowPass::modulate;
+                ModulateControls low_pass_view = new ModulateControls(this,new String[]{"Smoothing"}, new int[]{25}, new double[]{5},
                         new String[]{" "}, noFrag, LowPass, Gravity.CENTER,
                         "Low Pass Filter", flanger_progress,play_button,seek_n_loader,pieceTable);
                 testing.addView(low_pass_view);

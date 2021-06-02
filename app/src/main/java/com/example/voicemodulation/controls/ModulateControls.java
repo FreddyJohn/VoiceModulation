@@ -8,19 +8,17 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-
 import androidx.annotation.Nullable;
 import com.example.voicemodulation.MainActivity;
 import com.example.voicemodulation.R;
-import com.example.voicemodulation.audio.AudioF;
-import com.example.voicemodulation.audio.ModulateLogic;
+import com.example.voicemodulation.audio.AudioFile;
+import com.example.voicemodulation.modulate.timeDomain;
 import com.example.voicemodulation.sequence.PieceTable;
 import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.graph.AudioDisplay;
-
 import java.util.LinkedList;
 
-public class MControls extends LinearLayout{
+public class ModulateControls extends LinearLayout{
     private PieceTable pieceTable;
     private SeekBar seek;
     private AudioDisplay display;
@@ -30,28 +28,28 @@ public class MControls extends LinearLayout{
     private int[] maxes;
     private double[] scale;
     private  String[] quantity_type;
-    private AudioF creation;
-    private ModulateLogic.modulation method;
+    private AudioFile creation;
+    private timeDomain.modulation method;
     private int gravity;
     private String name;
     private int[] progress;
     private Pair<Integer,Integer> position;
 
-    public MControls(Context context) {
+    public ModulateControls(Context context) {
         super(context);
         init(context,null);
     }
 
-    public MControls(Context context, AttributeSet attrs) {
+    public ModulateControls(Context context, AttributeSet attrs) {
         super(context, attrs);
         init(context,attrs);
     }
 
 
-    public MControls(Context context, String[] title, int[] maxes, double[] scale,
-                     String[] quantity_type, AudioF creation, ModulateLogic.modulation modulation,
-                     int gravity, String name, int[] progress, ImageButton play,
-                     LinearLayout seek_n_load, PieceTable pieceTable){
+    public ModulateControls(Context context, String[] title, int[] maxes, double[] scale,
+                            String[] quantity_type, AudioFile creation, timeDomain.modulation modulation,
+                            int gravity, String name, int[] progress, ImageButton play,
+                            LinearLayout seek_n_load, PieceTable pieceTable){
         super(context);
         this.title=title;
         this.maxes=maxes;

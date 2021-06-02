@@ -7,8 +7,8 @@ This block allows for an arbitrary amount of padding. The contents of a PADDING 
 */
 public class Format {
     public static class wav implements Runnable{
-        private final AudioF data;
-        public wav(AudioF _data) {
+        private final AudioFile data;
+        public wav(AudioFile _data) {
             this.data=_data;
         }
         @Override
@@ -33,8 +33,8 @@ public class Format {
         }
     }
     public static class aiff implements Runnable {
-        private final AudioF data;
-        public aiff(AudioF _data) {
+        private final AudioFile data;
+        public aiff(AudioFile _data) {
             this.data=_data;
         }
         @Override

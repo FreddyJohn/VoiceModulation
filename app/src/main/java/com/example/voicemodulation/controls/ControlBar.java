@@ -20,7 +20,6 @@ public class ControlBar extends androidx.appcompat.widget.AppCompatSeekBar {
         Drawable t = context.getDrawable(R.drawable.seekbar_thumb);
         setThumb(t);
     }
-
     @Override
     protected void onMeasure(int width, int height) {
         float p = Resources.getSystem().getDisplayMetrics().density;
