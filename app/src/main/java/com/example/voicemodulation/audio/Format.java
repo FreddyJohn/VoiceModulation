@@ -1,20 +1,20 @@
 package com.example.voicemodulation.audio;
+import com.example.voicemodulation.project.AudioData;
+import com.example.voicemodulation.sequence.PieceTable;
 import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
-//TODO read below and implement. padding has reason
-/*
-This block allows for an arbitrary amount of padding. The contents of a PADDING block have no meaning. This block is useful when it is known that metadata will be edited after encoding; the user can instruct the encoder to reserve a PADDING block of sufficient size so that when metadata is added, it will simply overwrite the padding (which is relatively quick) instead of having to insert it into the right place in the existing file (which would normally require rewriting the entire file).
-*/
 public class Format {
     public static class wav implements Runnable{
-        private final AudioFile data;
-        public wav(AudioFile _data) {
+        private final AudioData data;
+        private PieceTable audioPieceTable;
+        public wav(AudioData _data, PieceTable audioPieceTable) {
             this.data=_data;
+            this.audioPieceTable = audioPieceTable;
         }
         @Override
+        //TODO implement extra padding bytes so we can insert the header there overwriting instead of using bytebuffer and getting out of memory errors.
         public void run() {
-            String file_path = data.getFilePath();
-            byte[] raw_data = AudioCon.Data.getBytes(file_path);
+            byte[] raw_data = audioPieceTable.get_text();
             long total_bytes = raw_data.length;
             int bit_depth = data.getBitDepth();
             long sample_rate = data.getPlaybackRate();
@@ -27,14 +27,15 @@ public class Format {
             buff.put(wav_header);
             buff.put(raw_data);
             byte[] formatted_file = buff.array();
-            AudioCon.IO_F con = new AudioCon.IO_F();
-            FileOutputStream out = con.setFileOutputStream(data.getFilePath().replace(".pcm",".wav"));
+            AudioConnect.IO_F con = new AudioConnect.IO_F();
+            //FileOutputStream out = con.setFileOutputStream(data.getFilePath().replace(".pcm",".wav"));
+            FileOutputStream out = con.setFileOutputStream(data.projectPaths.audio.replace(".pcm",".wav"));
             con.closeFileOutputStream(out,formatted_file);
         }
     }
     public static class aiff implements Runnable {
-        private final AudioFile data;
-        public aiff(AudioFile _data) {
+        private final AudioData data;
+        public aiff(AudioData _data) {
             this.data=_data;
         }
         @Override

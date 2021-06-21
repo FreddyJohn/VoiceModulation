@@ -8,7 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-public class AudioCon {
+public class AudioConnect {
 
     public static class IO_RAF {
         private final String file_path;

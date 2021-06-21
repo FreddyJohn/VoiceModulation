@@ -9,7 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import androidx.annotation.Nullable;
 import com.example.voicemodulation.R;
-import com.example.voicemodulation.audio.AudioFile;
+import com.example.voicemodulation.project.AudioData;
 import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
 
@@ -37,7 +37,7 @@ public class RecordControls extends LinearLayout {
     private Controller format;
     private Controller channel;
     private Controller encoding;
-    private AudioFile creation;
+    private AudioData creation;
     private String name;
     private int gravity;
     private int[] scale;
@@ -84,7 +84,7 @@ public class RecordControls extends LinearLayout {
         //type.setText("Record Controls");
         //addView(type);
 
-        creation = new AudioFile();
+        creation = new AudioData();
         playback = new Controller(getContext(),null,quantity_type[0],scale[0]);
         playback.setParam(titles[0],maxes[0],progresses[0]);
         addView(playback);
@@ -118,13 +118,14 @@ public class RecordControls extends LinearLayout {
         addView(encoding);
 
     }
-    public AudioFile getCreationData(){
+    public AudioData getCreationData(){
         creation.setPlaybackRate(playback.getProgress()*scale[0]);
         creation.setSampleRate(sample.getProgress()*scale[1]);
         creation.setFormat(ControlCases.formatSeeker(format.getProgress()));
         creation.setNumChannelsIn(ControlCases.channelSeeker(channel.getProgress()));
         creation.setBitDepth(ControlCases.encodingSeeker(encoding.getProgress()));
-        creation.setFilePath(creation.getNewRecordFile());
+        //creation.setFilePath(creation.getNewRecordFile());
+        creation.setProjectPaths(creation.getProjectPaths());
         return creation;
     }
 

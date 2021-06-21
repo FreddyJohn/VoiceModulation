@@ -11,8 +11,8 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 import com.example.voicemodulation.MainActivity;
 import com.example.voicemodulation.R;
-import com.example.voicemodulation.audio.AudioFile;
-import com.example.voicemodulation.modulate.timeDomain;
+import com.example.voicemodulation.project.AudioData;
+import com.example.voicemodulation.modulate.TimeDomain;
 import com.example.voicemodulation.sequence.PieceTable;
 import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.graph.AudioDisplay;
@@ -28,8 +28,8 @@ public class ModulateControls extends LinearLayout{
     private int[] maxes;
     private double[] scale;
     private  String[] quantity_type;
-    private AudioFile creation;
-    private timeDomain.modulation method;
+    private AudioData creation;
+    private TimeDomain.modulation method;
     private int gravity;
     private String name;
     private int[] progress;
@@ -47,7 +47,7 @@ public class ModulateControls extends LinearLayout{
 
 
     public ModulateControls(Context context, String[] title, int[] maxes, double[] scale,
-                            String[] quantity_type, AudioFile creation, timeDomain.modulation modulation,
+                            String[] quantity_type, AudioData creation, TimeDomain.modulation modulation,
                             int gravity, String name, int[] progress, ImageButton play,
                             LinearLayout seek_n_load, PieceTable pieceTable){
         super(context);
@@ -93,20 +93,21 @@ public class ModulateControls extends LinearLayout{
             ((Activity)context).runOnUiThread(() -> {
                 seek.setVisibility(View.GONE);
                 display.setVisibility(View.VISIBLE);
-                MainActivity.setDisplayStream(creation.getLength(),creation.getNewModulateFile(),true,0,Short.MAX_VALUE*2+1);
+                MainActivity.setDisplayStream(creation.getLength(),creation.projectPaths.modulation,true,0,Short.MAX_VALUE*2+1);
             });
             position = MainActivity.getSelectionPoints();
             RecordLogic recordLogic = new RecordLogic();
             recordLogic.setPieceTable(null);
-            creation.setFilePath(creation.getNewModulateFile());
-            recordLogic.setFileData(creation);
+            //creation.setFilePath(creation.getNewModulateFile());
+            //recordLogic.setFileData(creation);
+            recordLogic.setFileData(creation,creation.projectPaths.modulation);
             method.modulate(getModulateParameters(),creation, position,pieceTable);
             //System.out.println("NO NULL POINTER HAVE SCOPE "+seek.getProgress());
                 //recordLogic.play_recording(0,creation.getLength());
                 recordLogic.play_recording(0,position.second-position.first);
                 System.out.println("WE WILL PLAY AUDIO OF LENGTH "+(position.second-position.first)+" AT OFFSET "+position.first);
                 ((Activity)context).runOnUiThread(() -> {
-                    MainActivity.setDisplayStream(creation.getLength(),creation.getNewModulateFile(),false,0,Short.MAX_VALUE*2+1);
+                    MainActivity.setDisplayStream(creation.getLength(),creation.projectPaths.modulation,false,0,Short.MAX_VALUE*2+1);
                     display.setVisibility(View.GONE);
                     seek.setVisibility(View.VISIBLE);
                 });

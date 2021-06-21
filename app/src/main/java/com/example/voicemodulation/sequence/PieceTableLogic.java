@@ -1,6 +1,5 @@
 package com.example.voicemodulation.sequence;
 import android.util.Pair;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
@@ -11,7 +10,7 @@ import java.util.logging.Logger;
 
 
 public class PieceTableLogic implements Serializable {
-    public int _text_len;
+    public int byte_length;
     private ArrayList<_Piece> pieces;
     private int max_piece_length;
 
@@ -61,44 +60,32 @@ public class PieceTableLogic implements Serializable {
         }
         return null;
     }
-    /*
-    public void add(int length,int index){
-        if (length<=0){
-            return;
-        }
-        _add(max_piece_length, index);
-        for(int piece = max_piece_length; piece<length; piece+=max_piece_length){
-            _add(max_piece_length, index+piece);
-        }
-        if (length % max_piece_length != 0){
-            _add(length % max_piece_length, index + length - (length % max_piece_length));
-        }
-    }
-    public void add_original(int length){
-        _text_len = max_piece_length;
-        pieces.add(new _Piece(false,0,max_piece_length));
-        add(max_piece_length,length);
-    }
-
-
-     */
 
     public void add_original(int length){
-        _text_len = length;
+        byte_length = length;
         pieces.add(new _Piece(false,0,length));
     }
 
 
-    public PieceTableLogic add(int length, int index){
-        if (length<=0){
+    public PieceTableLogic add(int length,int index, RandomAccessFile edits){
+        if (length==0){
             return this;
         }
+
         Pair pair = get_pieces_and_offset(index);
         int piece_index = (int) pair.first;
-        _Piece curr_piece = pieces.get(piece_index);
         long piece_offset= (long) pair.second;
-        long added_offset = _text_len;
-        _text_len += length;
+        _Piece curr_piece = pieces.get(piece_index);
+
+        long added_offset =0;
+        try {
+            added_offset = edits.length() - length;
+        } catch (IOException ex) {
+            Logger.getLogger(PieceTable.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        byte_length += length;
+
+
         if (curr_piece.in_added && piece_offset == curr_piece.offset + (curr_piece.length == added_offset ? 1:0)){
             curr_piece.length += length;
             return this;
@@ -107,15 +94,18 @@ public class PieceTableLogic implements Serializable {
         insert_pieces.add(new _Piece(curr_piece.in_added,curr_piece.offset, piece_offset - curr_piece.offset));
         insert_pieces.add(new _Piece(true, added_offset, length));
         insert_pieces.add(new _Piece(curr_piece.in_added,piece_offset,curr_piece.length-(piece_offset - curr_piece.offset)));
-        insert_pieces =filter(insert_pieces);
+        insert_pieces = filter(insert_pieces);
         pieces = splice(piece_index,1,insert_pieces);
         return this;
     }
-    public byte[] get_text(RandomAccessFile _edits){
-        ByteBuffer doc = ByteBuffer.allocate(_text_len);
-        for (int i = 0, piecesSize = pieces.size(); i < piecesSize; i++) {
-            _Piece piece = pieces.get(i);
-            doc.put(get_chunk(_edits, piece.offset, piece.offset + piece.length));
+    public byte[] get_text(RandomAccessFile _edits, RandomAccessFile _origPiece){
+        ByteBuffer doc = ByteBuffer.allocate((int) byte_length);
+        for (_Piece piece : pieces) {
+            if (piece.in_added) {
+                doc.put(get_chunk(_edits, piece.offset, piece.offset + piece.length));
+            } else {
+                doc.put(get_chunk(_origPiece, piece.offset, piece.offset + piece.length));
+            }
         }
         return doc.array();
     }
@@ -130,9 +120,9 @@ public class PieceTableLogic implements Serializable {
         }
         return bytes;
     }
-    public byte[] find(long index,long length,RandomAccessFile _edits){
+    public byte[] find(long index,long length,RandomAccessFile _edits, RandomAccessFile origPiece){
         if(length<0){
-            return find(index+length, -length, _edits);
+            return find(index+length, -length, _edits, origPiece);
         }
         ByteBuffer doc = ByteBuffer.allocate((int) length);
         Pair start_pair = get_pieces_and_offset(index);
@@ -142,7 +132,7 @@ public class PieceTableLogic implements Serializable {
         int stop_piece_index=(int)stop_pair.first;
         long stop_piece_offset=(long)stop_pair.second;
         _Piece start_piece = pieces.get(start_piece_index);
-        RandomAccessFile buffer = _edits;
+        RandomAccessFile buffer = start_piece.in_added ? _edits : origPiece;
         if(start_piece_index==stop_piece_index){
             doc.put(get_chunk(buffer,start_piece_offset,start_piece_offset + length));
         }
@@ -182,7 +172,7 @@ public class PieceTableLogic implements Serializable {
         long start_piece_offset=(long)start_pair.second;
         int stop_piece_index=(int)stop_pair.first;
         long stop_piece_offset=(long)stop_pair.second;
-        _text_len -= length;
+        byte_length -= length;
         if (start_piece_index == stop_piece_index){
             _Piece piece = pieces.get(start_piece_index);
             if (start_piece_offset==piece.offset){
@@ -222,5 +212,6 @@ public class PieceTableLogic implements Serializable {
             this.length=length;
         }
     }
+
 }
 

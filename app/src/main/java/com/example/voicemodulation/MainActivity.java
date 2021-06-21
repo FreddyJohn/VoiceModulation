@@ -16,18 +16,17 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import com.example.voicemodulation.audio.AudioCon;
-import com.example.voicemodulation.audio.AudioFile;
-import com.example.voicemodulation.modulate.timeDomain;
+
+import com.example.voicemodulation.project.AudioData;
+import com.example.voicemodulation.modulate.TimeDomain;
+import com.example.voicemodulation.project.Paths;
 import com.example.voicemodulation.sequence.PieceTable;
 import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.controls.ModulateControls;
 import com.example.voicemodulation.controls.RecordControls;
 import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.util.Stack;
+import com.example.voicemodulation.project.Sequences;
 
 // TODO USER CONTROLLED VARIABILITY (support for N languages and N finger sizes)
 //  (1) consider the case when the user has a finger size above or below 50dp
@@ -74,37 +73,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private HorizontalScrollView modulations;
     private FrameLayout record_controls;
     private LinearLayout seek_n_loader;
-    private HorizontalScrollView testing;
+    private HorizontalScrollView scrollView;
     private HorizontalScrollView graph_scroll;
 
     private SeekBar the_seeker;
     private RecordControls controls;
     private RecordLogic record;
-    private AudioFile noFrag;
-    private int pos_select;
+    private AudioData audioProject;
     private PieceTable pieceTable;
-    private RandomAccessFile jennifer;
-    private Stack<Long> audioLength;
     int PERMISSION_ALL = 1;
     private final String[] PERMISSIONS = {
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     Manifest.permission.RECORD_AUDIO};
     private PieceTable bitmapPieceTable;
+    private Paths projectPaths;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        String namer= Environment.getExternalStorageDirectory().getPath()+"/bitmap";
-        String namer1= Environment.getExternalStorageDirectory().getPath()+"/bitmap_piece_table";
-        String namer2= Environment.getExternalStorageDirectory().getPath()+"/audio_piece_table";
-        audioLength = new Stack<>();
+        String bitmap_path= Environment.getExternalStorageDirectory().getPath()+"/bitmap";
+        String bitmap_table_path = Environment.getExternalStorageDirectory().getPath()+"/bitmap_piece_table";
+        String audio_table_path = Environment.getExternalStorageDirectory().getPath()+"/audio_piece_table";
+        String original_audio_path= Environment.getExternalStorageDirectory().getPath()+"/original_audio_piece";
+        String original_bitmap_path= Environment.getExternalStorageDirectory().getPath()+"/original_bitmap_piece";
+        String record_path = Environment.getExternalStorageDirectory().getPath()+"/rec.pcm";
+        String modulation_file = Environment.getExternalStorageDirectory().getPath()+"/mod.pcm";
+        projectPaths = new Paths(bitmap_path,record_path,
+                                        bitmap_table_path, audio_table_path,
+                                        original_audio_path,original_bitmap_path,
+                                        modulation_file);
+        Sequences projectSequences = new Sequences(projectPaths);
         // Data.getMemory()/x ? instead of static 1MB
-        bitmapPieceTable = new PieceTable(namer1,namer,1000000);
-        AudioCon.IO_RAF groovy = new AudioCon.IO_RAF(namer);
-        jennifer = groovy.getWriteObject(false);
-        noFrag = new AudioFile();
+        bitmapPieceTable = new PieceTable(bitmap_table_path,bitmap_path,original_bitmap_path,1000000);
+        audioProject = new AudioData();
         record = new RecordLogic();
         sharedPref = getPreferences(Context.MODE_PRIVATE);
         editor = sharedPref.edit();
@@ -122,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //}
 
         seek_n_loader = findViewById(R.id.seek_n_load);
-        testing = findViewById(R.id.fuckFragments);
+        scrollView = findViewById(R.id.fuckFragments);
         display = findViewById(R.id.audio_display);
         modulations = findViewById(R.id.modulations);
         graph = findViewById(R.id.display);
@@ -130,15 +133,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 record_control_scales,record_control_quantities,
                 record_gravity,record_control_title,record_control_progresses,
                 record_controls,graph,seek_n_loader,modulations);
-        testing.addView(controls);
+        scrollView.addView(controls);
         the_seeker = findViewById(R.id.seek);
-        pieceTable = new PieceTable(namer2,noFrag.getNewRecordFile(),1000000);
-        noFrag.setPieceTable(pieceTable);
+        //graph.createNewProject(projectPaths);
+        pieceTable = new PieceTable(audio_table_path,record_path,original_audio_path,1000000);
+        //audioProject.setPieceTable(pieceTable);
         graph.setTables(bitmapPieceTable, pieceTable);
+        //audioProject.setNewRecordFile(projectPaths.audio_original);
+        graph.setProjectPaths(projectPaths);
         the_seeker.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                time.setText(String.format("%.2f",(double)progress*2/noFrag.getSampleRate()));
+                time.setText(String.format("%.2f",(double)progress*2/ audioProject.getSampleRate()));
             }
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
@@ -146,16 +152,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                pos_select =the_seeker.getProgress()*2*(noFrag.getSampleRate()/1000);
+                //pos_select =the_seeker.getProgress()*2*(audioProject.getSampleRate()/1000);
             }
         });
     }
-    //TODO remove the file param
-    public static void setGraphStream(int buffsize, String file, boolean state){
-        graph.setGraphState(buffsize,state);
-    }
     public static void setDisplayStream(int buffsize, String file, boolean state, int length,int range) {
-        //System.out.println("the dynamic range of this encoding is: "+range);
         display.setEncoding(range);
         display.setGraphState(state, buffsize, file, length);
     }
@@ -168,162 +169,163 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.backwards:
-                testing.removeAllViews();
-                timeDomain.backwards backwards = new timeDomain.backwards();
-                timeDomain.modulation Backwards = backwards::modulate;
+                scrollView.removeAllViews();
+                TimeDomain.backwards backwards = new TimeDomain.backwards();
+                TimeDomain.modulation Backwards = backwards::modulate;
                 String[] backwards_titles = new String[]{"Volume"};
                 int[] backwards_maxes = new int[]{10};
                 ModulateControls backwards_view = new ModulateControls(this, backwards_titles, backwards_maxes, new double[]{.1},
-                        new String[]{"Volume"}, noFrag, Backwards, Gravity.CENTER,
+                        new String[]{"Volume"}, audioProject, Backwards, Gravity.CENTER,
                         "Backwards Effect", new int[]{10},play_button,seek_n_loader,pieceTable);
-                testing.addView(backwards_view);
+                scrollView.addView(backwards_view);
                 break;
             case R.id.echo:
-                testing.removeAllViews();
-                timeDomain.echo echo = new timeDomain.echo();
-                timeDomain.modulation Echo = echo::modulate;
+                scrollView.removeAllViews();
+                TimeDomain.echo echo = new TimeDomain.echo();
+                TimeDomain.modulation Echo = echo::modulate;
                 int[] echo_maxes = new int[]{10, 10};
                 ModulateControls echo_view = new ModulateControls(this,echo_titles, echo_maxes, new double[]{1, 1},
-                        new String[]{"S", "D"}, noFrag, Echo, Gravity.CENTER,
+                        new String[]{"S", "D"}, audioProject, Echo, Gravity.CENTER,
                         "Echo Effect", new int[]{5, 6},play_button,seek_n_loader,pieceTable);
-                testing.addView(echo_view);
+                scrollView.addView(echo_view);
                 break;
             case R.id.quantize:
-                testing.removeAllViews();
-                timeDomain.quantized quantized = new timeDomain.quantized();
-                timeDomain.modulation Quantized = quantized::modulate;
+                scrollView.removeAllViews();
+                TimeDomain.quantized quantized = new TimeDomain.quantized();
+                TimeDomain.modulation Quantized = quantized::modulate;
                 //TODO rename robotic shit
                 String[] robotic_titles = new String[]{"Quantize", "Amplitude"};
                 int[] robotic_maxes = new int[]{10, 10};
                 ModulateControls robotic = new ModulateControls(this,robotic_titles, robotic_maxes, new double[]{1000, .1},
-                        new String[]{"C", "Amp"}, noFrag, Quantized, Gravity.CENTER,
+                        new String[]{"C", "Amp"}, audioProject, Quantized, Gravity.CENTER,
                         "Quantize Audio Sample", new int[]{5, 10},play_button,seek_n_loader,pieceTable);
-                testing.addView(robotic);
+                scrollView.addView(robotic);
                 break;
             case R.id.phaser:
-                testing.removeAllViews();
-                timeDomain.phaser phaser = new timeDomain.phaser();
-                timeDomain.modulation Phaser = phaser::modulate;
+                scrollView.removeAllViews();
+                TimeDomain.phaser phaser = new TimeDomain.phaser();
+                TimeDomain.modulation Phaser = phaser::modulate;
                 int[] phaser_maxes = new int[]{20, 10, 10, 20};
                 ModulateControls phaser_view = new ModulateControls(this,phaser_titles, phaser_maxes, new double[]{nyquist, .1, .1, 0}, //.1 * Math.PI
-                        phaser_quantities, noFrag, Phaser, Gravity.NO_GRAVITY,
+                        phaser_quantities, audioProject, Phaser, Gravity.NO_GRAVITY,
                         "Phaser with Sine Wave", phaser_progress,play_button,seek_n_loader,pieceTable);
-                testing.addView(phaser_view);
+                scrollView.addView(phaser_view);
                 break;
             case R.id.phaser_triangle:
-                testing.removeAllViews();
-                timeDomain.phaserTriangle phaserTriangle = new timeDomain.phaserTriangle();
-                timeDomain.modulation PhaserTriangle = phaserTriangle::modulate;
+                scrollView.removeAllViews();
+                TimeDomain.phaserTriangle phaserTriangle = new TimeDomain.phaserTriangle();
+                TimeDomain.modulation PhaserTriangle = phaserTriangle::modulate;
                 int[] alien_maxes = new int[]{20, 10, 10, 10};
                 ModulateControls phaser_triangle_view = new ModulateControls(this,phaser_titles, alien_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
-                        phaser_quantities, noFrag, PhaserTriangle, Gravity.NO_GRAVITY,
+                        phaser_quantities, audioProject, PhaserTriangle, Gravity.NO_GRAVITY,
                         "Phaser with Triangle Wave", phaser_progress,play_button,seek_n_loader,pieceTable);
-                testing.addView(phaser_triangle_view);
+                scrollView.addView(phaser_triangle_view);
                 break;
             case R.id.phaser_square:
-                testing.removeAllViews();
-                timeDomain.phaserSquare phaserSquare = new timeDomain.phaserSquare();
-                timeDomain.modulation PhaserSquare = phaserSquare::modulate;
+                scrollView.removeAllViews();
+                TimeDomain.phaserSquare phaserSquare = new TimeDomain.phaserSquare();
+                TimeDomain.modulation PhaserSquare = phaserSquare::modulate;
                 int[] square_maxes = new int[]{20, 10, 10, 10};
                 ModulateControls phaser_square_view = new ModulateControls(this,phaser_titles, square_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
-                        phaser_quantities, noFrag, PhaserSquare, Gravity.NO_GRAVITY,
+                        phaser_quantities, audioProject, PhaserSquare, Gravity.NO_GRAVITY,
                         "Phaser with Square Wave", phaser_progress,play_button,seek_n_loader,pieceTable);
-                testing.addView(phaser_square_view);
+                scrollView.addView(phaser_square_view);
                 break;
             case R.id.phaser_saw:
-                testing.removeAllViews();
-                timeDomain.phaserSaw phaserSaw = new timeDomain.phaserSaw();
-                timeDomain.modulation PhaserSaw = phaserSaw::modulate;
+                scrollView.removeAllViews();
+                TimeDomain.phaserSaw phaserSaw = new TimeDomain.phaserSaw();
+                TimeDomain.modulation PhaserSaw = phaserSaw::modulate;
                 int[] saw_maxes = new int[]{20, 10, 10, 10};
                 ModulateControls phaser_saw_view = new ModulateControls(this,phaser_titles, saw_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
-                        phaser_quantities, noFrag, PhaserSaw, Gravity.NO_GRAVITY,
+                        phaser_quantities, audioProject, PhaserSaw, Gravity.NO_GRAVITY,
                         "Phaser with Saw Wave", phaser_progress,play_button,seek_n_loader,pieceTable);
-                testing.addView(phaser_saw_view);
+                scrollView.addView(phaser_saw_view);
                 break;
             case R.id.flanger:
-                testing.removeAllViews();
-                timeDomain.flanger flanger = new timeDomain.flanger();
-                timeDomain.modulation Flanger = flanger::modulate;
+                scrollView.removeAllViews();
+                TimeDomain.flanger flanger = new TimeDomain.flanger();
+                TimeDomain.modulation Flanger = flanger::modulate;
                 int[] flanger_maxes = new int[]{10, 10, 20};
                 ModulateControls flanger_view = new ModulateControls(this,flanger_titles, flanger_maxes, new double[]{10, 10, nyquist},
-                        new String[]{"∧", "∨", "Hz"}, noFrag, Flanger, Gravity.NO_GRAVITY,
+                        new String[]{"∧", "∨", "Hz"}, audioProject, Flanger, Gravity.NO_GRAVITY,
                         "Flanger with Sine Wave", flanger_progress,play_button,seek_n_loader,pieceTable);
-                testing.addView(flanger_view);
+                scrollView.addView(flanger_view);
                 break;
             case R.id.flanger_triangle:
-                testing.removeAllViews();
-                timeDomain.flangerTriangle flangerTriangle = new timeDomain.flangerTriangle();
-                timeDomain.modulation FlangerTriangle = flangerTriangle::modulate;
+                scrollView.removeAllViews();
+                TimeDomain.flangerTriangle flangerTriangle = new TimeDomain.flangerTriangle();
+                TimeDomain.modulation FlangerTriangle = flangerTriangle::modulate;
                 int[] flanger_triangle_maxes = new int[]{10, 10, 20};
                 ModulateControls flanger_triangle_view = new ModulateControls(this,flanger_titles, flanger_triangle_maxes, new double[]{10, 10, nyquist},
-                        new String[]{"∧", "∨", "Hz"}, noFrag, FlangerTriangle, Gravity.NO_GRAVITY,
+                        new String[]{"∧", "∨", "Hz"}, audioProject, FlangerTriangle, Gravity.NO_GRAVITY,
                         "Flanger with Triangle Wave", flanger_progress,play_button,seek_n_loader,pieceTable);
-                testing.addView(flanger_triangle_view);
+                scrollView.addView(flanger_triangle_view);
                 break;
             case R.id.flanger_square:
-                testing.removeAllViews();
-                timeDomain.flangerSquare flangerSquare = new timeDomain.flangerSquare();
-                timeDomain.modulation FlangerSquare = flangerSquare::modulate;
+                scrollView.removeAllViews();
+                TimeDomain.flangerSquare flangerSquare = new TimeDomain.flangerSquare();
+                TimeDomain.modulation FlangerSquare = flangerSquare::modulate;
                 int[] flanger_square_maxes = new int[]{10, 10, 20};
                 ModulateControls flanger_square_view = new ModulateControls(this,flanger_titles, flanger_square_maxes, new double[]{10, 10, nyquist},
-                        new String[]{"∧", "∨", "Hz"}, noFrag, FlangerSquare, Gravity.NO_GRAVITY,
+                        new String[]{"∧", "∨", "Hz"}, audioProject, FlangerSquare, Gravity.NO_GRAVITY,
                         "Flanger with Square Wave", flanger_progress,play_button,seek_n_loader,pieceTable);
-                testing.addView(flanger_square_view);
+                scrollView.addView(flanger_square_view);
                 break;
             case R.id.low_pass:
-                testing.removeAllViews();
-                timeDomain.lowPass lowPass = new timeDomain.lowPass();
-                timeDomain.modulation LowPass = lowPass::modulate;
+                scrollView.removeAllViews();
+                TimeDomain.lowPass lowPass = new TimeDomain.lowPass();
+                TimeDomain.modulation LowPass = lowPass::modulate;
                 ModulateControls low_pass_view = new ModulateControls(this,new String[]{"Smoothing"}, new int[]{25}, new double[]{5},
-                        new String[]{" "}, noFrag, LowPass, Gravity.CENTER,
+                        new String[]{" "}, audioProject, LowPass, Gravity.CENTER,
                         "Low Pass Filter", flanger_progress,play_button,seek_n_loader,pieceTable);
-                testing.addView(low_pass_view);
+                scrollView.addView(low_pass_view);
                 break;
             case R.id.start_recording:
-                noFrag = controls.getCreationData();
-                nyquist = (noFrag.getSampleRate() / 2) / 20;
+                audioProject = controls.getCreationData();
+                audioProject.setAudioPieceTable(pieceTable);
+                audioProject.setProjectPaths(projectPaths);
+                nyquist = (audioProject.getSampleRate() / 2) / 20;
                 record = new RecordLogic();
                 the_seeker.setVisibility(View.GONE);
                 time.setVisibility(View.GONE);
                 display.setVisibility(View.VISIBLE);
-                record.setFileObject(noFrag, file_state);
+                display.setEncoding(Short.MAX_VALUE*2+1);
+                if (pieceTable.byte_length == 0){
+                    record.setFileObject(audioProject,projectPaths.audio_original,file_state);
+                    display.setGraphState(true, record.buffer_size, projectPaths.audio_original, 1);
+                }else{
+                    record.setFileObject(audioProject,projectPaths.audio, file_state);
+                    display.setGraphState(true, record.buffer_size, projectPaths.audio, 1);}
                 file_state = false;
                 record.setRecordingState(false);
-                record.startRecording();
-                noFrag.setBufferSize(record.buffer_size);
-                setGraphStream(record.buffer_size,noFrag.getFilePath(),true);
-                setDisplayStream(record.buffer_size,noFrag.getFilePath(),true, 1,Short.MAX_VALUE*2+1);
+                record.startRecording(this);
+                audioProject.setBufferSize(record.buffer_size);
+
+                //setGraphStream(record.buffer_size, audioProject.getFilePath(),true);
+                graph.setGraphState(record.buffer_size,true);
+
+                //setDisplayStream(record.buffer_size, audioProject.getFilePath(),true, 1,Short.MAX_VALUE*2+1);
+
                 record_button.setVisibility(View.INVISIBLE);
                 pause_button.setVisibility(View.VISIBLE);
                 break;
             case  R.id.pause_recording:
-                AudioCon.IO_RAF readOnly = new AudioCon.IO_RAF(noFrag.getNewRecordFile());
-                RandomAccessFile f = readOnly.getReadObject();
-                long length =0;
-                long blength=0;
+
+                long length = pieceTable.byte_length;
+
                 record.setRecordingState(true);
-                try {
-                    length= f.length();
-                    audioLength.push(length);
-                    blength = jennifer.length();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                if (pieceTable._text_len == 0){
-                    pieceTable.add_original((int) length);
-                    bitmapPieceTable.add_original((int) blength);
-               }else{
-                    pieceTable.add((int) (length-pieceTable._text_len), pieceTable._text_len);
-                    bitmapPieceTable.print_pieces();
-                    bitmapPieceTable.add((int)blength-bitmapPieceTable._text_len, bitmapPieceTable._text_len);
-                    audioLength.remove(0);
-                }
+
+                //setGraphStream(record.buffer_size, audioProject.getFilePath(),false);
+                graph.setGraphState(record.buffer_size,false);
+
+                display.setEncoding(Short.MAX_VALUE*2+1);
+                display.setGraphState(false, record.buffer_size, projectPaths.audio_original, 1);
+
                 graph.catchUp(false);
-                graph.setTables(bitmapPieceTable, pieceTable);
-                setDisplayStream(record.buffer_size,noFrag.getNewRecordFile(),false, 1,Short.MAX_VALUE*2+1);
+
                 display.setVisibility(View.GONE);
-                noFrag.setLength((int)length);
-                int max = (int) (length/2/noFrag.getSampleRate()*1000);
+                audioProject.setLength((int)length);
+                int max = (int) (length/2/ audioProject.getSampleRate()*1000);
                 time.setVisibility(View.VISIBLE);
                 the_seeker.setMax(max);
                 the_seeker.setProgress(max);
@@ -336,15 +338,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case  R.id.play_recording:
                 record.setPieceTable(pieceTable);
-                Pair<Integer,Integer> pair = getSelectionPoints();
-                pos_select=the_seeker.getProgress()*2*(noFrag.getSampleRate()/1000);
                 new Thread(() -> {
-                    //record.play_recording(pair.first, pair.second);
-                    record.play_recording(0, (int) pieceTable._text_len);
+                    Pair<Integer,Integer> pair;
+                    try{
+                        pair = getSelectionPoints();
+                        record.play_recording(pair.first, pair.second);
+                    } catch (NullPointerException e){
+                        record.play_recording(0, pieceTable.byte_length);
+                    }
                     }).start();
                 break;
             case  R.id.stop_recording:
-                noFrag.save();
+                audioProject.save();
                 break;
 
 

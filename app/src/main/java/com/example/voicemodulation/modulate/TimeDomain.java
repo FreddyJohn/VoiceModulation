@@ -1,8 +1,8 @@
 package com.example.voicemodulation.modulate;
 import android.util.Pair;
 
-import com.example.voicemodulation.audio.AudioCon;
-import com.example.voicemodulation.audio.AudioFile;
+import com.example.voicemodulation.audio.AudioConnect;
+import com.example.voicemodulation.project.AudioData;
 import com.example.voicemodulation.audio.Generate;
 import com.example.voicemodulation.util.Convert;
 import com.example.voicemodulation.sequence.PieceTable;
@@ -13,17 +13,16 @@ import java.util.LinkedList;
 TODO
     do not use byte[] this class should not know what a chunk is.
     instead it should use streams.
-
  */
-public class timeDomain {
+public class TimeDomain {
     private static  double n;
     public interface modulation{
-        void modulate(LinkedList<Double> _params, AudioFile data, Pair<Integer,Integer> position, PieceTable pieceTable);
+        void modulate(LinkedList<Double> _params, AudioData data, Pair<Integer,Integer> position, PieceTable pieceTable);
     }
-    public static void writeToFile(short[] result, AudioFile data){
+    public static void writeToFile(short[] result, AudioData data){
         Convert.shortsToBytes(result);
-        AudioCon.IO_F con = new AudioCon.IO_F();
-        FileOutputStream out = con.setFileOutputStream(data.getNewModulateFile());
+        AudioConnect.IO_F con = new AudioConnect.IO_F();
+        FileOutputStream out = con.setFileOutputStream(data.projectPaths.modulation);
         con.closeFileOutputStream(out,Convert.shortsToBytes(result));
     }
     public static short[] readFromFile(Pair<Integer,Integer> position, PieceTable pieceTable){
@@ -31,9 +30,10 @@ public class timeDomain {
     }
     public static class backwards implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioFile data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioData data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double volume = _params.get(0);
-            short[] frontwards = AudioCon.Data.getShorts(data.getNewRecordFile());
+            short[] frontwards = readFromFile(position,pieceTable);
+            //short[] frontwards = AudioCon.Data.getShorts(data.getNewRecordFile());
             short[] backwards = new short[frontwards.length];
             int size = frontwards.length;
             for (int i = 0; i < size; i++) {
@@ -42,9 +42,10 @@ public class timeDomain {
             writeToFile(backwards,data);
         }
     }
+    //TODO acting strange do something about it, review old python code for echo
     public static class echo implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioFile data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioData data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double num_signals = _params.get(0);
             double delay = _params.get(1);
             short[] carrier_wave = readFromFile(position,pieceTable);
@@ -66,7 +67,7 @@ public class timeDomain {
     }
     public static class quantized implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioFile data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioData data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double C = _params.get(0);
             short[] carrier_wave = readFromFile(position,pieceTable);
             //short[] carrier_wave = AudioCon.Data.getShorts(data.getNewRecordFile());
@@ -85,7 +86,7 @@ public class timeDomain {
     }
     public static class phaser implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioFile data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioData data, Pair<Integer,Integer> position, PieceTable pieceTable) {
                 double frequency = _params.get(0);
                 double carrier_amplitude = _params.get(1);
                 double modulator_amplitude = _params.get(2);
@@ -101,7 +102,7 @@ public class timeDomain {
     }
     public static class phaserTriangle implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioFile data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioData data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double frequency = _params.get(0);
             double carrier_amplitude = _params.get(1);
             double modulator_amplitude = _params.get(2);
@@ -118,7 +119,7 @@ public class timeDomain {
     }
     public static class phaserSaw implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioFile data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioData data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double frequency = _params.get(0);
             double carrier_amplitude = _params.get(1);
             double modulator_amplitude = _params.get(2);
@@ -135,7 +136,7 @@ public class timeDomain {
     }
     public static class phaserSquare implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioFile data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioData data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double frequency = _params.get(0);
             double carrier_amplitude = _params.get(1);
             double modulator_amplitude = _params.get(2);
@@ -153,7 +154,7 @@ public class timeDomain {
 
     public static class flanger implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioFile data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioData data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double min = _params.get(0);
             double max = _params.get(1);
             double frequency = _params.get(2);
@@ -173,7 +174,7 @@ public class timeDomain {
     }
     public static class flangerTriangle implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioFile data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioData data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double min = _params.get(0);
             double max = _params.get(1);
             double frequency = _params.get(2);
@@ -194,7 +195,7 @@ public class timeDomain {
     }
     public static class flangerSquare implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, AudioFile data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioData data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double min = _params.get(0);
             double max = _params.get(1);
             double frequency = _params.get(2);
@@ -215,7 +216,7 @@ public class timeDomain {
     }
     public static class lowPass implements modulation {
         @Override
-        public void modulate(LinkedList<Double> _params, AudioFile data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, AudioData data, Pair<Integer,Integer> position, PieceTable pieceTable) {
             double smooth = _params.get(0);
             //short[] carrier_wave = AudioCon.Data.getShorts(data.getNewRecordFile());
             short[] carrier_wave = readFromFile(position,pieceTable);

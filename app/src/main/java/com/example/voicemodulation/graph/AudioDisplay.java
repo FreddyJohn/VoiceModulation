@@ -9,7 +9,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
 import androidx.annotation.Nullable;
-import com.example.voicemodulation.audio.AudioCon;
+import com.example.voicemodulation.audio.AudioConnect;
 import com.example.voicemodulation.util.Convert;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
@@ -108,7 +108,7 @@ public class AudioDisplay extends View {
                 this.bufferSize= (int) view_width*2;
                 break;
             case 1:
-                AudioCon.IO_RAF con = new AudioCon.IO_RAF(in_file);
+                AudioConnect.IO_RAF con = new AudioConnect.IO_RAF(in_file);
                 RandomAccessFile f = con.getReadObject();
                 try {
                     skipBytes((int) f.length());
