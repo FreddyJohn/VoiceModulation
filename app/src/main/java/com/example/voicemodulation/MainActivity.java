@@ -28,6 +28,8 @@ import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
 import com.example.voicemodulation.project.Sequences;
 
+import java.util.ArrayList;
+
 // TODO USER CONTROLLED VARIABILITY (support for N languages and N finger sizes)
 //  (1) consider the case when the user has a finger size above or below 50dp
 //  if we were to allow the user to vary the view sizes based on the upper and lower human finger diameters
@@ -88,6 +90,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Manifest.permission.RECORD_AUDIO};
     private PieceTable bitmapPieceTable;
     private Paths projectPaths;
+    private static ArrayList<Thread> threadList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,6 +107,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                         bitmap_table_path, audio_table_path,
                                         original_audio_path,original_bitmap_path,
                                         modulation_file);
+        threadList = new ArrayList<>();
         Sequences projectSequences = new Sequences(projectPaths);
         // Data.getMemory()/x ? instead of static 1MB
         bitmapPieceTable = new PieceTable(bitmap_table_path,bitmap_path,original_bitmap_path,1000000);
@@ -163,6 +167,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static Pair<Integer,Integer> getSelectionPoints(){
         return new Pair<>(graph.points.audio_start,graph.points.audio_stop);
 
+    }
+    public static void addThread(Thread thread){
+        threadList.add(thread);
     }
 
     @Override
@@ -349,6 +356,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }).start();
                 break;
             case  R.id.stop_recording:
+                for(Thread thread: threadList){
+                    if (thread.isAlive()){
+                        thread.interrupt();
+                    }
+                }
                 audioProject.save();
                 break;
 

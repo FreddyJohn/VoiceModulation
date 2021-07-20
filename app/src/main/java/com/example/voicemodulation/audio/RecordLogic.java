@@ -31,6 +31,8 @@ public class RecordLogic {
     private AudioData file_data;
     private String file_path;
     private PieceTable pieceTable;
+    private AudioManager am;
+    private AudioTrack at;
 
     public RecordLogic() {
 
@@ -58,9 +60,7 @@ public class RecordLogic {
         this.out = ioRAF.getWriteObject(false);
         stopRecording();
     }
-    @RequiresApi(api = Build.VERSION_CODES.O)
     public void startRecording(Context context) {
-
         int bufferSize = AudioRecord.getMinBufferSize(
                 file_data.getSampleRate(), file_data.getNumChannelsIn(), file_data.getBitDepth());
         this.buffer_size = bufferSize;
@@ -78,7 +78,6 @@ public class RecordLogic {
         if (null != recorder) {
             recorder.stop();
             recorder.release();
-            //audioManager.abandonAudioFocus(afChangeListener);
             isRecording = false;
             recorder = null;
             recordingThread = null;
@@ -111,13 +110,14 @@ public class RecordLogic {
         if (file_path != null) {
             file = new File(file_path);
             RandomAccessFile in = ioRAF.getReadObject();
-            if (pieceTable==null){
-                byteData = AudioConnect.Data.getAudioChunk(offset,length-offset,0,in);}
-            else{
-                byteData = pieceTable.find(offset,length-offset);}
+            if (pieceTable == null) {
+                byteData = AudioConnect.Data.getAudioChunk(offset, length - offset, 0, in);
+            } else {
+                byteData = pieceTable.find(offset, length - offset);
+            }
             int intSize = android.media.AudioTrack.getMinBufferSize(
                     file_data.getPlaybackRate(), file_data.getNumChannelsOut(), file_data.getBitDepth());
-            AudioTrack at = new AudioTrack(
+            at = new AudioTrack(
                     AudioManager.STREAM_MUSIC, file_data.getPlaybackRate(), file_data.getNumChannelsOut(),
                     file_data.getBitDepth(), intSize, AudioTrack.MODE_STREAM);
             if (at != null) {
@@ -126,6 +126,15 @@ public class RecordLogic {
                 at.stop();
                 at.release();
             }
+        }
+    }
+    public void stop_playing(){
+        if (at != null ) {
+           try {
+               at.pause();
+               at.flush();
+           }catch (IllegalStateException e){
+               e.printStackTrace();}
         }
     }
     /*
