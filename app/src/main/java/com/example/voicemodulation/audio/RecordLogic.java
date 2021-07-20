@@ -1,17 +1,12 @@
 package com.example.voicemodulation.audio;
 
 import android.content.Context;
-import android.media.AudioAttributes;
-import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
-
-import com.example.voicemodulation.project.AudioData;
+//import com.example.voicemodulation.project.AudioData;
+import com.example.voicemodulation.database.tables.AudioData;
 import com.example.voicemodulation.sequence.PieceTable;
 
 import java.io.File;
@@ -35,7 +30,6 @@ public class RecordLogic {
     private AudioTrack at;
 
     public RecordLogic() {
-
     }
     public void setPieceTable(PieceTable pieceTable){
         this.pieceTable = pieceTable;
@@ -43,8 +37,6 @@ public class RecordLogic {
     public void setFileData(AudioData file, String path)
     {
         this.file_data = file;
-        //this.file_path = file.getFilePath();
-        //this.file_path=file.projectPaths.audio;
         this.file_path = path;
     }
     public void setFileObject(AudioData creation, String path, Boolean file_state) {
@@ -61,12 +53,23 @@ public class RecordLogic {
         stopRecording();
     }
     public void startRecording(Context context) {
+        //AudioRecord f = new AudioRecord
+        /*
         int bufferSize = AudioRecord.getMinBufferSize(
                 file_data.getSampleRate(), file_data.getNumChannelsIn(), file_data.getBitDepth());
         this.buffer_size = bufferSize;
+        System.out.println(file_data.getSampleRate()+","+file_data.getNumChannelsIn()+","+
+                file_data.getBitDepth()+","+bufferSize);
         recorder = new AudioRecord(AUDIO_SOURCE,
                 file_data.getSampleRate(), file_data.getNumChannelsIn(),
                 file_data.getBitDepth(), bufferSize);
+         */
+        int bufferSize = AudioRecord.getMinBufferSize(
+                file_data.sample_rate, file_data.num_channels_in, file_data.bit_depth);
+        this.buffer_size = bufferSize;
+        recorder = new AudioRecord(AUDIO_SOURCE,
+                file_data.sample_rate, file_data.num_channels_in,
+                file_data.bit_depth, bufferSize);
         recorder.startRecording();
         isRecording = true;
         recordingThread = new Thread(() -> writeAudioDataToFile(), "AudioRecorder Thread");
@@ -114,12 +117,18 @@ public class RecordLogic {
                 byteData = AudioConnect.Data.getAudioChunk(offset, length - offset, 0, in);
             } else {
                 byteData = pieceTable.find(offset, length - offset);
-            }
+            }/*
             int intSize = android.media.AudioTrack.getMinBufferSize(
                     file_data.getPlaybackRate(), file_data.getNumChannelsOut(), file_data.getBitDepth());
             at = new AudioTrack(
                     AudioManager.STREAM_MUSIC, file_data.getPlaybackRate(), file_data.getNumChannelsOut(),
                     file_data.getBitDepth(), intSize, AudioTrack.MODE_STREAM);
+                    */
+            int intSize = android.media.AudioTrack.getMinBufferSize(
+                    file_data.playback_rate, file_data.num_channels_out, file_data.bit_depth);
+            at = new AudioTrack(
+                    AudioManager.STREAM_MUSIC, file_data.playback_rate, file_data.num_channels_out,
+                    file_data.bit_depth, intSize, AudioTrack.MODE_STREAM);
             if (at != null) {
                 at.play();
                 at.write(byteData, 0, byteData.length);

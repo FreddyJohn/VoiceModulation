@@ -9,23 +9,11 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import androidx.annotation.Nullable;
 import com.example.voicemodulation.R;
-import com.example.voicemodulation.project.AudioData;
+//import com.example.voicemodulation.project.AudioData;
+import com.example.voicemodulation.database.tables.AudioData;
 import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
 
-//TODO know why are you doing this? -> so i don't have to deal with fragment life cycles
-//  don't have to deal with back stack
-//  can get rid of implementation 'androidx.fragment:fragment:1.2.5'
-//  get more shit directly in activity scope so things are easier like adding removing views and getting data from them
-//      via getter/setters instead of Bundle or LiveData or more Google dev vomit
-
-//TODO another consequence is that we can now make a functional interface
-// and inner classes that implement that interface for all modulate
-// functions and pass by direct reference instead of invoking the method
-
-//TODO make this a horizontal view
-
-//TODO now you can automatically set the gravity if ?
 public class RecordControls extends LinearLayout {
     private HorizontalScrollView mod;
     private AudioDisplay display;
@@ -119,6 +107,7 @@ public class RecordControls extends LinearLayout {
 
     }
     public AudioData getCreationData(){
+        /*
         creation.setPlaybackRate(playback.getProgress()*scale[0]);
         creation.setSampleRate(sample.getProgress()*scale[1]);
         creation.setFormat(ControlCases.formatSeeker(format.getProgress()));
@@ -126,6 +115,17 @@ public class RecordControls extends LinearLayout {
         creation.setBitDepth(ControlCases.encodingSeeker(encoding.getProgress()));
         //creation.setFilePath(creation.getNewRecordFile());
         creation.setProjectPaths(creation.getProjectPaths());
+
+         */
+
+        creation.playback_rate=playback.getProgress()*scale[0];
+        creation.sample_rate=sample.getProgress()*scale[1];
+        creation.format=ControlCases.formatSeeker(format.getProgress());
+        creation.num_channels_in=ControlCases.channelSeeker(channel.getProgress());
+        creation.bit_depth=ControlCases.encodingSeeker(encoding.getProgress());
+
+        //creation.setFilePath(creation.getNewRecordFile());
+        //creation.setProjectPaths(creation.getProjectPaths());
         return creation;
     }
 

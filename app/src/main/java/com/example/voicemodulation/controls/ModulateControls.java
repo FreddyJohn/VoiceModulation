@@ -11,13 +11,13 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 import com.example.voicemodulation.MainActivity;
 import com.example.voicemodulation.R;
-import com.example.voicemodulation.project.AudioData;
-import com.example.voicemodulation.modulate.TimeDomain;
+//import com.example.voicemodulation.project.AudioData;
+import com.example.voicemodulation.database.tables.Project;
+import com.example.voicemodulation.signal.Modulation;
 import com.example.voicemodulation.sequence.PieceTable;
 import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.graph.AudioDisplay;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class ModulateControls extends LinearLayout{
@@ -30,8 +30,8 @@ public class ModulateControls extends LinearLayout{
     private int[] maxes;
     private double[] scale;
     private  String[] quantity_type;
-    private AudioData creation;
-    private TimeDomain.modulation method;
+    private Project project;
+    private Modulation.modulation method;
     private int gravity;
     private String name;
     private int[] progress;
@@ -50,7 +50,7 @@ public class ModulateControls extends LinearLayout{
 
 
     public ModulateControls(Context context, String[] title, int[] maxes, double[] scale,
-                            String[] quantity_type, AudioData creation, TimeDomain.modulation modulation,
+                            String[] quantity_type, Project creation, Modulation.modulation modulation,
                             int gravity, String name, int[] progress, ImageButton play,
                             LinearLayout seek_n_load, PieceTable pieceTable){
         super(context);
@@ -58,7 +58,7 @@ public class ModulateControls extends LinearLayout{
         this.maxes=maxes;
         this.scale=scale;
         this.quantity_type=quantity_type;
-        this.creation=creation;
+        this.project =creation;
         this.method=modulation;
         this.gravity=gravity;
         this.name=name;
@@ -98,17 +98,19 @@ public class ModulateControls extends LinearLayout{
                     recordLogic = new RecordLogic();
                     position = MainActivity.getSelectionPoints();
                     recordLogic.setPieceTable(null);
-                    recordLogic.setFileData(creation, creation.projectPaths.modulation);
-                    method.modulate(getModulateParameters(), creation, position, pieceTable);
+                    //recordLogic.setFileData(creation, creation.projectPaths.modulation);
+                    recordLogic.setFileData(project.audioData, project.paths.modulation);
+                    method.modulate(getModulateParameters(), project, position, pieceTable);
                     while (!Thread.currentThread().isInterrupted()) {
                         ((Activity) context).runOnUiThread(() -> {
                             seek.setVisibility(View.GONE);
                             display.setVisibility(View.VISIBLE);
-                            MainActivity.setDisplayStream(creation.getLength(), creation.projectPaths.modulation, true, 0, Short.MAX_VALUE * 2 + 1);
+
+                            MainActivity.setDisplayStream(pieceTable.byte_length, project.paths.modulation, true, 0, Short.MAX_VALUE * 2 + 1);
                         });
                         recordLogic.play_recording(0, position.second - position.first);
                         ((Activity) context).runOnUiThread(() -> {
-                            MainActivity.setDisplayStream(creation.getLength(), creation.projectPaths.modulation, false, 0, Short.MAX_VALUE * 2 + 1);
+                            MainActivity.setDisplayStream(pieceTable.byte_length, project.paths.modulation, false, 0, Short.MAX_VALUE * 2 + 1);
                             display.setVisibility(View.GONE);
                             seek.setVisibility(View.VISIBLE);
                         });

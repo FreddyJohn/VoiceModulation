@@ -58,6 +58,7 @@ public class PieceTable {
     }
 
     public byte[] find(long index, long length) {
+        pieceTable = deserialize();
         return pieceTable.find(index,length,_edits, originalPiece);
     }
 
@@ -108,7 +109,10 @@ public class PieceTable {
         }
         return pieceTable;
     }
-
+    public PieceTable getMostRecent(){
+        pieceTable=deserialize();
+        return this;
+    }
 
 
 }

@@ -1,14 +1,15 @@
 package com.example.voicemodulation.audio;
-import com.example.voicemodulation.project.AudioData;
+//import com.example.voicemodulation.project.AudioData;
+import com.example.voicemodulation.database.tables.Project;
 import com.example.voicemodulation.sequence.PieceTable;
 import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 public class Format {
     public static class wav implements Runnable{
-        private final AudioData data;
+        private final Project project;
         private PieceTable audioPieceTable;
-        public wav(AudioData _data, PieceTable audioPieceTable) {
-            this.data=_data;
+        public wav(Project _data, PieceTable audioPieceTable) {
+            this.project =_data;
             this.audioPieceTable = audioPieceTable;
         }
         @Override
@@ -16,9 +17,9 @@ public class Format {
         public void run() {
             byte[] raw_data = audioPieceTable.get_text();
             long total_bytes = raw_data.length;
-            int bit_depth = data.getBitDepth();
-            long sample_rate = data.getPlaybackRate();
-            int num_channels_in = data.getNumChannelsIn();
+            int bit_depth = project.audioData.bit_depth;
+            long sample_rate = project.audioData.sample_rate;
+            int num_channels_in = project.audioData.num_channels_in;
             byte[] wav_header = Generate.wavHeader(total_bytes, total_bytes + 36,
                     sample_rate,
                     num_channels_in, (byte) (bit_depth * 8));
@@ -29,10 +30,11 @@ public class Format {
             byte[] formatted_file = buff.array();
             AudioConnect.IO_F con = new AudioConnect.IO_F();
             //FileOutputStream out = con.setFileOutputStream(data.getFilePath().replace(".pcm",".wav"));
-            FileOutputStream out = con.setFileOutputStream(data.projectPaths.audio.replace(".pcm",".wav"));
+            FileOutputStream out = con.setFileOutputStream(project.paths.audio.replace(".pcm",".wav"));
             con.closeFileOutputStream(out,formatted_file);
         }
     }
+    /*
     public static class aiff implements Runnable {
         private final AudioData data;
         public aiff(AudioData _data) {
@@ -42,4 +44,6 @@ public class Format {
         public void run() {
         }
     }
+
+     */
 }

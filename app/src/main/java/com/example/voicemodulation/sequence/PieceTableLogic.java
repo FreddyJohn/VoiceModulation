@@ -140,6 +140,7 @@ public class PieceTableLogic implements Serializable {
             doc.put(get_chunk(buffer,start_piece_offset,start_piece.offset + start_piece.length));
             for(int i =start_piece_index+1;i<stop_piece_index+1;i++){
                 _Piece cur_piece=pieces.get(i);
+                buffer = cur_piece.in_added ? _edits : origPiece;
                 if (i==stop_piece_index){
                     doc.put(get_chunk(buffer,cur_piece.offset,stop_piece_offset));
                 }
