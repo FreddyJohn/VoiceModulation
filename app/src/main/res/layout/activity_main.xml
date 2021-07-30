@@ -9,7 +9,7 @@
     android:gravity="center|clip_vertical"
     android:orientation="vertical"
     android:visibility="visible"
-    tools:context=".ui.MainActivity">
+    tools:context=".MainActivity">
     <!--
     <LinearLayout
         android:id="@+id/display"

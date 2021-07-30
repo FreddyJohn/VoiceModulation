@@ -9,7 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import androidx.annotation.Nullable;
-import com.example.voicemodulation.ui.MainActivity;
+import com.example.voicemodulation.MainActivity;
 import com.example.voicemodulation.R;
 //import com.example.voicemodulation.project.AudioData;
 import com.example.voicemodulation.database.project.Project;

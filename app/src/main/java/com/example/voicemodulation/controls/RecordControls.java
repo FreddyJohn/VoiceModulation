@@ -9,7 +9,6 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import androidx.annotation.Nullable;
 import com.example.voicemodulation.R;
-//import com.example.voicemodulation.project.AudioData;
 import com.example.voicemodulation.database.project.AudioData;
 import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
