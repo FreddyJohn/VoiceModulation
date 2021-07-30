@@ -3,7 +3,7 @@ import android.util.Pair;
 
 import com.example.voicemodulation.audio.AudioConnect;
 //import com.example.voicemodulation.project.AudioData;
-import com.example.voicemodulation.database.tables.Project;
+import com.example.voicemodulation.database.project.Project;
 import com.example.voicemodulation.audio.Generate;
 import com.example.voicemodulation.util.Convert;
 import com.example.voicemodulation.sequence.PieceTable;

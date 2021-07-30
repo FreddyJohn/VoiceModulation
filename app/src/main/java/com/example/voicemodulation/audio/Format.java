@@ -1,6 +1,6 @@
 package com.example.voicemodulation.audio;
 //import com.example.voicemodulation.project.AudioData;
-import com.example.voicemodulation.database.tables.Project;
+import com.example.voicemodulation.database.project.Project;
 import com.example.voicemodulation.sequence.PieceTable;
 import java.io.FileOutputStream;
 import java.nio.ByteBuffer;

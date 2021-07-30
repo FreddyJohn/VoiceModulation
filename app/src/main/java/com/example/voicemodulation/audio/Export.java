@@ -1,7 +1,6 @@
 package com.example.voicemodulation.audio;
 
-import com.example.voicemodulation.audio.Format;
-import com.example.voicemodulation.database.tables.Project;
+import com.example.voicemodulation.database.project.Project;
 import com.example.voicemodulation.sequence.PieceTable;
 
 public class Export {

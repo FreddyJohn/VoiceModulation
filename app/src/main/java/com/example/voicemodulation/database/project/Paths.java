@@ -1,4 +1,4 @@
-package com.example.voicemodulation.database.tables;
+package com.example.voicemodulation.database.project;
 
 
 public class Paths {
@@ -9,8 +9,8 @@ public class Paths {
     public String audio_original;
     public String bitmap_original;
     public String modulation;
-    public Paths(String bitmap, String audio, String bitmap_table, String audio_table,
-                 String audio_original, String bitmap_original, String modulation) {
+    public Paths(){}
+    public Paths(String bitmap, String audio, String bitmap_table, String audio_table, String audio_original, String bitmap_original, String modulation) {
         this.bitmap = bitmap;
         this.audio = audio;
         this.bitmap_table = bitmap_table;
@@ -19,5 +19,6 @@ public class Paths {
         this.bitmap_original = bitmap_original;
         this.modulation = modulation;
     }
+
 
 }

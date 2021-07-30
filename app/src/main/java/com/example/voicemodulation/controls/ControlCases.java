@@ -18,14 +18,20 @@ public class ControlCases {
         }
         return encoding;
     }
-    public static int channelSeeker(int progress) {
-        int channels=0;
+    public static class Channels{
+        public int in;
+        public int out;
+    }
+    public static Channels channelSeeker(int progress) {
+        Channels channels = new Channels();
         switch (progress) {
             case 1:
-                channels = AudioFormat.CHANNEL_IN_STEREO;
+                channels.in=AudioFormat.CHANNEL_IN_STEREO;
+                channels.out=AudioFormat.CHANNEL_OUT_STEREO;
                 break;
             case 0:
-                channels = AudioFormat.CHANNEL_IN_MONO;
+                channels.in=AudioFormat.CHANNEL_IN_MONO;
+                channels.out=AudioFormat.CHANNEL_OUT_MONO;
                 break;
         }
         return channels;

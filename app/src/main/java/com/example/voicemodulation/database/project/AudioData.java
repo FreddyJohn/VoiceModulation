@@ -1,4 +1,4 @@
-package com.example.voicemodulation.database.tables;
+package com.example.voicemodulation.database.project;
 
 public class AudioData {
     public String format;

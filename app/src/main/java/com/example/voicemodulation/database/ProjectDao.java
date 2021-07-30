@@ -5,9 +5,9 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
 
-import com.example.voicemodulation.database.tables.AudioData;
-import com.example.voicemodulation.database.tables.Paths;
-import com.example.voicemodulation.database.tables.Project;
+import com.example.voicemodulation.database.project.AudioData;
+import com.example.voicemodulation.database.project.Paths;
+import com.example.voicemodulation.database.project.Project;
 
 
 @Dao
@@ -31,6 +31,7 @@ public abstract class ProjectDao{
     public int getMax(String project_name){
         return getProject(project_name).audioData.max;
     }
+
     public Paths getPaths(String project_name){
         return getProject(project_name).paths;
     }
@@ -45,7 +46,5 @@ public abstract class ProjectDao{
     public void insertProject(Project project){
         _insertProject(project);
     }
-
-
 
 }

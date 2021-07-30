@@ -10,7 +10,7 @@ import android.widget.SeekBar;
 import androidx.annotation.Nullable;
 import com.example.voicemodulation.R;
 //import com.example.voicemodulation.project.AudioData;
-import com.example.voicemodulation.database.tables.AudioData;
+import com.example.voicemodulation.database.project.AudioData;
 import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
 
@@ -115,13 +115,14 @@ public class RecordControls extends LinearLayout {
         creation.setBitDepth(ControlCases.encodingSeeker(encoding.getProgress()));
         //creation.setFilePath(creation.getNewRecordFile());
         creation.setProjectPaths(creation.getProjectPaths());
-
          */
 
         creation.playback_rate=playback.getProgress()*scale[0];
         creation.sample_rate=sample.getProgress()*scale[1];
         creation.format=ControlCases.formatSeeker(format.getProgress());
-        creation.num_channels_in=ControlCases.channelSeeker(channel.getProgress());
+        ControlCases.Channels channels = ControlCases.channelSeeker(channel.getProgress());
+        creation.num_channels_in=channels.in;
+        creation.num_channels_out=channels.out;
         creation.bit_depth=ControlCases.encodingSeeker(encoding.getProgress());
 
         //creation.setFilePath(creation.getNewRecordFile());

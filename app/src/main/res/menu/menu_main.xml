@@ -4,12 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.example.voicemodulation.MainActivity">
     <item
-        android:id="@+id/delete"
-        android:orderInCategory="20"
-        android:title="delete"
-        android:icon="@android:drawable/ic_menu_delete"
-        app:showAsAction="always"/>
-    <item
         android:id="@+id/update"
         android:orderInCategory="20"
         android:title="change directory"

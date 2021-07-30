@@ -3,9 +3,7 @@ package com.example.voicemodulation.database;
 import androidx.room.Database;
 import androidx.room.RoomDatabase;
 
-import com.example.voicemodulation.database.tables.AudioData;
-import com.example.voicemodulation.database.tables.Paths;
-import com.example.voicemodulation.database.tables.Project;
+import com.example.voicemodulation.database.project.Project;
 
 //TODO define the schema location in build.gradle and find out
 //  wtf schema location is

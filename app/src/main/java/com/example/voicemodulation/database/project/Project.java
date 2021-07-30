@@ -1,7 +1,5 @@
-package com.example.voicemodulation.database.tables;
+package com.example.voicemodulation.database.project;
 
-import androidx.annotation.NonNull;
-import androidx.room.ColumnInfo;
 import androidx.room.Embedded;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;

@@ -6,7 +6,7 @@ import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
 //import com.example.voicemodulation.project.AudioData;
-import com.example.voicemodulation.database.tables.AudioData;
+import com.example.voicemodulation.database.project.AudioData;
 import com.example.voicemodulation.sequence.PieceTable;
 
 import java.io.File;
@@ -52,8 +52,8 @@ public class RecordLogic {
         this.out = ioRAF.getWriteObject(false);
         stopRecording();
     }
-    public void startRecording(Context context) {
-        //AudioRecord f = new AudioRecord
+    public void startRecording() {
+
         /*
         int bufferSize = AudioRecord.getMinBufferSize(
                 file_data.getSampleRate(), file_data.getNumChannelsIn(), file_data.getBitDepth());
@@ -124,6 +124,7 @@ public class RecordLogic {
                     AudioManager.STREAM_MUSIC, file_data.getPlaybackRate(), file_data.getNumChannelsOut(),
                     file_data.getBitDepth(), intSize, AudioTrack.MODE_STREAM);
                     */
+            System.out.println(file_data.playback_rate+","+file_data.num_channels_out+","+file_data.bit_depth);
             int intSize = android.media.AudioTrack.getMinBufferSize(
                     file_data.playback_rate, file_data.num_channels_out, file_data.bit_depth);
             at = new AudioTrack(

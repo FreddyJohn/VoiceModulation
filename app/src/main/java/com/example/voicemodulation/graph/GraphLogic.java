@@ -9,7 +9,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 //import com.example.voicemodulation.project.Paths;
-import com.example.voicemodulation.database.tables.Paths;
+import com.example.voicemodulation.database.project.Paths;
 import com.example.voicemodulation.audio.AudioConnect.IO_RAF;
 import com.example.voicemodulation.sequence.PieceTable;
 import com.example.voicemodulation.util.Convert;
@@ -171,6 +171,7 @@ public class GraphLogic extends View {
                 file_length=0;
 
             } else {
+                audioPieceTable.print_pieces();
                 audioPieceTable.add(record_session_length, audioPieceTable.byte_length);
                 bitmapPieceTable.print_pieces();
                 bitmapPieceTable.add(bitmap_session_length, bitmapPieceTable.byte_length);
@@ -281,6 +282,19 @@ public class GraphLogic extends View {
             _canvas.drawBitmap(bitmap, 0, 0, paint);
             startGraphing();
         }
+        /*
+        TODO instead of augmenting the data structure we are going to augment our code
+            we would like this situation for our piece table
+            |-----|-----|-----|----|---|--|-|
+            where all pieces may have lengths in the domain 0 < piece.length < pieceTable.maximum
+            and where pieceTable.maximum = is a function of memory and CPU stats
+            drawable.someMethod() should check if the next buffer will be over pieceTable.maximum starting from the the beginning of the current record session
+            if this is the case then we should add
+                the annoying case is when the user is still writing the original piece
+
+
+
+         */
         private void startGraphing() {
             byte[] buffers = getRecentBuffers(file_length, (int) file_length);
             count += buffers.length;
