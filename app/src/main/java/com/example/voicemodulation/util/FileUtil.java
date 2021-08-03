@@ -13,7 +13,8 @@ public class FileUtil {
 
     public static Paths createNewProjectPaths(Context context, List<String> nFiles){
         File parentDir = context.getExternalFilesDir("Projects");
-        File projectDir = new File(parentDir.getAbsolutePath()+"/"+ System.nanoTime());
+        String uniqueDir = String.valueOf(System.nanoTime());
+        File projectDir = new File(parentDir.getAbsolutePath()+"/"+ uniqueDir);
         projectDir.mkdirs();
 
         List<String> list = new ArrayList<>();
@@ -26,6 +27,7 @@ public class FileUtil {
             }
             list.add(file.getAbsolutePath());
         }
+        list.add(uniqueDir);
         return initializePaths(list);
     }
     private static Paths initializePaths(List<String> list){
@@ -37,6 +39,7 @@ public class FileUtil {
         projectPaths.bitmap_original = list.get(4);
         projectPaths.audio = list.get(5);
         projectPaths.modulation = list.get(6);
+        projectPaths.uniqueDir = list.get(7);
         return projectPaths;
     }
 }

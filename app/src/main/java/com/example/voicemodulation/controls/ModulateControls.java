@@ -123,9 +123,8 @@ public class ModulateControls extends LinearLayout{
                     recordLogic.stop_playing();
                 }
             };
-            ((Activity) context).runOnUiThread(() -> {
-                MainActivity.addThread(thread);
-            });
+            ((Activity) context).runOnUiThread(() -> 
+                    MainActivity.addThread(thread)); 
             thread.start();
         });
         /*

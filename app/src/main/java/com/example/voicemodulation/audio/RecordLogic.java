@@ -1,11 +1,9 @@
 package com.example.voicemodulation.audio;
 
-import android.content.Context;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
-//import com.example.voicemodulation.project.AudioData;
 import com.example.voicemodulation.database.project.AudioData;
 import com.example.voicemodulation.sequence.PieceTable;
 
@@ -26,7 +24,6 @@ public class RecordLogic {
     private AudioData file_data;
     private String file_path;
     private PieceTable pieceTable;
-    private AudioManager am;
     private AudioTrack at;
 
     public RecordLogic() {
@@ -39,17 +36,17 @@ public class RecordLogic {
         this.file_data = file;
         this.file_path = path;
     }
-    public void setFileObject(AudioData creation, String path, Boolean file_state) {
+    public void setFileObject(AudioData creation, String path) {
         this.file_data = creation;
         //this.file_path = creation.getFilePath();
         //this.file_path=creation.projectPaths.audio;
         this.file_path = path;
         this.ioRAF = new AudioConnect.IO_RAF(file_path);
-        this.out = ioRAF.getWriteObject(file_state); //TODO instead of new file or not seekPos
+        this.out = ioRAF.getWriteObject();
     }
     public void setRecordingState(boolean state) {
         this.isPaused = state;
-        this.out = ioRAF.getWriteObject(false);
+        this.out = ioRAF.getWriteObject();
         stopRecording();
     }
     public void startRecording() {
@@ -67,6 +64,7 @@ public class RecordLogic {
         int bufferSize = AudioRecord.getMinBufferSize(
                 file_data.sample_rate, file_data.num_channels_in, file_data.bit_depth);
         this.buffer_size = bufferSize;
+        System.out.println("buffer size as calculated in RecordLogic = "+bufferSize);
         recorder = new AudioRecord(AUDIO_SOURCE,
                 file_data.sample_rate, file_data.num_channels_in,
                 file_data.bit_depth, bufferSize);
@@ -124,7 +122,7 @@ public class RecordLogic {
                     AudioManager.STREAM_MUSIC, file_data.getPlaybackRate(), file_data.getNumChannelsOut(),
                     file_data.getBitDepth(), intSize, AudioTrack.MODE_STREAM);
                     */
-            System.out.println(file_data.playback_rate+","+file_data.num_channels_out+","+file_data.bit_depth);
+            //System.out.println(file_data.playback_rate+","+file_data.num_channels_out+","+file_data.bit_depth);
             int intSize = android.media.AudioTrack.getMinBufferSize(
                     file_data.playback_rate, file_data.num_channels_out, file_data.bit_depth);
             at = new AudioTrack(

@@ -9,6 +9,8 @@ import com.example.voicemodulation.database.project.AudioData;
 import com.example.voicemodulation.database.project.Paths;
 import com.example.voicemodulation.database.project.Project;
 
+import java.util.List;
+
 
 @Dao
 public abstract class ProjectDao{
@@ -18,6 +20,9 @@ public abstract class ProjectDao{
 
     @Query("SELECT * FROM Project WHERE project_name=:project_name")
     abstract Project getProject(String project_name);
+
+    @Query("SELECT project_name FROM project")
+    abstract List<String> _getProjectNames();
 
     @Update
     abstract void _updateProject(Project project);
@@ -37,10 +42,16 @@ public abstract class ProjectDao{
     }
 
     public void insertBufferSize(Project project, int buffer_size){
-        new Thread(()-> _updateBufferSize(project.project_name,buffer_size)).start();
+        _updateBufferSize(project.project_name,buffer_size);
+    }
+    public Project getProjectFromName(String project_name){
+        return getProject(project_name);
     }
     public AudioData getAudioData(String project_name){
         return getProject(project_name).audioData;
+    }
+    public List<String> getProjectNames(){
+          return _getProjectNames();
     }
 
     public void insertProject(Project project){

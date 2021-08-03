@@ -17,13 +17,19 @@ public class AudioConnect {
             this.file_path = file_path;
         }
 
-        public RandomAccessFile getWriteObject(boolean new_file) {
+        public RandomAccessFile getWriteObject() {
             RandomAccessFile writeObject = null;
             try {
                 writeObject = new RandomAccessFile(file_path, "rw");
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
+            try {
+                writeObject.seek(writeObject.length());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            /*
             if (new_file) {
                 try {
                     writeObject.setLength(0);
@@ -39,6 +45,8 @@ public class AudioConnect {
                     e.printStackTrace();
                 }
             }
+
+             */
             return writeObject;
         }
 

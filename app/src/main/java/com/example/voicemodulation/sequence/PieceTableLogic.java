@@ -12,11 +12,9 @@ import java.util.logging.Logger;
 public class PieceTableLogic implements Serializable {
     public int byte_length;
     private ArrayList<Piece> pieces;
-    private int max_piece_length;
 
-    public PieceTableLogic(int max) {
+    public PieceTableLogic() {
         this.pieces = new ArrayList<>();
-        this.max_piece_length = max;
     }
 
     private ArrayList filter(ArrayList<Piece> pieces) {

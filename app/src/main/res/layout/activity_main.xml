@@ -10,6 +10,7 @@
     android:orientation="vertical"
     android:visibility="visible"
     tools:context=".MainActivity">
+
     <!--
     <LinearLayout
         android:id="@+id/display"
@@ -50,7 +51,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0"/>
   -->
-
 
     <com.example.voicemodulation.graph.GraphLogic
         android:id="@+id/display"

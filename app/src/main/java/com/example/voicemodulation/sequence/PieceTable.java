@@ -19,19 +19,25 @@ public class PieceTable {
     private RandomAccessFile _edits;
     private PieceTableLogic pieceTable;
     public int byte_length;
-    private int max;
-    public PieceTable(String oPath,String ePath, String origPath,int max) {
+
+    public PieceTable(String oPath, String ePath, String origPath) {
         this.originalPath = origPath;
         this.objectPath = oPath;
         this.editPath = ePath;
-        this.max = max;
         try {
             persistent_object = new RandomAccessFile(objectPath,"rw");
             originalPiece = new RandomAccessFile(originalPath,"rw");
             _edits = new RandomAccessFile(editPath, "rw");
-            persistent_object.setLength(0);
-            originalPiece.setLength(0);
-            _edits.setLength(0);
+            //persistent_object.setLength(0);
+            //if(originalPiece.length()==0 || _edits.length()==0) {
+            //    originalPiece.setLength(0);
+            //    _edits.setLength(0);
+            //}
+            System.out.println(originalPiece.length()+","+_edits.length());
+            //pieceTable = originalPiece.length()!=0 || _edits.length()!=0 ? deserialize() : pieceTable;
+            pieceTable = originalPiece.length()!=0 || _edits.length()!=0 ? deserialize() : pieceTable;
+            byte_length = pieceTable!=null ? pieceTable.byte_length : 0;
+
         } catch (FileNotFoundException ex) {
             Logger.getLogger(PieceTable.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
@@ -39,7 +45,7 @@ public class PieceTable {
         }
     }
     public void add_original(int length) {
-        pieceTable = new PieceTableLogic(max);
+        pieceTable = new PieceTableLogic();
         pieceTable.add_original(length);
         byte_length = pieceTable.byte_length;
         serialize();

@@ -34,11 +34,13 @@ import com.example.voicemodulation.database.project.Paths;
 import com.example.voicemodulation.database.project.Project;
 import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
+import com.example.voicemodulation.graph.GraphLogic.BytePoints;
 import com.example.voicemodulation.sequence.PieceTable;
 import com.example.voicemodulation.signal.Modulation;
 import com.example.voicemodulation.util.FileUtil;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 // TODO USER CONTROLLED VARIABILITY (support for N languages and N finger sizes)
@@ -92,8 +94,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private SeekBar the_seeker;
     private RecordControls controls;
     private RecordLogic record;
-    private AudioData audioProject;
-    private PieceTable pieceTable;
+    private AudioData audioData;
+    private static PieceTable pieceTable;
     int PERMISSION_ALL = 1;
     private final String[] PERMISSIONS = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -139,13 +141,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         the_seeker = findViewById(R.id.seek);
 
         AppDatabase db = Room.databaseBuilder(getApplicationContext(),
-                AppDatabase.class, "database-name").build();
+                AppDatabase.class, "database-name").allowMainThreadQueries().build();
         userDao = db.projectDao();
         the_seeker.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 //time.setText(String.format("%.2f", (double) progress * 2 / audioProject.getSampleRate()));
-                time.setText(String.format("%.2f", (double) progress * 2 / audioProject.sample_rate));
+                time.setText(String.format("%.2f", (double) progress * 2 / audioData.sample_rate));
             }
 
             @Override
@@ -163,8 +165,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         display.setEncoding(range);
         display.setGraphState(state, buffsize, file, length);
     }
+
     public static Pair<Integer, Integer> getSelectionPoints() {
-        return new Pair<>(graph.points.audio_start, graph.points.audio_stop);
+        if (graph.points!=null){
+            return new Pair<>(graph.points.audio_start, graph.points.audio_stop);
+        }
+        return new Pair<>(0, pieceTable.byte_length);
     }
 
     public static void addThread(Thread thread) {
@@ -292,46 +298,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     scrollView.addView(low_pass_view);
                     break;
                 case R.id.start_recording:
-                    /*
-                    TODO
-                        controls.getCreationData() should return AudioData from tables
-                     */
-                    audioProject = audioProject!=null ? audioProject : controls.getCreationData();
-                    if (audioProject!=null) {
-                        new Thread(() -> {
-                            project = new Project();
-                            project.project_name = "Big Money";
-                            project.audioData = controls.getCreationData();
-                            project.paths = projectPaths;
-                            userDao.insertProject(project);
-                        }).start();
+                    audioData = audioData !=null ? audioData : controls.getCreationData();
+                    if (audioData !=null){// && !userDao.doesExist(project.project_name)) {
+                        project = new Project();
+                        project.audioData = controls.getCreationData();
+                        project.paths = projectPaths;
+                        project.project_name = "Big Money "+ project.paths.uniqueDir;
+                        System.out.println("project name= "+project.project_name);
+                        userDao.insertProject(project);
                     }
                     //audioProject = audioProject!=null ? audioProject : controls.getCreationData();
                     //audioProject.setAudioPieceTable(pieceTable);
                     //audioProject.setProjectPaths(projectPaths);
 
-                    nyquist = (audioProject.sample_rate / 2) / 20;
+                    nyquist = (audioData.sample_rate / 2) / 20;
                     record = new RecordLogic();
                     the_seeker.setVisibility(View.GONE);
                     time.setVisibility(View.GONE);
                     display.setVisibility(View.VISIBLE);
                     display.setEncoding(Short.MAX_VALUE * 2 + 1);
                     if (pieceTable.byte_length == 0) {
-                        record.setFileObject(audioProject, projectPaths.audio_original, file_state);
+                        record.setFileObject(audioData, projectPaths.audio_original);
                         display.setGraphState(true, record.buffer_size, projectPaths.audio_original, 1);
                     } else {
-                        record.setFileObject(audioProject, projectPaths.audio, file_state);
+                        record.setFileObject(audioData, projectPaths.audio);
                         display.setGraphState(true, record.buffer_size, projectPaths.audio, 1);
                     }
                     file_state = false;
                     record.setFileData(project.audioData, project.paths.modulation);
                     record.setRecordingState(false);
                     record.startRecording();
-
                     //TODO add the buffer size to the database'
                     userDao.insertBufferSize(project,record.buffer_size);
-                    //audioProject.setBufferSize(record.buffer_size);
-
                     graph.setGraphState(record.buffer_size, true);
                     record_button.setVisibility(View.INVISIBLE);
                     pause_button.setVisibility(View.VISIBLE);
@@ -344,10 +342,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     display.setGraphState(false, record.buffer_size, projectPaths.audio_original, 1);
                     graph.catchUp(false);
                     display.setVisibility(View.GONE);
-
-                    //audioProject.setLength((int) length);
-
-                    int max = (int) (length / 2 / audioProject.sample_rate * 1000);
+                    int max = (int) (length / 2 / audioData.sample_rate * 1000);
                     time.setVisibility(View.VISIBLE);
                     the_seeker.setMax(max);
                     the_seeker.setProgress(max);
@@ -428,16 +423,50 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     add("original_bitmap_piece");
                     add("rec.pcm");
                     add("mod.pcm");}});
-        bitmapPieceTable = new PieceTable(projectPaths.bitmap_table, projectPaths.bitmap, projectPaths.bitmap_original, 1000000);
-        pieceTable = new PieceTable(projectPaths.audio_table, projectPaths.audio, projectPaths.audio_original, 1000000);
+        bitmapPieceTable = new PieceTable(projectPaths.bitmap_table, projectPaths.bitmap, projectPaths.bitmap_original );
+        pieceTable = new PieceTable(projectPaths.audio_table, projectPaths.audio, projectPaths.audio_original);
         record = new RecordLogic();
         graph.setTables(bitmapPieceTable, pieceTable);
-        graph.setProjectPaths(projectPaths);
+        graph.setOriginalPaths(projectPaths);
     }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        List<String> title_list = userDao.getProjectNames();
+        if(title_list!=null) {
+            for (CharSequence title : title_list) {
+                menu.add(title).setOnMenuItemClickListener(item -> {
+                    project = userDao.getProjectFromName((String) title);
+                    audioData = project.audioData;
+                    projectPaths = project.paths;
+
+                    bitmapPieceTable = new PieceTable(projectPaths.bitmap_table, projectPaths.bitmap, projectPaths.bitmap_original);
+                    pieceTable = new PieceTable(projectPaths.audio_table, projectPaths.audio, projectPaths.audio_original);
+
+                    record = new RecordLogic();
+                    nyquist = (audioData.sample_rate / 2) / 20;
+                    record.setFileData(project.audioData, project.paths.modulation);
+                    record.setPieceTable(pieceTable);
+
+                    graph = findViewById(R.id.display);
+                    graph.setTables(bitmapPieceTable, pieceTable);
+                    graph.setProjectPaths(project.paths);
+                    graph.buffer_size = project.audioData.buffer_size;
+                    graph.populateProject();
+
+                    int max = pieceTable.byte_length / 2 / audioData.sample_rate * 1000;
+                    time.setVisibility(View.VISIBLE);
+                    the_seeker.setMax(max);
+                    the_seeker.setProgress(max);
+                    modulations.setVisibility(View.VISIBLE);
+                    the_seeker.setVisibility(View.VISIBLE);
+                    play_button.setVisibility(View.VISIBLE);
+                    stop_button.setVisibility(View.VISIBLE);
+                    record_button.setVisibility(View.VISIBLE);
+                    return false;
+                });
+            }
+        }
         return true;
     }
     @Override

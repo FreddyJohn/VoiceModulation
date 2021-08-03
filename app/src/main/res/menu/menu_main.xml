@@ -5,8 +5,18 @@
     tools:context="com.example.voicemodulation.MainActivity">
     <item
         android:id="@+id/update"
-        android:orderInCategory="20"
+        android:orderInCategory="26"
         android:title="change directory"
         android:icon="@android:drawable/ic_input_get"
         app:showAsAction="always"/>
+    <group android:id="@+id/group">
+        <!--
+        <item android:id="@+id/group_item1"
+            android:onClick="onGroupItemClick"
+            android:title="Big Money" />
+        <item android:id="@+id/group_item2"
+            android:onClick="onGroupItemClick"
+            android:title="Saliva" />
+            -->
+    </group>
 </menu>
