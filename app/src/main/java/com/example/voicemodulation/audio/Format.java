@@ -1,21 +1,22 @@
 package com.example.voicemodulation.audio;
 //import com.example.voicemodulation.project.AudioData;
 import com.example.voicemodulation.database.project.Project;
-import com.example.voicemodulation.sequence.PieceTable;
+import com.example.voicemodulation.structures.Structure;
+
 import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 public class Format {
     public static class wav implements Runnable{
         private final Project project;
-        private PieceTable audioPieceTable;
-        public wav(Project _data, PieceTable audioPieceTable) {
+        private Structure audioPieceTable;
+        public wav(Project _data, Structure audioPieceTable) {
             this.project =_data;
             this.audioPieceTable = audioPieceTable;
         }
         @Override
         //TODO implement extra padding bytes so we can insert the header there overwriting instead of using bytebuffer and getting out of memory errors.
         public void run() {
-            byte[] raw_data = audioPieceTable.get_text();
+            byte[] raw_data = audioPieceTable.getByteSequence();
             long total_bytes = raw_data.length;
             int bit_depth = project.audioData.bit_depth;
             long sample_rate = project.audioData.sample_rate;

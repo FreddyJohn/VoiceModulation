@@ -14,14 +14,14 @@ import com.example.voicemodulation.R;
 //import com.example.voicemodulation.project.AudioData;
 import com.example.voicemodulation.database.project.Project;
 import com.example.voicemodulation.signal.Modulation;
-import com.example.voicemodulation.sequence.PieceTable;
 import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.graph.AudioDisplay;
+import com.example.voicemodulation.structures.Structure;
 
 import java.util.LinkedList;
 
 public class ModulateControls extends LinearLayout{
-    private PieceTable pieceTable;
+    private Structure pieceTable;
     private SeekBar seek;
     private AudioDisplay display;
     private ImageButton play;
@@ -52,7 +52,7 @@ public class ModulateControls extends LinearLayout{
     public ModulateControls(Context context, String[] title, int[] maxes, double[] scale,
                             String[] quantity_type, Project creation, Modulation.modulation modulation,
                             int gravity, String name, int[] progress, ImageButton play,
-                            LinearLayout seek_n_load, PieceTable pieceTable){
+                            LinearLayout seek_n_load, Structure pieceTable){
         super(context);
         this.title=title;
         this.maxes=maxes;

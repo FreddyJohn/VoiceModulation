@@ -11,46 +11,71 @@
     android:visibility="visible"
     tools:context=".MainActivity">
 
-    <!--
     <LinearLayout
-        android:id="@+id/display"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginBottom="10dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/global_seek"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0"/>
-        -->
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
+        <ImageButton
+            android:id="@+id/undo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|center_vertical"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:contentDescription="@null"
+            android:onClick="onClick"
+            android:padding="@dimen/spacing_small"
+            android:src="@drawable/ic_baseline_undo_24" />
 
+        <ImageButton
+            android:id="@+id/redo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|center_vertical"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:contentDescription="@null"
+            android:onClick="onClick"
+            android:padding="@dimen/spacing_small"
+            android:src="@drawable/ic_baseline_redo_24" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="25dp"
+            android:layout_weight="1"
+            android:gravity="right|center_horizontal"
+            android:text="@string/app_name"
+            android:textColor="@color/white"
+            android:textSize="@dimen/text_large"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/projects"
+            android:layout_width="49dp"
+            android:layout_height="@dimen/bottom_pnl_small_btn_size"
+            android:layout_gravity="center_vertical|end"
+            android:adjustViewBounds="true"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:contentDescription="@null"
+            android:onClick="onClick"
+            android:scaleType="center"
+            android:src="@drawable/ic_baseline_storage_24" />
+
+    </LinearLayout>
     <!--
-    <LinearLayout
-        android:id="@+id/display"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginBottom="10dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/global_seek"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0"/>
-  -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/my_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical|start">
+        <androidx.appcompat.widget.AppCompatButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </androidx.appcompat.widget.Toolbar>
+    -->
+
 
     <com.example.voicemodulation.graph.GraphLogic
         android:id="@+id/display"
@@ -90,7 +115,9 @@
             android:layout_height="match_parent"
             android:layout_marginBottom="10dp"
             android:visibility="gone" />
+
     </LinearLayout>
+
 
     <LinearLayout
         android:id="@+id/controls"

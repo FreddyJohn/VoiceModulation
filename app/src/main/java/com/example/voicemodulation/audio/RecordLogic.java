@@ -5,7 +5,7 @@ import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import com.example.voicemodulation.database.project.AudioData;
-import com.example.voicemodulation.sequence.PieceTable;
+import com.example.voicemodulation.structures.Structure;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,12 +23,12 @@ public class RecordLogic {
     public long record_size;
     private AudioData file_data;
     private String file_path;
-    private PieceTable pieceTable;
+    private Structure pieceTable;
     private AudioTrack at;
 
     public RecordLogic() {
     }
-    public void setPieceTable(PieceTable pieceTable){
+    public void setPieceTable(Structure pieceTable){
         this.pieceTable = pieceTable;
     }
     public void setFileData(AudioData file, String path)
@@ -64,7 +64,7 @@ public class RecordLogic {
         int bufferSize = AudioRecord.getMinBufferSize(
                 file_data.sample_rate, file_data.num_channels_in, file_data.bit_depth);
         this.buffer_size = bufferSize;
-        System.out.println("buffer size as calculated in RecordLogic = "+bufferSize);
+        //System.out.println("buffer size as calculated in RecordLogic = "+bufferSize);
         recorder = new AudioRecord(AUDIO_SOURCE,
                 file_data.sample_rate, file_data.num_channels_in,
                 file_data.bit_depth, bufferSize);
@@ -123,6 +123,7 @@ public class RecordLogic {
                     file_data.getBitDepth(), intSize, AudioTrack.MODE_STREAM);
                     */
             //System.out.println(file_data.playback_rate+","+file_data.num_channels_out+","+file_data.bit_depth);
+
             int intSize = android.media.AudioTrack.getMinBufferSize(
                     file_data.playback_rate, file_data.num_channels_out, file_data.bit_depth);
             at = new AudioTrack(

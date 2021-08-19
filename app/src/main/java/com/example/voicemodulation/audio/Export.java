@@ -1,10 +1,10 @@
 package com.example.voicemodulation.audio;
 
 import com.example.voicemodulation.database.project.Project;
-import com.example.voicemodulation.sequence.PieceTable;
+import com.example.voicemodulation.structures.Structure;
 
 public class Export {
-    public static void format(Project data, PieceTable sequence){
+    public static void format(Project data, Structure sequence){
         switch (data.audioData.format)
         {
             case ".wav":

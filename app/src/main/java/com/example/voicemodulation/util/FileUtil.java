@@ -11,6 +11,7 @@ import java.util.List;
 
 public class FileUtil {
 
+
     public static Paths createNewProjectPaths(Context context, List<String> nFiles){
         File parentDir = context.getExternalFilesDir("Projects");
         String uniqueDir = String.valueOf(System.nanoTime());
@@ -39,7 +40,9 @@ public class FileUtil {
         projectPaths.bitmap_original = list.get(4);
         projectPaths.audio = list.get(5);
         projectPaths.modulation = list.get(6);
-        projectPaths.uniqueDir = list.get(7);
+        projectPaths.bitmap_edits = list.get(7);
+        projectPaths.audio_edits = list.get(8);
+        projectPaths.uniqueDir = list.get(9);
         return projectPaths;
     }
 }

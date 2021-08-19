@@ -3,5 +3,10 @@
     <dimen name="spacing_normal">16dp</dimen>
     <dimen name="spacing_small">8dp</dimen>
     <dimen name="text_medium">16sp</dimen>
+    <dimen name="text_large">24sp</dimen>
+    <dimen name="bottom_pnl_small_btn_size">50dp</dimen>
+    <dimen name="spacing_double">32dp</dimen>
+    <dimen name="spacing_medium">12dp</dimen>
+
 
 </resources>

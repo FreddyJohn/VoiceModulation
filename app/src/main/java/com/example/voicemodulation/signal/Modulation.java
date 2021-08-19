@@ -5,8 +5,9 @@ import com.example.voicemodulation.audio.AudioConnect;
 //import com.example.voicemodulation.project.AudioData;
 import com.example.voicemodulation.database.project.Project;
 import com.example.voicemodulation.audio.Generate;
+import com.example.voicemodulation.structures.Structure;
 import com.example.voicemodulation.util.Convert;
-import com.example.voicemodulation.sequence.PieceTable;
+
 import java.io.FileOutputStream;
 import java.util.LinkedList;
 
@@ -18,7 +19,7 @@ TODO
 public class Modulation {
     private static  double n;
     public interface modulation{
-        void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, PieceTable pieceTable);
+        void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable);
     }
     public static void writeToFile(short[] result, Project data){
         Convert.shortsToBytes(result);
@@ -26,12 +27,12 @@ public class Modulation {
         FileOutputStream out = con.setFileOutputStream(data.paths.modulation);
         con.closeFileOutputStream(out,Convert.shortsToBytes(result));
     }
-    public static short[] readFromFile(Pair<Integer,Integer> position, PieceTable pieceTable){
+    public static short[] readFromFile(Pair<Integer,Integer> position, Structure pieceTable){
         return Convert.bytesToShorts(pieceTable.find(position.first,position.second-position.first));
     }
     public static class backwards implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
             double volume = _params.get(0);
             short[] frontwards = readFromFile(position,pieceTable);
             //short[] frontwards = AudioCon.Data.getShorts(data.getNewRecordFile());
@@ -46,7 +47,7 @@ public class Modulation {
     //TODO acting strange do something about it, review old python code for echo
     public static class echo implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
             double num_signals = _params.get(0);
             double delay = _params.get(1);
             short[] carrier_wave = readFromFile(position,pieceTable);
@@ -69,7 +70,7 @@ public class Modulation {
     }
     public static class quantized implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
             double C = _params.get(0);
             short[] carrier_wave = readFromFile(position,pieceTable);
             //short[] carrier_wave = AudioCon.Data.getShorts(data.getNewRecordFile());
@@ -88,7 +89,7 @@ public class Modulation {
     }
     public static class phaser implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
                 double frequency = _params.get(0);
                 double carrier_amplitude = _params.get(1);
                 double modulator_amplitude = _params.get(2);
@@ -104,7 +105,7 @@ public class Modulation {
     }
     public static class phaserTriangle implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
             double frequency = _params.get(0);
             double carrier_amplitude = _params.get(1);
             double modulator_amplitude = _params.get(2);
@@ -121,7 +122,7 @@ public class Modulation {
     }
     public static class phaserSaw implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
             double frequency = _params.get(0);
             double carrier_amplitude = _params.get(1);
             double modulator_amplitude = _params.get(2);
@@ -138,7 +139,7 @@ public class Modulation {
     }
     public static class phaserSquare implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
             double frequency = _params.get(0);
             double carrier_amplitude = _params.get(1);
             double modulator_amplitude = _params.get(2);
@@ -156,7 +157,7 @@ public class Modulation {
 
     public static class flanger implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
             double min = _params.get(0);
             double max = _params.get(1);
             double frequency = _params.get(2);
@@ -176,7 +177,7 @@ public class Modulation {
     }
     public static class flangerTriangle implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
             double min = _params.get(0);
             double max = _params.get(1);
             double frequency = _params.get(2);
@@ -197,7 +198,7 @@ public class Modulation {
     }
     public static class flangerSquare implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
             double min = _params.get(0);
             double max = _params.get(1);
             double frequency = _params.get(2);
@@ -218,7 +219,7 @@ public class Modulation {
     }
     public static class lowPass implements modulation {
         @Override
-        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
             double smooth = _params.get(0);
             //short[] carrier_wave = AudioCon.Data.getShorts(data.getNewRecordFile());
             short[] carrier_wave = readFromFile(position,pieceTable);
@@ -235,7 +236,7 @@ public class Modulation {
     //TODO use the max calculated from every buffer that was written inside of GraphLogic
     public static class variableEcho implements modulation{
         @Override
-        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, PieceTable pieceTable) {
+        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
             double num_signals = _params.get(0);
             double frequency = _params.get(1);
             short[] carrier_wave = readFromFile(position,pieceTable);

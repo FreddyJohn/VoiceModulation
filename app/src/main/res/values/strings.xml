@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">VoiceModulation</string>
     <string name="sample_rate">Sample Rate</string>
-    <string name="playback_rate">PlayBack Rate</string>
+    <string name="playback_rate">Playback Rate</string>
     <string name="encoding">Encoding</string>
     <string name="format">Format</string>
     <string name="selected_format">.wav</string>

@@ -1,6 +1,5 @@
 package com.example.voicemodulation.database.project;
 
-
 public class Paths {
     public String bitmap;
     public String audio;
@@ -10,4 +9,6 @@ public class Paths {
     public String bitmap_original;
     public String modulation;
     public String uniqueDir;
+    public String audio_edits;
+    public String bitmap_edits;
 }

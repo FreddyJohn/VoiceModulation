@@ -8,13 +8,13 @@ import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.util.Pair;
 import android.view.Gravity;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.MenuInflater;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -32,10 +32,10 @@ import com.example.voicemodulation.database.ProjectDao;
 import com.example.voicemodulation.database.project.AudioData;
 import com.example.voicemodulation.database.project.Paths;
 import com.example.voicemodulation.database.project.Project;
+
 import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.graph.GraphLogic;
-import com.example.voicemodulation.graph.GraphLogic.BytePoints;
-import com.example.voicemodulation.sequence.PieceTable;
+import com.example.voicemodulation.structures.Structure;
 import com.example.voicemodulation.signal.Modulation;
 import com.example.voicemodulation.util.FileUtil;
 
@@ -66,7 +66,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
-    private final String[] record_control_titles = new String[]{"PlayBack Rate", "Sample Rate", "Format", "Channels", "Encoding"};
+    private final String[] record_control_titles = new String[]{"Playback Rate", "Sample Rate", "Format", "Channels", "Encoding"};
     private final String[] phaser_titles = new String[]{"Frequency", "Carrier Amp", "Modulator Amp", "Theta"};
     private final String[] record_control_quantities = new String[]{"Hz", "Hz", null, null, null};
     private final String[] phaser_quantities = new String[]{"Hz", "Amp", "Amp", "θ"};
@@ -78,7 +78,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int[] phaser_progress = new int[]{1, 10, 10, 0};
     private final int[] flanger_progress = new int[]{8, 4, 1};
     private final int record_gravity = Gravity.NO_GRAVITY;
-    private ImageButton play_button, stop_button, record_button, pause_button;
+    private ImageButton play_button, stop_button,
+            record_button, pause_button;
+           // undo_button, redo_button;
     private TextView time;
     private static AudioDisplay display;
     private static GraphLogic graph;
@@ -89,19 +91,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FrameLayout record_controls;
     private LinearLayout seek_n_loader;
     private HorizontalScrollView scrollView;
-    private HorizontalScrollView graph_scroll;
-
     private SeekBar the_seeker;
     private RecordControls controls;
     private RecordLogic record;
     private AudioData audioData;
-    private static PieceTable pieceTable;
+    private static Structure audioPieceTable;
+    private Structure bitmapPieceTable;
+
     int PERMISSION_ALL = 1;
     private final String[] PERMISSIONS = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.RECORD_AUDIO};
-    private PieceTable bitmapPieceTable;
     //private Paths projectPaths;
     private Paths projectPaths;
     private static ArrayList<Thread> threadList;
@@ -115,19 +116,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         graph = findViewById(R.id.display);
         threadList = new ArrayList<>();
-        // Data.getMemory()/x ? instead of static 1MB
+
         sharedPref = getPreferences(Context.MODE_PRIVATE);
         editor = sharedPref.edit();
+
+        //undo_button = findViewById(R.id.undo);
+        //redo_button = findViewById(R.id.redo);
+
         record_controls = findViewById(R.id.record_controls);
         record_button = findViewById(R.id.start_recording);
         play_button = findViewById(R.id.play_recording);
         pause_button = findViewById(R.id.pause_recording);
         stop_button = findViewById(R.id.stop_recording);
+
         play_button.setVisibility(View.INVISIBLE);
         stop_button.setVisibility(View.INVISIBLE);
         pause_button.setVisibility(View.INVISIBLE);
+
         time = findViewById(R.id.time);
         seek_n_loader = findViewById(R.id.seek_n_load);
         scrollView = findViewById(R.id.fuckFragments);
@@ -137,12 +145,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 record_control_scales, record_control_quantities,
                 record_gravity, record_control_title, record_control_progresses,
                 record_controls, graph, seek_n_loader, modulations);
+
         scrollView.addView(controls);
         the_seeker = findViewById(R.id.seek);
 
         AppDatabase db = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "database-name").allowMainThreadQueries().build();
         userDao = db.projectDao();
+
         the_seeker.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -170,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (graph.points!=null){
             return new Pair<>(graph.points.audio_start, graph.points.audio_stop);
         }
-        return new Pair<>(0, pieceTable.byte_length);
+        return new Pair<>(0, audioPieceTable.byte_length);
     }
 
     public static void addThread(Thread thread) {
@@ -192,7 +202,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     int[] backwards_maxes = new int[]{10};
                     ModulateControls backwards_view = new ModulateControls(this, backwards_titles, backwards_maxes, new double[]{.1},
                             new String[]{"Volume"}, project, Backwards, Gravity.CENTER,
-                            "Backwards Effect", new int[]{10}, play_button, seek_n_loader, pieceTable);
+                            "Backwards Effect", new int[]{10}, play_button, seek_n_loader, audioPieceTable);
                     scrollView.addView(backwards_view);
                     break;
                 case R.id.echo:
@@ -202,7 +212,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     int[] echo_maxes = new int[]{10, 10};
                     ModulateControls echo_view = new ModulateControls(this, echo_titles, echo_maxes, new double[]{1, 1},
                             new String[]{"S", "D"}, project, Echo, Gravity.CENTER,
-                            "Echo Effect", new int[]{5, 6}, play_button, seek_n_loader, pieceTable);
+                            "Echo Effect", new int[]{5, 6}, play_button, seek_n_loader, audioPieceTable);
                     scrollView.addView(echo_view);
                     break;
                 case R.id.quantize:
@@ -214,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     int[] robotic_maxes = new int[]{10, 10};
                     ModulateControls robotic = new ModulateControls(this, robotic_titles, robotic_maxes, new double[]{1000, .1},
                             new String[]{"C", "Amp"}, project, Quantized, Gravity.CENTER,
-                            "Quantize Audio Sample", new int[]{5, 10}, play_button, seek_n_loader, pieceTable);
+                            "Quantize Audio Sample", new int[]{5, 10}, play_button, seek_n_loader, audioPieceTable);
                     scrollView.addView(robotic);
                     break;
                 case R.id.phaser:
@@ -224,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     int[] phaser_maxes = new int[]{20, 10, 10, 20};
                     ModulateControls phaser_view = new ModulateControls(this, phaser_titles, phaser_maxes, new double[]{nyquist, .1, .1, 0}, //.1 * Math.PI
                             phaser_quantities, project, Phaser, Gravity.NO_GRAVITY,
-                            "Phaser with Sine Wave", phaser_progress, play_button, seek_n_loader, pieceTable);
+                            "Phaser with Sine Wave", phaser_progress, play_button, seek_n_loader, audioPieceTable);
                     scrollView.addView(phaser_view);
                     break;
                 case R.id.phaser_triangle:
@@ -234,7 +244,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     int[] alien_maxes = new int[]{20, 10, 10, 10};
                     ModulateControls phaser_triangle_view = new ModulateControls(this, phaser_titles, alien_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
                             phaser_quantities, project, PhaserTriangle, Gravity.NO_GRAVITY,
-                            "Phaser with Triangle Wave", phaser_progress, play_button, seek_n_loader, pieceTable);
+                            "Phaser with Triangle Wave", phaser_progress, play_button, seek_n_loader, audioPieceTable);
                     scrollView.addView(phaser_triangle_view);
                     break;
                 case R.id.phaser_square:
@@ -245,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     int[] square_maxes = new int[]{20, 10, 10, 10};
                     ModulateControls phaser_square_view = new ModulateControls(this, phaser_titles, square_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
                             phaser_quantities, project, PhaserSquare, Gravity.NO_GRAVITY,
-                            "Phaser with Square Wave", phaser_progress, play_button, seek_n_loader, pieceTable);
+                            "Phaser with Square Wave", phaser_progress, play_button, seek_n_loader, audioPieceTable);
                     scrollView.addView(phaser_square_view);
                     break;
                 case R.id.phaser_saw:
@@ -255,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     int[] saw_maxes = new int[]{20, 10, 10, 10};
                     ModulateControls phaser_saw_view = new ModulateControls(this, phaser_titles, saw_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
                             phaser_quantities, project, PhaserSaw, Gravity.NO_GRAVITY,
-                            "Phaser with Saw Wave", phaser_progress, play_button, seek_n_loader, pieceTable);
+                            "Phaser with Saw Wave", phaser_progress, play_button, seek_n_loader, audioPieceTable);
                     scrollView.addView(phaser_saw_view);
                     break;
                 case R.id.flanger:
@@ -265,7 +275,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     int[] flanger_maxes = new int[]{10, 10, 20};
                     ModulateControls flanger_view = new ModulateControls(this, flanger_titles, flanger_maxes, new double[]{10, 10, nyquist},
                             new String[]{"∧", "∨", "Hz"}, project, Flanger, Gravity.NO_GRAVITY,
-                            "Flanger with Sine Wave", flanger_progress, play_button, seek_n_loader, pieceTable);
+                            "Flanger with Sine Wave", flanger_progress, play_button, seek_n_loader, audioPieceTable);
                     scrollView.addView(flanger_view);
                     break;
                 case R.id.flanger_triangle:
@@ -275,7 +285,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     int[] flanger_triangle_maxes = new int[]{10, 10, 20};
                     ModulateControls flanger_triangle_view = new ModulateControls(this, flanger_titles, flanger_triangle_maxes, new double[]{10, 10, nyquist},
                             new String[]{"∧", "∨", "Hz"}, project, FlangerTriangle, Gravity.NO_GRAVITY,
-                            "Flanger with Triangle Wave", flanger_progress, play_button, seek_n_loader, pieceTable);
+                            "Flanger with Triangle Wave", flanger_progress, play_button, seek_n_loader, audioPieceTable);
                     scrollView.addView(flanger_triangle_view);
                     break;
                 case R.id.flanger_square:
@@ -285,7 +295,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     int[] flanger_square_maxes = new int[]{10, 10, 20};
                     ModulateControls flanger_square_view = new ModulateControls(this, flanger_titles, flanger_square_maxes, new double[]{10, 10, nyquist},
                             new String[]{"∧", "∨", "Hz"}, project, FlangerSquare, Gravity.NO_GRAVITY,
-                            "Flanger with Square Wave", flanger_progress, play_button, seek_n_loader, pieceTable);
+                            "Flanger with Square Wave", flanger_progress, play_button, seek_n_loader, audioPieceTable);
                     scrollView.addView(flanger_square_view);
                     break;
                 case R.id.low_pass:
@@ -294,22 +304,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Modulation.modulation LowPass = lowPass::modulate;
                     ModulateControls low_pass_view = new ModulateControls(this, new String[]{"Smoothing"}, new int[]{25}, new double[]{5},
                             new String[]{" "}, project, LowPass, Gravity.CENTER,
-                            "Low Pass Filter", flanger_progress, play_button, seek_n_loader, pieceTable);
+                            "Low Pass Filter", flanger_progress, play_button, seek_n_loader, audioPieceTable);
                     scrollView.addView(low_pass_view);
                     break;
                 case R.id.start_recording:
-                    audioData = audioData !=null ? audioData : controls.getCreationData();
-                    if (audioData !=null){// && !userDao.doesExist(project.project_name)) {
-                        project = new Project();
+
+                    if (project.audioData==null){
                         project.audioData = controls.getCreationData();
-                        project.paths = projectPaths;
-                        project.project_name = "Big Money "+ project.paths.uniqueDir;
-                        System.out.println("project name= "+project.project_name);
+                        audioData = project.audioData;
                         userDao.insertProject(project);
+                        System.out.println("a project must have been inserted which means somehow project.audioData==null");
                     }
-                    //audioProject = audioProject!=null ? audioProject : controls.getCreationData();
-                    //audioProject.setAudioPieceTable(pieceTable);
-                    //audioProject.setProjectPaths(projectPaths);
+                    project.audioData = project.audioData !=null ? project.audioData : controls.getCreationData();
+                    audioData = project.audioData;
 
                     nyquist = (audioData.sample_rate / 2) / 20;
                     record = new RecordLogic();
@@ -317,13 +324,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     time.setVisibility(View.GONE);
                     display.setVisibility(View.VISIBLE);
                     display.setEncoding(Short.MAX_VALUE * 2 + 1);
-                    if (pieceTable.byte_length == 0) {
-                        record.setFileObject(audioData, projectPaths.audio_original);
-                        display.setGraphState(true, record.buffer_size, projectPaths.audio_original, 1);
-                    } else {
-                        record.setFileObject(audioData, projectPaths.audio);
-                        display.setGraphState(true, record.buffer_size, projectPaths.audio, 1);
-                    }
+                    //if (audioPieceTable.byte_length == 0) {
+                        //record.setFileObject(audioData, projectPaths.audio_original);
+                        //display.setGraphState(true, record.buffer_size, projectPaths.audio_original, 1);
+                    //} else {
+                    record.setFileObject(audioData, projectPaths.audio);
+                    display.setGraphState(true, record.buffer_size, projectPaths.audio, 1);
+                    //}
                     file_state = false;
                     record.setFileData(project.audioData, project.paths.modulation);
                     record.setRecordingState(false);
@@ -335,11 +342,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     pause_button.setVisibility(View.VISIBLE);
                     break;
                 case R.id.pause_recording:
-                    long length = pieceTable.byte_length;
+                    long length = audioPieceTable.byte_length;
                     record.setRecordingState(true);
                     graph.setGraphState(record.buffer_size, false);
+                    //graph.setTables(bitmapPieceTable,audioPieceTable);
+                    //bitmapPieceTable.printPieces();
+                    //bitmapPieceTable.printEditStack();
                     display.setEncoding(Short.MAX_VALUE * 2 + 1);
-                    display.setGraphState(false, record.buffer_size, projectPaths.audio_original, 1);
+                    //display.setGraphState(false, record.buffer_size, projectPaths.audio_original, 1);
+                    display.setGraphState(false, record.buffer_size, projectPaths.audio, 1);
+
                     graph.catchUp(false);
                     display.setVisibility(View.GONE);
                     int max = (int) (length / 2 / audioData.sample_rate * 1000);
@@ -354,16 +366,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     record_button.setVisibility(View.VISIBLE);
                     break;
                 case R.id.play_recording:
-                    record.setPieceTable(pieceTable.getMostRecent());
-                    System.out.println("pieceTable.byte_length="+pieceTable.byte_length);
+                    record.setPieceTable(audioPieceTable.getMostRecent());
                     new Thread(() -> {
                         Pair<Integer, Integer> pair;
                         try {
                             pair = getSelectionPoints();
-                            System.out.println("start="+pair.first+" stop="+pair.second);
+                            //System.out.println("start="+pair.first+" stop="+pair.second);
                             record.play_recording(pair.first, pair.second);
                         } catch (NullPointerException e) {
-                            record.play_recording(0, pieceTable.byte_length);
+                            record.play_recording(0, audioPieceTable.byte_length);
                         }
                     }).start();
                     break;
@@ -373,13 +384,129 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             thread.interrupt();
                         }
                     }
-                    Export.format(project,pieceTable);
+                    Export.format(project, audioPieceTable);
                     break;
+                case R.id.projects:
+                    displayProjectList(v);
+                    break;
+                /*
+                case R.id.undo:
+                    System.out.println("undo pressed");
+
+                    audioPieceTable.undo();
+                    bitmapPieceTable.undo();
+
+                    System.out.println("bitmap edit stack");
+                    bitmapPieceTable.printEditStack();
+                    System.out.println("bitmap pieces");
+                    bitmapPieceTable.printPieces();
+
+                    System.out.println("in MainActivity undo pressed and bitmap byte length is = "+ bitmapPieceTable.byte_length);
+                    //graph.editable = null;
+                    //graph.graphState = false;
+                    //graph.invalidate();
+
+                    //graph.graphState = false;
+
+                    graph.populateProject();
+                    break;
+                case R.id.redo:
+                    System.out.println("redo pressed");
+
+                    audioPieceTable.redo();
+                    bitmapPieceTable.redo();
+
+                    System.out.println("bitmap edit stack");
+                    bitmapPieceTable.printEditStack();
+                    System.out.println("bitmap pieces");
+                    bitmapPieceTable.printPieces();
+
+                    //graph.invalidate();
+
+                    //graph.editable = null;
+                    //graph.graphState = false;
+                    //graph.invalidate();
+
+                    graph.populateProject();
+
+                    break;
+                    */
+
+
             }
+
         }else if(!recordPermission | !storagePermission){
             getPermissions();
         }
     }
+
+    private void initializeProject() {
+        projectPaths = FileUtil.createNewProjectPaths(this,
+                new ArrayList<String>(){{add("bitmap");
+                    add("bitmap_piece_table");
+                    add("audio_piece_table");
+                    add("original_audio_piece");
+                    add("original_bitmap_piece");
+                    add("rec.pcm");
+                    add("mod.pcm");
+                    add("bitmap_edits_stack");
+                    add("audio_edits_stack");}});
+        bitmapPieceTable = new Structure(projectPaths.bitmap_table, projectPaths.bitmap,
+                projectPaths.bitmap_original,projectPaths.bitmap_edits);
+        audioPieceTable = new Structure(projectPaths.audio_table, projectPaths.audio,
+                projectPaths.audio_original,projectPaths.audio_edits);
+        record = new RecordLogic();
+        graph.setTables(bitmapPieceTable, audioPieceTable);
+        graph.setProjectPaths(projectPaths);
+        //graph.setOriginalPaths(projectPaths);
+        project = new Project();
+        project.paths = projectPaths;
+        project.project_name = "Big Money "+ project.paths.uniqueDir;
+    }
+    private void displayProjectList(View view) {
+        PopupMenu popupMenu = new PopupMenu(view.getContext(),view);
+        List<String> title_list = userDao.getProjectNames();
+        if(title_list!=null) {
+            for (CharSequence title : title_list) {
+                popupMenu.getMenu().add(title).setOnMenuItemClickListener(item -> {
+                    project = userDao.getProjectFromName((String) title);
+                    audioData = project.audioData;
+                    projectPaths = project.paths;
+
+                    bitmapPieceTable = new Structure(projectPaths.bitmap_table, projectPaths.bitmap,
+                            projectPaths.bitmap_original,projectPaths.bitmap_edits);
+                    audioPieceTable = new Structure(projectPaths.audio_table, projectPaths.audio,
+                            projectPaths.audio_original,projectPaths.audio_edits);
+
+                    record = new RecordLogic();
+                    nyquist = (audioData.sample_rate / 2) / 20;
+                    record.setFileData(project.audioData, project.paths.modulation);
+                    record.setPieceTable(audioPieceTable);
+
+                    graph = findViewById(R.id.display);
+                    graph.setTables(bitmapPieceTable, audioPieceTable);
+                    graph.setProjectPaths(project.paths);
+                    graph.buffer_size = project.audioData.buffer_size;
+                    graph.populateProject();
+
+                    int max = audioPieceTable.byte_length / 2 / audioData.sample_rate * 1000;
+                    time.setVisibility(View.VISIBLE);
+                    the_seeker.setMax(max);
+                    the_seeker.setProgress(max);
+                    modulations.setVisibility(View.VISIBLE);
+                    the_seeker.setVisibility(View.VISIBLE);
+                    play_button.setVisibility(View.VISIBLE);
+                    stop_button.setVisibility(View.VISIBLE);
+                    record_button.setVisibility(View.VISIBLE);
+                    return false;
+                });
+            }
+        }
+        MenuInflater inflater = popupMenu.getMenuInflater();
+        inflater.inflate(R.menu.menu_main, popupMenu.getMenu());
+        popupMenu.show();
+    }
+
     public void getPermissions(){
         if(!hasPermissions(this, PERMISSIONS)) {
             requestPermissions(PERMISSIONS, PERMISSION_ALL);
@@ -414,21 +541,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
     }
-    private void initializeProject() {
-        projectPaths = FileUtil.createNewProjectPaths(this,
-                new ArrayList<String>(){{add("bitmap");
-                    add("bitmap_piece_table");
-                    add("audio_piece_table");
-                    add("original_audio_piece");
-                    add("original_bitmap_piece");
-                    add("rec.pcm");
-                    add("mod.pcm");}});
-        bitmapPieceTable = new PieceTable(projectPaths.bitmap_table, projectPaths.bitmap, projectPaths.bitmap_original );
-        pieceTable = new PieceTable(projectPaths.audio_table, projectPaths.audio, projectPaths.audio_original);
-        record = new RecordLogic();
-        graph.setTables(bitmapPieceTable, pieceTable);
-        graph.setOriginalPaths(projectPaths);
-    }
+
+    /*
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
@@ -469,6 +583,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         return true;
     }
+
+     */
+    /*
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -481,8 +598,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         return super.onOptionsItemSelected(item);
     }
-    public void getUserDirectorySelection(){
 
+     */
+    public void getUserDirectorySelection(){
         /*
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP & !selected){
             Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
@@ -492,10 +610,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             startActivityForResult(Intent.createChooser(i, "Choose directory"), 9999);
             editor.putBoolean("selected", true);
             editor.apply();
-
         }
-
-         */
+        */
     }
 
 

@@ -1,8 +1,8 @@
-package com.example.voicemodulation.sequence;
+package com.example.voicemodulation.structures.sequence;
 
 import java.io.Serializable;
 
-public class Piece implements Serializable {
+public class Piece implements Serializable{
     public boolean in_added;
     public long offset;
     public long length;

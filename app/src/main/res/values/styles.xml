@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/black</item>
+        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorSecondaryVariant">@color/teal_700</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBarOverlay">true</item>
+    </style>
 
     <style name="StaticSeekBarTitle">
         <item name="android:textColor">@color/white</item>
@@ -31,6 +42,6 @@
         <attr name="android:rotation">270</attr>
         <attr name="android:thumb">@drawable/seekbar_thumb</attr>
     </declare-styleable>
-
+=
 
 </resources>

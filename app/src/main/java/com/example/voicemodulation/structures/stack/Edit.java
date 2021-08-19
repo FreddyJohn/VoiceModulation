@@ -1,5 +1,8 @@
-package com.example.voicemodulation.edits;
-public class Edit{
+package com.example.voicemodulation.structures.stack;
+
+import java.io.Serializable;
+
+public class Edit implements Serializable {
     public int length;
     public int offset;
     public String editType;
