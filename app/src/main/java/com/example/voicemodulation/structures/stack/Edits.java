@@ -12,7 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Edits implements Serializable {
-    private final ArrayList<Edit> editStack = new ArrayList<>();
+    private ArrayList<Edit> editStack = new ArrayList<>();
     private ArrayList<Edit> redoStack = new ArrayList<>();
     public Edit currentEdit;
     public Edit currentRedo;
@@ -31,11 +31,11 @@ public class Edits implements Serializable {
         editStack.remove(editIndex);
         editIndex-=1;
     }
-    private void handleRemove(Edit edit,RandomAccessFile buffer){
+    private void handleRemove(Edit edit,RandomAccessFile buffer,RandomAccessFile removeStack){
         byte[] removeSequence = new byte[edit.length];
         try {
-            buffer.seek(buffer.length()-edit.length);
-            buffer.read(removeSequence);
+            removeStack.seek(0);
+            removeStack.read(removeSequence);
             buffer.seek(buffer.length());
             buffer.write(removeSequence);
         } catch (IOException ex) {
@@ -43,48 +43,51 @@ public class Edits implements Serializable {
         }
     }
 
-    public PieceTable undo(PieceTable sequence, RandomAccessFile buffer){
+    public PieceTable undo(PieceTable sequence, RandomAccessFile buffer,RandomAccessFile removeStack){
         if(editIndex>=0){
             currentEdit = editStack.get(editIndex);
-            System.out.println("edit length = "+ currentEdit.length+ " offset = "+ currentEdit.offset+" type = "+ currentEdit.editType);
             switch(currentEdit.editType)
             {
                 case "addition":
-                    sequence.position-=currentEdit.length;
+                    try {
+                        removeStack.setLength(0);
+                        removeStack.seek(0);
+                        removeStack.write(sequence.find(currentEdit.offset,currentEdit.length,buffer));
+                    } catch (IOException ex) { }
                     sequence.remove(currentEdit.offset,currentEdit.length);
                     break;
                 case "remove":
-                    handleRemove(currentEdit,buffer);
-                    sequence.position=sequence.byte_length+currentEdit.length-1;
-                    sequence.add(currentEdit.length,currentEdit.offset);
-                    sequence.position-=currentEdit.length;
+                    handleRemove(currentEdit,buffer,removeStack);
+                    sequence.add(currentEdit.length,currentEdit.offset,buffer);
                     break;
             }
             redoStack.add(currentEdit);
             redoIndex+=1;
             pop();
+        }else{
+            System.out.println("At initial state");
         }
         return sequence;
     }
+
     public PieceTable redo(PieceTable sequence, RandomAccessFile buffer){
         System.out.println("redoIndex="+redoIndex);
         printRedo();
         if(redoIndex>=0){
             currentRedo = redoStack.get(redoIndex);
-            System.out.println("edit length = "+ currentRedo.length+ " offset = "+ currentRedo.offset+" type = "+ currentRedo.editType);
             switch(currentRedo.editType){
                 case "addition":
-                    System.out.println("redoing an addition");
-                    sequence.add(currentRedo.length,currentRedo.offset);
+                    sequence.add(currentRedo.length,currentRedo.offset,buffer);
                     break;
                 case "remove":
-                    sequence.position-=currentEdit.length;
                     sequence.remove(currentRedo.offset, currentRedo.length);
                     break;
             }
             push(currentRedo);
             redoStack.remove(redoIndex);
             redoIndex-=1;
+        }else{
+            System.out.println("At latest state");
         }
         return sequence;
     }
@@ -101,5 +104,18 @@ public class Edits implements Serializable {
         for(Edit edit: redoStack){
             System.out.println("editType: "+edit.editType+", editOffset: "+edit.offset+", editLength: "+edit.length);
         }
+    }
+    public void emptyRedoStack(){
+        redoStack=new ArrayList<>();
+        redoIndex = -1;
+    }
+
+    public void emptyUndoStack() {
+        editStack = new ArrayList<>();
+        editIndex = -1;
+    }
+    public void emptyEdits() {
+        emptyUndoStack();
+        emptyRedoStack();
     }
 }

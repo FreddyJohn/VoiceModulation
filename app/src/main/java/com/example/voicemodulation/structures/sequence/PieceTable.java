@@ -72,16 +72,22 @@ public class PieceTable implements Serializable{
         byte_length = length;
         pieces.add(new Piece(false,offset,length));
     }
-    public PieceTable add(int length,int index){
+    public PieceTable add(int length,int index,RandomAccessFile buffer){
         if (length==0){
             return this;
         }
+
         Pair pair = get_pieces_and_offset(index);
         int piece_index = (int) pair.first;
         long piece_offset= (long) pair.second;
         Piece curr_piece = pieces.get(piece_index);
 
-        this.position+=length;
+        try {
+            position = buffer.length();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //this.position += length;
         long added_offset = this.position - length;
         byte_length += length;
 
@@ -99,6 +105,7 @@ public class PieceTable implements Serializable{
         pieces = splice(piece_index,1,insert_pieces);
         return this;
     }
+
     public byte[] get_text(RandomAccessFile _edits){//, RandomAccessFile _origPiece){
         ByteBuffer doc = ByteBuffer.allocate(byte_length);
         for(Piece piece: pieces) {

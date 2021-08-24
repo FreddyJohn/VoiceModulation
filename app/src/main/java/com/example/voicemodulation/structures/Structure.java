@@ -9,14 +9,22 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+/*
+    TODO refactor Structure
+        1.) add member variables for BOTH the audio and bitmap PieceTable
+        2.) in each wrapper for the dynamic set operations include code to add to each representation
+            by using a new parameter BytePoints
+
+ */
 
 public class Structure {
     public Persist<PieceTable> pieceTablePersist;
     public Persist<Edits> editsPersist;
-    private String originalPath;
+    private String removeStackPath;
+    private String editsStackPath;
     private String objectPath;
     private String editPath;
-    private RandomAccessFile originalPiece;
+    private RandomAccessFile removeStack;
     private RandomAccessFile editsStack;
     private RandomAccessFile editsBuffer;
     private PieceTable pieceTable;
@@ -24,7 +32,8 @@ public class Structure {
     private Edits edits;
 
     public Structure(String oPath, String ePath, String origPath, String editsPath) {
-        this.originalPath = origPath;
+        this.removeStackPath = origPath;
+        this.editsStackPath = editsPath;
         this.objectPath = oPath;
         this.editPath = ePath;
         this.pieceTablePersist = new Persist<>();
@@ -33,10 +42,10 @@ public class Structure {
         editsPersist.setOutputFile(editsPath);
         try {
 
-            originalPiece = new RandomAccessFile(originalPath,"rw");
+            removeStack = new RandomAccessFile(removeStackPath,"rw");
             editsBuffer = new RandomAccessFile(editPath, "rw");
-            editsStack = new RandomAccessFile(editsPath,"rw");
-            pieceTable = originalPiece.length()!=0 || editsBuffer.length()!=0 ? pieceTablePersist.deserialize() : pieceTable;
+            editsStack = new RandomAccessFile(editsStackPath,"rw");
+            pieceTable = removeStack.length()!=0 || editsBuffer.length()!=0 ? pieceTablePersist.deserialize() : pieceTable;
             byte_length = pieceTable!=null ? pieceTable.byte_length : 0;
             edits = editsStack.length()!=0 ? editsPersist.deserialize() : edits;
 
@@ -44,33 +53,23 @@ public class Structure {
             Logger.getLogger(PieceTable.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    /*
+
     public void add_original(int length) {
         edits = new Edits();
         pieceTable = new PieceTable();
-        edits.pushEdit(new Edit(length, 0,"addition"));
-        pieceTable.add_original(length);
-        byte_length = pieceTable.byte_length;
-        pieceTablePersist.serialize(pieceTable);
-        editsPersist.serialize(edits);
+        //edits.pushEdit(new Edit(0, 0,"addition"));
+        pieceTable.add_original(0,0); //Recall that based on the encoding we cannot have x offset
+        pieceTablePersist.serialize(pieceTable);     //  an offset of one in any 16bit sequence absolutely ruins decoding
+        editsPersist.serialize(edits);               //  so if we go down this route we would have to change this x based on selected encoding
+        add(length,0);
     }
-     */
-    public void add_original(int length) {
-        edits = new Edits();
-        pieceTable = new PieceTable();
-        edits.pushEdit(new Edit(0, 0,"addition"));
-        pieceTable.add_original(0,1);
-        pieceTablePersist.serialize(pieceTable);
-        editsPersist.serialize(edits);
-        //pieceTable.print_pieces();
-        add(length,1);
-    }
+
     public Structure add(int length, int index) {
-        //updatePosition();
+        edits.emptyEdits();
         edits.pushEdit(new Edit(length, index,"addition"));
         //pieceTable = pieceTablePersist.deserialize();
         pieceTable.print_pieces();
-        pieceTable.add(length,index);//,editsBuffer);
+        pieceTable.add(length,index,editsBuffer);
         byte_length = pieceTable.byte_length;
         pieceTablePersist.serialize(pieceTable);
         editsPersist.serialize(edits);
@@ -87,7 +86,12 @@ public class Structure {
     }
 
     public Structure remove(long index, long length) {
-        //updatePosition();
+        edits.emptyEdits();
+        try {
+            removeStack.setLength(0);
+            removeStack.seek(0);
+            removeStack.write(find(index,length));
+        } catch (IOException ex) { }
         edits.pushEdit(new Edit((int)length,(int)index,"remove"));
         pieceTable = pieceTablePersist.deserialize();
         pieceTable.remove(index,length);
@@ -95,14 +99,6 @@ public class Structure {
         pieceTablePersist.serialize(pieceTable);
         editsPersist.serialize(edits);
         return this;
-    }
-
-    private void updatePosition() {
-        try {
-            pieceTable.position = editsBuffer.length();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public void printPieces() {
@@ -117,7 +113,7 @@ public class Structure {
     public void undo(){
         pieceTable = pieceTablePersist.deserialize();
         edits = editsPersist.deserialize();
-        pieceTable = edits.undo(pieceTable, editsBuffer);
+        pieceTable = edits.undo(pieceTable, editsBuffer, removeStack);
         byte_length = pieceTable.byte_length;
         pieceTablePersist.serialize(pieceTable);
         editsPersist.serialize(edits);

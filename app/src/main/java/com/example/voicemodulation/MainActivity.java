@@ -183,6 +183,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return new Pair<>(0, audioPieceTable.byte_length);
     }
 
+    /*
+    public static BytePoints getSelectionPoints() {
+        return graph.getPoints();
+    }
+
+     */
+
+
     public static void addThread(Thread thread) {
         threadList.add(thread);
     }
@@ -368,11 +376,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 case R.id.play_recording:
                     record.setPieceTable(audioPieceTable.getMostRecent());
                     new Thread(() -> {
-                        Pair<Integer, Integer> pair;
+                        Pair<Integer, Integer> points;
                         try {
-                            pair = getSelectionPoints();
+                            points = getSelectionPoints();
                             //System.out.println("start="+pair.first+" stop="+pair.second);
-                            record.play_recording(pair.first, pair.second);
+                            record.play_recording(points.first,points.second);
                         } catch (NullPointerException e) {
                             record.play_recording(0, audioPieceTable.byte_length);
                         }
@@ -389,7 +397,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 case R.id.projects:
                     displayProjectList(v);
                     break;
-                /*
+
                 case R.id.undo:
                     System.out.println("undo pressed");
 
@@ -401,12 +409,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     System.out.println("bitmap pieces");
                     bitmapPieceTable.printPieces();
 
-                    System.out.println("in MainActivity undo pressed and bitmap byte length is = "+ bitmapPieceTable.byte_length);
-                    //graph.editable = null;
-                    //graph.graphState = false;
-                    //graph.invalidate();
-
-                    //graph.graphState = false;
 
                     graph.populateProject();
                     break;
@@ -421,16 +423,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     System.out.println("bitmap pieces");
                     bitmapPieceTable.printPieces();
 
-                    //graph.invalidate();
-
-                    //graph.editable = null;
-                    //graph.graphState = false;
-                    //graph.invalidate();
-
                     graph.populateProject();
 
                     break;
-                    */
+
 
 
             }

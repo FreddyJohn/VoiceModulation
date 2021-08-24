@@ -17,6 +17,7 @@ import com.example.voicemodulation.signal.Modulation;
 import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.graph.AudioDisplay;
 import com.example.voicemodulation.structures.Structure;
+import com.example.voicemodulation.util.FileUtil;
 
 import java.util.LinkedList;
 
@@ -90,6 +91,18 @@ public class ModulateControls extends LinearLayout{
             controller.setParam(title[i],maxes[i],progress[i]);
             controllers.add(controller);
             addView(controller); }
+        play.setOnLongClickListener(v -> {
+            Thread thread = new Thread() {
+                @Override
+                public void run() {
+                    position = MainActivity.getSelectionPoints();
+                    method.modulate(getModulateParameters(), project, position, pieceTable);
+                    FileUtil.writeModulation(project,pieceTable,position);
+                }
+            };
+            thread.start();
+            return false;
+        });
         play.setOnClickListener(v -> {
             Thread thread = new Thread() {
                 private RecordLogic recordLogic;
@@ -97,6 +110,7 @@ public class ModulateControls extends LinearLayout{
                 public void run() {
                     recordLogic = new RecordLogic();
                     position = MainActivity.getSelectionPoints();
+                    //position = new Pair<>(bytePoints.audio_start,bytePoints.audio_stop);
                     recordLogic.setPieceTable(null);
                     //recordLogic.setFileData(creation, creation.projectPaths.modulation);
                     recordLogic.setFileData(project.audioData, project.paths.modulation);
@@ -127,6 +141,7 @@ public class ModulateControls extends LinearLayout{
                     MainActivity.addThread(thread)); 
             thread.start();
         });
+
         /*
         play.setOnClickListener(v -> new Thread(() -> {
             ((Activity) context).runOnUiThread(() -> {

@@ -1,13 +1,20 @@
 package com.example.voicemodulation.util;
 
 import android.content.Context;
+import android.support.v4.app.INotificationSideChannel;
+import android.util.Pair;
 
+import com.example.voicemodulation.audio.AudioConnect;
 import com.example.voicemodulation.database.project.Paths;
+import com.example.voicemodulation.database.project.Project;
+import com.example.voicemodulation.structures.Structure;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class FileUtil {
 
@@ -44,5 +51,47 @@ public class FileUtil {
         projectPaths.audio_edits = list.get(8);
         projectPaths.uniqueDir = list.get(9);
         return projectPaths;
+    }
+    public static void writeModulation(Project project,Structure structure, Pair<Integer,Integer> bytePoints){
+        /*
+            TODO saving modulations to master file
+                1.) perform the modulation on a selected span
+                2.) a.) retrieve the modulated audio data from project.paths.modulation
+                    b.) retrieve the bitmap data from the selected span
+                3.) write the output of (a) and (b) to their respective locations using project.paths.
+         */
+
+        AudioConnect.IO_RAF audioConnect = new AudioConnect.IO_RAF(project.paths.audio);
+        RandomAccessFile audioFile = audioConnect.getWriteObject();
+
+        AudioConnect.IO_RAF funky = new AudioConnect.IO_RAF(project.paths.modulation);
+        RandomAccessFile modulationFile = funky.getReadObject();
+
+        byte[] bytes = read(modulationFile);
+        structure.remove(bytePoints.first,bytePoints.second-bytePoints.first);
+        write(bytes,audioFile);
+        structure.add(bytePoints.second-bytePoints.first,bytePoints.first);
+    }
+
+    private static void write(byte[] read, RandomAccessFile audioFile) {
+        try {
+            audioFile.seek(audioFile.length());
+            audioFile.write(read);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private static byte[] read(RandomAccessFile modulationFile) {
+        byte[] modulatedBytes = null;
+        try {
+            modulatedBytes = new byte[(int) modulationFile.length()];
+            modulationFile.seek(0);
+            modulationFile.read(modulatedBytes);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return modulatedBytes;
     }
 }

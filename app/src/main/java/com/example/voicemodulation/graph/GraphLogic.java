@@ -83,7 +83,9 @@ public class GraphLogic extends View {
             float x = roundToNearestMultiple(evt.getX(), pixel_density);
             float y = roundToNearestMultiple(evt.getY(), pixel_density);
             points = new BytePoints((int) columnStart, (int) columnStop, (int) (columnScreenStartPosition +x));
+
             switch (evt.getAction()) {
+
                 case MotionEvent.ACTION_DOWN:
                     editable.action_down(x, y);
                     performClick();
@@ -210,22 +212,6 @@ public class GraphLogic extends View {
         this.camus = groovy.getWriteObject();
 
     }
-    public void setOriginalPaths(Paths projectPaths){
-        this.projectPaths = projectPaths;
-        IO_RAF funky = new IO_RAF(projectPaths.audio_original);
-        this.hendrix = funky.getWriteObject();
-        IO_RAF groovy = new IO_RAF(projectPaths.bitmap_original);
-        this.camus = groovy.getWriteObject();
-
-    }
-    private void closeFiles() {
-        try {
-            hendrix.close();
-            camus.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     private byte[] getRecentBuffers(long file_position) {
         try {
@@ -248,7 +234,17 @@ public class GraphLogic extends View {
         this.file_length = length;
         return buffer;
     }
+    /*
+    public BytePoints getPoints(){
+         if(points!=null){
+             return points;
+         }
+        return new BytePoints( 0, (int) graph_pos,
+                0,buffer_size,pixel_density,
+                audioPieceTable.byte_length,drawable.bitmap.getWidth());
+    }
 
+     */
 
     public class BytePoints {
         public int audio_start;
@@ -267,6 +263,8 @@ public class GraphLogic extends View {
             this.bitmap_start = (start * drawable.bitmap.getWidth() * 4);
         }
     }
+
+
     public int roundToNearestMultiple(float num, float multiple) {
         return (int) (multiple*(Math.ceil(Math.abs(num/multiple))));
     }
@@ -428,7 +426,7 @@ public class GraphLogic extends View {
             }
             //else{
             //    editable_bitmap.recycle();
-            //}
+
         }
 
         private void action_down(float x, float y) {
