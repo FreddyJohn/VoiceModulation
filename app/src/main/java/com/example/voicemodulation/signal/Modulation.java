@@ -256,6 +256,17 @@ public class Modulation {
             writeToFile(result,data);
         }
     }
+    public static class increaseAmplitude implements modulation{
+        @Override
+        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
+            double amplitude = _params.get(0);
+            short[] carrier_wave = readFromFile(position,pieceTable);
+            for (int i = 0; i < carrier_wave.length; i++) {
+                carrier_wave[i]= (short) (amplitude*carrier_wave[i]);
+            }
+            writeToFile(carrier_wave,data);
+        }
+    }
 
 }
 

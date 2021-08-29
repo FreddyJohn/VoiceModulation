@@ -11,4 +11,6 @@ public class Paths {
     public String uniqueDir;
     public String audio_edits;
     public String bitmap_edits;
+    public String bitmap_remove_stack;
+    public String audio_remove_stack;
 }

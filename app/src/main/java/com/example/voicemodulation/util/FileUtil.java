@@ -49,7 +49,9 @@ public class FileUtil {
         projectPaths.modulation = list.get(6);
         projectPaths.bitmap_edits = list.get(7);
         projectPaths.audio_edits = list.get(8);
-        projectPaths.uniqueDir = list.get(9);
+        projectPaths.bitmap_remove_stack = list.get(9);
+        projectPaths.audio_remove_stack = list.get(10);
+        projectPaths.uniqueDir = list.get(11);
         return projectPaths;
     }
     public static void writeModulation(Project project,Structure structure, Pair<Integer,Integer> bytePoints){

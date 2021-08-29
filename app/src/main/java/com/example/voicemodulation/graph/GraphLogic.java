@@ -83,9 +83,7 @@ public class GraphLogic extends View {
             float x = roundToNearestMultiple(evt.getX(), pixel_density);
             float y = roundToNearestMultiple(evt.getY(), pixel_density);
             points = new BytePoints((int) columnStart, (int) columnStop, (int) (columnScreenStartPosition +x));
-
             switch (evt.getAction()) {
-
                 case MotionEvent.ACTION_DOWN:
                     editable.action_down(x, y);
                     performClick();
@@ -155,7 +153,6 @@ public class GraphLogic extends View {
                 graph_pos = (int) (view_width - pixel_density * (10 + columns_to_write)) + pixel_density;
             }
         }
-
          */
         this.graphState = b;
     }
@@ -165,6 +162,11 @@ public class GraphLogic extends View {
         this.graphState = state;
         editable = null;
         scrollTo(0,0);
+        try {
+            file_length = hendrix.length();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         if (!graphState){
             int audio_file_length = 0;
             int bitmap_file_length = 0;
@@ -175,15 +177,16 @@ public class GraphLogic extends View {
                 e.printStackTrace();
             }
             if (audioPieceTable.byte_length == 0) {
-                System.out.println("audiofilelength="+audio_file_length);
+                System.out.println("audio file length="+audio_file_length);
                 audioPieceTable.add_original(audio_file_length);
                 bitmapPieceTable.add_original(bitmap_file_length);
-                //closeFiles();
-                //IO_RAF funky = new IO_RAF(projectPaths.audio);
-                //hendrix = funky.getWriteObject();
-                //IO_RAF groovy = new IO_RAF(projectPaths.bitmap);
-                //camus = groovy.getWriteObject();
-                //file_length=0;
+                closeFiles();
+                IO_RAF funky = new IO_RAF(projectPaths.audio);
+                hendrix = funky.getWriteObject();
+                IO_RAF groovy = new IO_RAF(projectPaths.bitmap);
+                camus = groovy.getWriteObject();
+                file_length=0;
+
             } else {
                 //audioPieceTable.print_pieces();
                 audioPieceTable.add(record_session_length, audioPieceTable.byte_length);
@@ -210,7 +213,22 @@ public class GraphLogic extends View {
         this.hendrix = funky.getWriteObject();
         IO_RAF groovy = new IO_RAF(projectPaths.bitmap);
         this.camus = groovy.getWriteObject();
+    }
 
+    public void setOriginalPaths(Paths projectPaths){
+        this.projectPaths = projectPaths;
+        IO_RAF funky = new IO_RAF(projectPaths.audio_original);
+        this.hendrix = funky.getWriteObject();
+        IO_RAF groovy = new IO_RAF(projectPaths.bitmap_original);
+        this.camus = groovy.getWriteObject();
+    }
+    private void closeFiles() {
+        try {
+            hendrix.close();
+            camus.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private byte[] getRecentBuffers(long file_position) {
@@ -234,17 +252,6 @@ public class GraphLogic extends View {
         this.file_length = length;
         return buffer;
     }
-    /*
-    public BytePoints getPoints(){
-         if(points!=null){
-             return points;
-         }
-        return new BytePoints( 0, (int) graph_pos,
-                0,buffer_size,pixel_density,
-                audioPieceTable.byte_length,drawable.bitmap.getWidth());
-    }
-
-     */
 
     public class BytePoints {
         public int audio_start;
@@ -302,17 +309,6 @@ public class GraphLogic extends View {
             _canvas.drawBitmap(bitmap, 0, 0, paint);
             startGraphing();
         }
-
-        /*
-        TODO instead of augmenting the data structure we are going to augment our code
-            we would like this situation for our piece table
-            |-----|-----|-----|----|---|--|-|
-            where all pieces may have lengths in the domain 0 < piece.length < pieceTable.maximum
-            and where pieceTable.maximum = is a function of memory and CPU stats
-            drawable.someMethod() should check if the next buffer will be over pieceTable.maximum starting from the the beginning of the current record session
-            if this is the case then we should add
-                the annoying case is when the user is still writing the original piece
-         */
 
         private void startGraphing() {
             byte[] buffers = getRecentBuffers(file_length);

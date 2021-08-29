@@ -1,12 +1,8 @@
 package com.example.voicemodulation.structures.stack;
-import com.example.voicemodulation.structures.Structure;
-import com.example.voicemodulation.structures.sequence.Piece;
 import com.example.voicemodulation.structures.sequence.PieceTable;
-
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,17 +39,19 @@ public class Edits implements Serializable {
         }
     }
 
-    public PieceTable undo(PieceTable sequence, RandomAccessFile buffer,RandomAccessFile removeStack){
+    public PieceTable undo(PieceTable sequence, RandomAccessFile buffer,RandomAccessFile originalBuffer,RandomAccessFile removeStack){
         if(editIndex>=0){
             currentEdit = editStack.get(editIndex);
             switch(currentEdit.editType)
             {
                 case "addition":
+                    /*
                     try {
                         removeStack.setLength(0);
                         removeStack.seek(0);
-                        removeStack.write(sequence.find(currentEdit.offset,currentEdit.length,buffer));
+                        removeStack.write(sequence.find(currentEdit.offset,currentEdit.length,buffer,originalBuffer));
                     } catch (IOException ex) { }
+                    */
                     sequence.remove(currentEdit.offset,currentEdit.length);
                     break;
                 case "remove":

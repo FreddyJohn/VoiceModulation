@@ -80,7 +80,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int record_gravity = Gravity.NO_GRAVITY;
     private ImageButton play_button, stop_button,
             record_button, pause_button;
-           // undo_button, redo_button;
     private TextView time;
     private static AudioDisplay display;
     private static GraphLogic graph;
@@ -122,9 +121,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         sharedPref = getPreferences(Context.MODE_PRIVATE);
         editor = sharedPref.edit();
-
-        //undo_button = findViewById(R.id.undo);
-        //redo_button = findViewById(R.id.redo);
 
         record_controls = findViewById(R.id.record_controls);
         record_button = findViewById(R.id.start_recording);
@@ -332,23 +328,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     time.setVisibility(View.GONE);
                     display.setVisibility(View.VISIBLE);
                     display.setEncoding(Short.MAX_VALUE * 2 + 1);
-                    //if (audioPieceTable.byte_length == 0) {
-                        //record.setFileObject(audioData, projectPaths.audio_original);
-                        //display.setGraphState(true, record.buffer_size, projectPaths.audio_original, 1);
-                    //} else {
-                    record.setFileObject(audioData, projectPaths.audio);
-                    display.setGraphState(true, record.buffer_size, projectPaths.audio, 1);
-                    //}
+                    if (audioPieceTable.byte_length == 0) {
+                        record.setFileObject(audioData, projectPaths.audio_original);
+                        display.setGraphState(true, record.buffer_size, projectPaths.audio_original, 1);
+                    } else {
+                        record.setFileObject(audioData, projectPaths.audio);
+                        display.setGraphState(true, record.buffer_size, projectPaths.audio, 1);
+                    }
+
                     file_state = false;
                     record.setFileData(project.audioData, project.paths.modulation);
                     record.setRecordingState(false);
                     record.startRecording();
-                    //TODO add the buffer size to the database'
                     userDao.insertBufferSize(project,record.buffer_size);
                     graph.setGraphState(record.buffer_size, true);
                     record_button.setVisibility(View.INVISIBLE);
                     pause_button.setVisibility(View.VISIBLE);
                     break;
+
                 case R.id.pause_recording:
                     long length = audioPieceTable.byte_length;
                     record.setRecordingState(true);
@@ -379,7 +376,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Pair<Integer, Integer> points;
                         try {
                             points = getSelectionPoints();
-                            //System.out.println("start="+pair.first+" stop="+pair.second);
                             record.play_recording(points.first,points.second);
                         } catch (NullPointerException e) {
                             record.play_recording(0, audioPieceTable.byte_length);
@@ -408,7 +404,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     bitmapPieceTable.printEditStack();
                     System.out.println("bitmap pieces");
                     bitmapPieceTable.printPieces();
-
 
                     graph.populateProject();
                     break;
@@ -446,15 +441,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     add("rec.pcm");
                     add("mod.pcm");
                     add("bitmap_edits_stack");
-                    add("audio_edits_stack");}});
+                    add("audio_edits_stack");
+                    add("bitmap_remove_stack");
+                    add("audio_remove_stack");}});
+
+
         bitmapPieceTable = new Structure(projectPaths.bitmap_table, projectPaths.bitmap,
-                projectPaths.bitmap_original,projectPaths.bitmap_edits);
+                projectPaths.bitmap_original,projectPaths.bitmap_edits,projectPaths.bitmap_remove_stack);
         audioPieceTable = new Structure(projectPaths.audio_table, projectPaths.audio,
-                projectPaths.audio_original,projectPaths.audio_edits);
+                projectPaths.audio_original,projectPaths.audio_edits,projectPaths.audio_remove_stack);
+
         record = new RecordLogic();
         graph.setTables(bitmapPieceTable, audioPieceTable);
-        graph.setProjectPaths(projectPaths);
-        //graph.setOriginalPaths(projectPaths);
+        //graph.setProjectPaths(projectPaths);
+        graph.setOriginalPaths(projectPaths);
         project = new Project();
         project.paths = projectPaths;
         project.project_name = "Big Money "+ project.paths.uniqueDir;
@@ -470,9 +470,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     projectPaths = project.paths;
 
                     bitmapPieceTable = new Structure(projectPaths.bitmap_table, projectPaths.bitmap,
-                            projectPaths.bitmap_original,projectPaths.bitmap_edits);
+                            projectPaths.bitmap_original,projectPaths.bitmap_edits,projectPaths.bitmap_remove_stack);
                     audioPieceTable = new Structure(projectPaths.audio_table, projectPaths.audio,
-                            projectPaths.audio_original,projectPaths.audio_edits);
+                            projectPaths.audio_original,projectPaths.audio_edits,projectPaths.audio_remove_stack);
 
                     record = new RecordLogic();
                     nyquist = (audioData.sample_rate / 2) / 20;

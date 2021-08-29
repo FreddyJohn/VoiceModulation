@@ -91,7 +91,6 @@ public class PieceTable implements Serializable{
         long added_offset = this.position - length;
         byte_length += length;
 
-
         if (curr_piece.in_added && piece_offset == curr_piece.offset + (curr_piece.length == added_offset ? 1:0)){
             curr_piece.length += length;
             return this;
@@ -106,13 +105,13 @@ public class PieceTable implements Serializable{
         return this;
     }
 
-    public byte[] get_text(RandomAccessFile _edits){//, RandomAccessFile _origPiece){
+    public byte[] get_text(RandomAccessFile _edits, RandomAccessFile _origPiece){
         ByteBuffer doc = ByteBuffer.allocate(byte_length);
         for(Piece piece: pieces) {
             if (piece.in_added){
                 doc.put(get_chunk(_edits, piece.offset, piece.offset + piece.length));
-                //}else{
-                //    doc.put(get_chunk(_origPiece, piece.offset, piece.offset + piece.length));
+            }else{
+                doc.put(get_chunk(_origPiece, piece.offset, piece.offset + piece.length));
             }
         }
         return doc.array();
@@ -128,9 +127,9 @@ public class PieceTable implements Serializable{
         }
         return bytes;
     }
-    public byte[] find(long index,long length,RandomAccessFile _edits){//,RandomAccessFile origPiece){
+    public byte[] find(long index,long length,RandomAccessFile _edits,RandomAccessFile origPiece){
         if(length<0){
-            return find(index+length, -length, _edits);//, origPiece);
+            return find(index+length, -length, _edits, origPiece);
         }
         ByteBuffer doc = ByteBuffer.allocate((int) length);
         Pair start_pair = get_pieces_and_offset(index);
@@ -141,8 +140,7 @@ public class PieceTable implements Serializable{
         long stop_piece_offset=(long)stop_pair.second;
 
         Piece start_piece = pieces.get(start_piece_index);
-        //RandomAccessFile buffer = start_piece.in_added ? _edits : origPiece;
-        RandomAccessFile buffer = _edits;
+        RandomAccessFile buffer = start_piece.in_added ? _edits : origPiece;
         if(start_piece_index==stop_piece_index){
             doc.put(get_chunk(buffer,start_piece_offset,start_piece_offset + length));
         }
@@ -150,7 +148,7 @@ public class PieceTable implements Serializable{
             doc.put(get_chunk(buffer,start_piece_offset,start_piece.offset + start_piece.length));
             for(int i =start_piece_index+1;i<stop_piece_index+1;i++){
                 Piece cur_piece=pieces.get(i);
-                //buffer = cur_piece.in_added ? _edits : origPiece;
+                buffer = cur_piece.in_added ? _edits : origPiece;
                 if (i==stop_piece_index){
                     doc.put(get_chunk(buffer,cur_piece.offset,stop_piece_offset));
                 }
