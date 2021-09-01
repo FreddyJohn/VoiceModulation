@@ -25,14 +25,14 @@
       android:pathData="m19.0624,13.6156c-0.7515,-0.7515 -0.7101,-1.8649 0.0993,-2.6742 0.8326,-0.8326 1.7423,-0.8326 2.575,0 0.8714,0.8714 0.7786,2.1638 -0.2098,2.9227 -0.597,0.4583 -1.8878,0.3282 -2.4644,-0.2485z"
       android:strokeLineJoin="bevel"
       android:strokeWidth="1.60149479"
-      android:fillColor="#ff0000"
+      android:fillColor="#cccccc"
       android:strokeColor="#00000000"
       android:strokeLineCap="round"/>
   <path
       android:pathData="m29.2318,13.6156c-0.7854,-0.7854 -0.7259,-2.0233 0.1318,-2.745 0.3585,-0.3017 0.8307,-0.5485 1.0494,-0.5485 1.0645,0 2.1124,1.0377 2.1124,2.0919 0,0.2299 -0.2468,0.7113 -0.5485,1.0698 -0.7217,0.8577 -1.9597,0.9172 -2.745,0.1318z"
       android:strokeLineJoin="bevel"
       android:strokeWidth="1.60149479"
-      android:fillColor="#ff0000"
+      android:fillColor="#cccccc"
       android:strokeColor="#00000000"
       android:strokeLineCap="round"/>
   <path

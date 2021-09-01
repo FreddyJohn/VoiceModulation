@@ -45,27 +45,34 @@ public class Modulation {
         }
     }
     //TODO acting strange do something about it, review old python code for echo
+
+
+
     public static class echo implements modulation{
         @Override
         public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
             double num_signals = _params.get(0);
             double delay = _params.get(1);
             short[] carrier_wave = readFromFile(position,pieceTable);
-            //short[] carrier_wave = AudioCon.Data.getShorts(data.getNewRecordFile());
-            short[] result = new short[carrier_wave.length];
+            double[] result = new double[carrier_wave.length];
             for (int i = 0; i < carrier_wave.length; i++) {
-                try {
-                    double echo_sample = 0;
-                    for (int signal = 0; signal < num_signals + 1; signal++) {
-                        echo_sample += .1*carrier_wave[(int) (i - Math.pow(delay, signal))];
-                        //echo_sample += .1*carrier_wave[(int) (i - Math.pow(Math.sin(4400 * i),signal))];
+                double echo_sample = 0;
+                double maximumDelay = i - Math.pow(delay,num_signals);
+                if(maximumDelay>0 & maximumDelay<carrier_wave.length) {
+                    for (int signal = 0; signal < num_signals; signal++) {
+                        echo_sample += carrier_wave[(int) (i - Math.pow(delay, signal))];
                     }
-                    result[i] = (short) echo_sample;
-                } catch (IndexOutOfBoundsException e) {
-                    result[i] =  carrier_wave[i];
                 }
+                else{
+                    echo_sample = carrier_wave[i];
+                }
+                result[i] = echo_sample;
             }
-            writeToFile(result,data);
+            double norm = 32767.0/Generate.getAbsoluteMax(result);
+            for(int i = 0; i < result.length; i++){
+                carrier_wave[i] = (short) (norm*result[i]);
+            }
+            writeToFile(carrier_wave,data);
         }
     }
     public static class quantized implements modulation{
@@ -185,12 +192,12 @@ public class Modulation {
             short[] carrier_wave = readFromFile(position,pieceTable);
             short[] result = new short[carrier_wave.length];
             for (int i = 0; i < carrier_wave.length; i++) {
+                double yx=Generate.triangle_t(frequency * i);
                 try {
-                    double yx=Generate.triangle_t(frequency * i);
-                    double flanger_sample = n * carrier_wave[i] + carrier_wave[i - (int) ((max - min) * (.5 * yx + .5) + min)];
+                    double flanger_sample = carrier_wave[i] + carrier_wave[i - (int) ((max - min) * (.5 * yx + .5) + min)];
                     result[i] = (short) flanger_sample;
                 } catch (IndexOutOfBoundsException e) {
-                    result[i] = (short) (n * carrier_wave[i]);
+                    result[i] = (short) (carrier_wave[i] +yx);
                 }
             }
             writeToFile(result,data);

@@ -155,7 +155,7 @@
             android:id="@+id/modulations"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:visibility="invisible">
+            android:visibility="visible">
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -163,18 +163,17 @@
 
                 <ImageView
                     android:id="@+id/low_pass"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
                     android:layout_weight="1"
                     android:onClick="onClick"
                     app:srcCompat="@drawable/flangersine" />
 
                 <ImageButton
                     android:id="@+id/backwards"
-                    android:layout_width="50dp"
+                    android:layout_width="52dp"
                     android:layout_height="50dp"
                     android:layout_weight="1"
-                    android:hapticFeedbackEnabled="true"
                     android:onClick="onClick"
                     android:scaleType="fitCenter"
                     app:srcCompat="@drawable/ic_backwards" />

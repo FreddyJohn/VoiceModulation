@@ -54,10 +54,8 @@ public class Generate {
 
     public static double[] triangle(int a, double p,double theta, int samples, int fps)
     {
-        int time = samples/fps;
-        double[] t = linspace(0, time, samples);
         double[] y = new double[samples];
-        for (int x = 0; x < t.length; x++) {
+        for (int x = 0; x < samples; x++) {
             y[x]= ((2*a)/Math.PI) * Math.asin(Math.sin((2*Math.PI*x)/p)+theta);
         }
         return y;
@@ -69,20 +67,16 @@ public class Generate {
     }
     public static double[] saw(int a, double p,double theta, int samples, int fps)
     {
-        int time = samples/fps;
-        double[] t = linspace(0, time, samples);
         double[] y = new double[samples];
-        for (int x = 0; x < t.length; x++) {
+        for (int x = 0; x < samples; x++) {
             y[x]= -((2*a)/Math.PI) * Math.atan(1/Math.tan((2*Math.PI*x)/p)+theta);
         }
         return y;
     }
     public static double[] square(int a, double f,double theta, int samples, int fps)
     {
-        int time = samples/fps;
-        double[] t = linspace(0, time, samples);
         double[] y = new double[samples];
-        for (int x = 0; x < t.length; x++) {
+        for (int x = 0; x < samples; x++) {
             y[x]= a*Math.signum(Math.sin(2*Math.PI*f*x+theta));
         }
         return y;
@@ -113,16 +107,14 @@ public class Generate {
         }
         return (max/65535)/1.7;
     }
-    public static short getAbsoluteMax(byte[] buffer){
-        short[] data= Convert.bytesToShorts(buffer);
-        short max=0;
+    public static double getAbsoluteMax(double[] data){
+        double max=0;
         for (int counter = 1; counter < data.length; counter++)
         {
-            int sample = Math.abs(data[counter]);
+            double sample = Math.abs(data[counter]);
             if (sample > Math.abs(max))
             {
                 max = data[counter];
-                //System.out.println(max);
             }
         }
         return max;

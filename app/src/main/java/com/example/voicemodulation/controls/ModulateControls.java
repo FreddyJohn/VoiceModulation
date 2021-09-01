@@ -11,7 +11,6 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 import com.example.voicemodulation.MainActivity;
 import com.example.voicemodulation.R;
-//import com.example.voicemodulation.project.AudioData;
 import com.example.voicemodulation.database.project.Project;
 import com.example.voicemodulation.signal.Modulation;
 import com.example.voicemodulation.audio.RecordLogic;
