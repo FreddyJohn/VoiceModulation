@@ -6,6 +6,7 @@ import com.example.voicemodulation.audio.AudioConnect;
 import com.example.voicemodulation.database.project.Project;
 import com.example.voicemodulation.audio.Generate;
 import com.example.voicemodulation.structures.Structure;
+import com.example.voicemodulation.structures.stack.Ring;
 import com.example.voicemodulation.util.Convert;
 
 import java.io.FileOutputStream;
@@ -80,18 +81,21 @@ public class Modulation {
         public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
             double C = _params.get(0);
             short[] carrier_wave = readFromFile(position,pieceTable);
-            //short[] carrier_wave = AudioCon.Data.getShorts(data.getNewRecordFile());
-            short[] result = new short[carrier_wave.length];
+            double[] result = new double[carrier_wave.length];
             for (int i=0; i<carrier_wave.length; i++) {
-                short x = carrier_wave[i];
+                double x = carrier_wave[i];
                 if (x>0 || x<0) {
-                    //TODO get normalization coefficient
-                    double sample = .1*(x/Math.abs(x))*C*Math.floor((Math.abs(x)/C)+.5);
-                    result[i]= (short) sample; }
+                    double sample = (x/Math.abs(x))*C*Math.floor((Math.abs(x)/C)+.5);
+                    result[i]= sample; }
                 else {
-                    result[i]=x; }
+                    result[i]=x;
+                }
             }
-            writeToFile(result,data);
+            double norm=32767.0/Generate.getAbsoluteMax(result);
+            for(int i=0; i<result.length; i++){
+                carrier_wave[i]= (short) (norm*result[i]);
+            }
+            writeToFile(carrier_wave,data);
         }
     }
     public static class phaser implements modulation{
@@ -163,23 +167,34 @@ public class Modulation {
     }
 
     public static class flanger implements modulation{
+
         @Override
         public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
-            double min = _params.get(0);
-            double max = _params.get(1);
-            double frequency = _params.get(2);
-            //short[] carrier_wave = AudioCon.Data.getShorts(data.getNewRecordFile());
+            double ampl = 2 * data.audioData.sample_rate / 1000;
+            double delay = Math.max(10*data.audioData.sample_rate/1000,ampl);
+            double freq = 2 * Math.PI * 10  / data.audioData.sample_rate;
+            double wet = .5;
+            int bufsiz = (int) (delay+ampl)+1;
+            Ring buf = new Ring(bufsiz);
             short[] carrier_wave = readFromFile(position,pieceTable);
-            short[] result = new short[carrier_wave.length];
-            for (int i = 0; i < carrier_wave.length; i++) {
-                try {
-                    double flanger_sample = n * carrier_wave[i] + carrier_wave[i - (int) ((max - min) * (.5 * Math.sin(frequency * i) + .5) + min)];
-                    result[i] = (short) flanger_sample;
-                } catch (IndexOutOfBoundsException e) {
-                    result[i] = (short) (n * carrier_wave[i]);
+            double[] result = new double[carrier_wave.length];
+            for(int i=0; i<carrier_wave.length; i++){
+                buf.enqueue(carrier_wave[i]);
+                double y;
+                if (i<bufsiz-1){
+                    y = carrier_wave[i];
+                }else{
+                    double lb = delay + ampl * Math.sin(i*freq);
+                    y = buf.loopback((int)lb);
+                    buf.dequeue();
                 }
+                result[i] = (1-wet) * carrier_wave[i] + wet*y;
             }
-            writeToFile(result,data);
+            double norm=32767.0/Generate.getAbsoluteMax(result);
+            for(int i=0; i<result.length; i++){
+                carrier_wave[i]= (short) (norm*result[i]);
+            }
+            writeToFile(carrier_wave,data);
         }
     }
     public static class flangerTriangle implements modulation{
@@ -228,7 +243,6 @@ public class Modulation {
         @Override
         public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
             double smooth = _params.get(0);
-            //short[] carrier_wave = AudioCon.Data.getShorts(data.getNewRecordFile());
             short[] carrier_wave = readFromFile(position,pieceTable);
             short[] result = new short[carrier_wave.length];
             double value = carrier_wave[0];
@@ -237,39 +251,49 @@ public class Modulation {
                 value +=(currentValue - value) /smooth;
                 result[i]= (short) value;
             }
-            writeToFile(result,data);
+            double norm = 32767.0/Generate.getAbsoluteMax(result);
+            for(int i = 0; i < result.length; i++){
+                carrier_wave[i] = (short) (norm * result[i]);
+            }
+            writeToFile(carrier_wave,data);
         }
     }
-    //TODO use the max calculated from every buffer that was written inside of GraphLogic
     public static class variableEcho implements modulation{
         @Override
         public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
             double num_signals = _params.get(0);
             double frequency = _params.get(1);
             short[] carrier_wave = readFromFile(position,pieceTable);
-            //short[] carrier_wave = AudioCon.Data.getShorts(data.getNewRecordFile());
-            short[] result = new short[carrier_wave.length];
+            double[] result = new double[carrier_wave.length];
             for (int i = 0; i < carrier_wave.length; i++) {
-                try {
-                    double echo_sample = 0;
-                    for (int signal = 0; signal < num_signals + 1; signal++) {
-                        echo_sample += .1 * carrier_wave[(int) (i - Math.pow(Math.sin(frequency * i),signal))];
+                double echo_sample = 0;
+                double base = Math.sin(frequency * i);
+                double maximumDelay = i - Math.pow(base,num_signals);
+                if(maximumDelay>0 & maximumDelay<carrier_wave.length) {
+                    for (int signal = 0; signal < num_signals; signal++) {
+                        echo_sample += carrier_wave[(int) (i - Math.pow(base,signal))];
                     }
-                    result[i] = (short) echo_sample;
-                } catch (IndexOutOfBoundsException e) {
-                    result[i] =  carrier_wave[i];
+                }  else{
+                    echo_sample = carrier_wave[i];
                 }
+                result[i] =  echo_sample;
             }
-            writeToFile(result,data);
+            double norm = 32767.0/Generate.getAbsoluteMax(result);
+            for(int i = 0; i < result.length; i++){
+                carrier_wave[i] = (short) (norm * result[i]);
+            }
+            writeToFile(carrier_wave,data);
         }
     }
-    public static class increaseAmplitude implements modulation{
+    public static class amplitude implements modulation{
         @Override
         public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable) {
             double amplitude = _params.get(0);
             short[] carrier_wave = readFromFile(position,pieceTable);
+            double norm = 32767.0/Generate.getAbsoluteMax(carrier_wave);
+            double norm_amp = norm/amplitude;
             for (int i = 0; i < carrier_wave.length; i++) {
-                carrier_wave[i]= (short) (amplitude*carrier_wave[i]);
+                carrier_wave[i]= (short) (norm*carrier_wave[i]);
             }
             writeToFile(carrier_wave,data);
         }

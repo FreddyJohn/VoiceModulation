@@ -155,19 +155,27 @@
             android:id="@+id/modulations"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:visibility="visible">
+            android:visibility="invisible">
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent">
 
-                <ImageView
+                <ImageButton
+                    android:id="@+id/volume"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:onClick="onClick"
+                    app:srcCompat="@drawable/ic_amp" />
+
+                <ImageButton
                     android:id="@+id/low_pass"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_weight="1"
                     android:onClick="onClick"
-                    app:srcCompat="@drawable/flangersine" />
+                    app:srcCompat="@drawable/ic_lowpass" />
 
                 <ImageButton
                     android:id="@+id/backwards"

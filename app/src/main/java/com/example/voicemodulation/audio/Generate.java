@@ -119,6 +119,18 @@ public class Generate {
         }
         return max;
     }
+    public static short getAbsoluteMax(short[] data){
+        short max=0;
+        for (int counter = 1; counter < data.length; counter++)
+        {
+            short sample = (short) Math.abs(data[counter]);
+            if (sample > Math.abs(max))
+            {
+                max = data[counter];
+            }
+        }
+        return max;
+    }
     public static byte[] wavHeader(
             long totalAudioLen, long totalDataLen, long sampleRate, int channels,byte RECORDER_BPP) {
         //byteRate=SampleRate * NumChannels * BitsPerSample/8

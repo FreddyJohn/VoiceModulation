@@ -306,10 +306,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     scrollView.removeAllViews();
                     Modulation.lowPass lowPass = new Modulation.lowPass();
                     Modulation.modulation LowPass = lowPass::modulate;
-                    ModulateControls low_pass_view = new ModulateControls(this, new String[]{"Smoothing"}, new int[]{25}, new double[]{5},
+                    ModulateControls low_pass_view = new ModulateControls(this, new String[]{"Smoothing"}, new int[]{10}, new double[]{20},
                             new String[]{" "}, project, LowPass, Gravity.CENTER,
                             "Low Pass Filter", flanger_progress, play_button, seek_n_loader, audioPieceTable);
                     scrollView.addView(low_pass_view);
+                    break;
+                case R.id.volume:
+                    scrollView.removeAllViews();
+                    Modulation.amplitude amp = new Modulation.amplitude();
+                    Modulation.modulation Amp = amp::modulate;
+                    ModulateControls amp_view = new ModulateControls(this, new String[]{"Volume"}, new int[]{20}, new double[]{5},
+                            new String[]{" "}, project, Amp, Gravity.CENTER,
+                            "Amplitude", flanger_progress, play_button, seek_n_loader, audioPieceTable);
+                    scrollView.addView(amp_view);
                     break;
                 case R.id.start_recording:
 
