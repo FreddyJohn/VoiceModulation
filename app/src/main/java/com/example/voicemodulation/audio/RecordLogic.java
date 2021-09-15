@@ -44,7 +44,7 @@ public class RecordLogic {
         this.ioRAF = new AudioConnect.IO_RAF(file_path);
         this.out = ioRAF.getWriteObject();
     }
-    public void setRecordingState(boolean state) {
+    public void isPaused(boolean state) {
         this.isPaused = state;
         this.out = ioRAF.getWriteObject();
         stopRecording();

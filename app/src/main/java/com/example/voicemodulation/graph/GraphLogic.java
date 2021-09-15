@@ -7,6 +7,7 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+
 import com.example.voicemodulation.database.project.Paths;
 import com.example.voicemodulation.audio.AudioConnect.IO_RAF;
 import com.example.voicemodulation.structures.Structure;
@@ -49,7 +50,6 @@ public class GraphLogic extends View {
     private float columnStop;
     private float columnStart;
 
-
     public GraphLogic(Context context) {
         super(context);
         init(context);
@@ -66,7 +66,6 @@ public class GraphLogic extends View {
     }
 
     public void init(Context context) {
-        setHorizontalScrollBarEnabled(true);
         pixel_density = (float) Math.ceil(Convert.numberToDp(context, 1));
         paint = new Paint();
         y_coordinate_axis = new Paint();
@@ -77,6 +76,7 @@ public class GraphLogic extends View {
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(pixel_density);
     }
+
     @Override
     public boolean onTouchEvent(MotionEvent evt) {
         if (editable != null) {
@@ -112,6 +112,7 @@ public class GraphLogic extends View {
         this.view_height = MeasureSpec.getSize(height);
         setMeasuredDimension(width, height);
     }
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -143,7 +144,10 @@ public class GraphLogic extends View {
     public void catchUp(boolean b) {
         /*
         if (count != audioPieceTable.byte_length) {
-            drawable.startGraphing();
+            byte[] buffers = getRecentBuffers(file_length);
+            columns_to_write = buffers.length / buffer_size != 0 ? buffers.length / buffer_size : 1;
+            //drawable.cut_off = (view_width - (pixel_density * columns_to_write+10));
+            drawable.startGraphing(buffers);
             bitmapPieceTable.add(columns_byte_length, bitmapPieceTable.byte_length);
             if (graph_pos >= view_width - pixel_density * (10 + columns_to_write)) {
                 int columns = columns_byte_length / drawable.column_bytes.length;
@@ -152,8 +156,8 @@ public class GraphLogic extends View {
                 drawable.bitmap.setPixels(drawable.pixelsMinusColumns, 0, drawable.bitmap.getWidth(), 0, 0, drawable.bitmap.getWidth(), (int) (drawable.bitmap.getHeight() - pixel_density * columns));
                 graph_pos = (int) (view_width - pixel_density * (10 + columns_to_write)) + pixel_density;
             }
-        }
-         */
+        }   */
+
         this.graphState = b;
     }
 
@@ -164,20 +168,24 @@ public class GraphLogic extends View {
         scrollTo(0,0);
         try {
             file_length = hendrix.length();
+            System.out.println("this is also somehow impossibly stupidly 0 " + file_length );
+
         } catch (IOException e) {
             e.printStackTrace();
         }
         if (!graphState){
+            T1_onScreen = false;
+            T2_onScreen = false;
             int audio_file_length = 0;
             int bitmap_file_length = 0;
             try{
                 audio_file_length = (int) hendrix.length();
+                System.out.println("this is also somehow impossibly stupidly 0 " + audio_file_length);
                 bitmap_file_length = (int) camus.length();
             } catch (IOException e) {
                 e.printStackTrace();
             }
             if (audioPieceTable.byte_length == 0) {
-                System.out.println("audio file length="+audio_file_length);
                 audioPieceTable.add_original(audio_file_length);
                 bitmapPieceTable.add_original(bitmap_file_length);
                 closeFiles();
@@ -188,20 +196,15 @@ public class GraphLogic extends View {
                 file_length=0;
 
             } else {
-                //audioPieceTable.print_pieces();
                 audioPieceTable.add(record_session_length, audioPieceTable.byte_length);
                 bitmapPieceTable.add(bitmap_session_length, bitmapPieceTable.byte_length);
-                System.out.println("bitmap edits Stack");
-                bitmapPieceTable.printEditStack();
-                System.out.println("bitmap pieces");
-                bitmapPieceTable.printPieces();
-
             }
             record_session_length = 0;
             bitmap_session_length = 0;
         }
-        postInvalidate();
+        invalidate();
     }
+
     public void setTables(Structure bitmapPieceTable, Structure audioPieceTable) {
         this.bitmapPieceTable = bitmapPieceTable;
         this.audioPieceTable = audioPieceTable;
@@ -222,6 +225,7 @@ public class GraphLogic extends View {
         IO_RAF groovy = new IO_RAF(projectPaths.bitmap_original);
         this.camus = groovy.getWriteObject();
     }
+
     private void closeFiles() {
         try {
             hendrix.close();
@@ -261,6 +265,7 @@ public class GraphLogic extends View {
         public int bitmap_insert;
         public int bitmap_start;
         public BytePoints(int start, int stop, int insert) {
+
             this.audio_start = (int) (start * buffer_size / pixel_density);
             this.audio_stop = (int) (stop * buffer_size / pixel_density);
             this.audio_length = audio_stop - audio_start;
@@ -268,13 +273,15 @@ public class GraphLogic extends View {
                     audioPieceTable.byte_length : (int) (insert * buffer_size / pixel_density);
             this.bitmap_insert = Math.min((insert * 4 * drawable.bitmap.getWidth()), bitmapPieceTable.byte_length);
             this.bitmap_start = (start * drawable.bitmap.getWidth() * 4);
+
+
         }
     }
-
 
     public int roundToNearestMultiple(float num, float multiple) {
         return (int) (multiple*(Math.ceil(Math.abs(num/multiple))));
     }
+
     public class Drawable {
         private  Canvas canvas;
         private float cut_off;
@@ -283,7 +290,7 @@ public class GraphLogic extends View {
         private final int[] column;
         private final float[] lines;
         private short[] cur_buffer;
-        private byte[] column_bytes;
+        public byte[] column_bytes;
         private int[] pixelsMinusColumns;
 
         private Drawable(int width, int height) {
@@ -299,24 +306,25 @@ public class GraphLogic extends View {
         }
 
         private void doGraphing(Canvas _canvas) {
-            cut_off = (view_width - pixel_density * (10 + columns_to_write));
+            byte[] buffers = getRecentBuffers(file_length);
+            columns_to_write = buffers.length / buffer_size != 0 ? buffers.length / buffer_size : 1;
+            cut_off = (view_width - (pixel_density * columns_to_write+10));
             if(graph_pos > cut_off){
-                graph_pos = (int) (view_width - pixel_density * (10 + columns_to_write));
+                graph_pos = cut_off;
                 bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
                 pixelsMinusColumns = Arrays.copyOfRange(pixels, (int) (bitmap.getWidth() * pixel_density) * columns_to_write, pixels.length);
                 bitmap.setPixels(pixelsMinusColumns, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), (int) (bitmap.getHeight() - pixel_density * columns_to_write));
             }
+
             _canvas.drawBitmap(bitmap, 0, 0, paint);
-            startGraphing();
+            startGraphing(buffers);
         }
 
-        private void startGraphing() {
-            byte[] buffers = getRecentBuffers(file_length);
+        private void startGraphing(byte[] buffers) {
             count += buffers.length;
             record_session_length += buffers.length;
-            float norm = (float) (bitmap.getWidth()) / 65535;
-            float x_axis = drawable.bitmap.getWidth() / 2;
-            columns_to_write = buffers.length / buffer_size != 0 ? buffers.length / buffer_size : 1;
+            float norm = (bitmap.getWidth()) / 65535.0f;
+            float x_axis = drawable.bitmap.getWidth() / 2.0f;
             columns_byte_length = (buffers.length / buffer_size) * column_bytes.length;
             for (int buffer = 0; buffer < buffers.length; buffer += buffer_size) {
                 cur_buffer = Convert.bytesToShorts(Arrays.copyOfRange(buffers, buffer, buffer + buffer_size));
@@ -346,23 +354,21 @@ public class GraphLogic extends View {
             }
         }
         public void refreshDrawable() {
-            //System.out.println("project byte length="+audioPieceTable.byte_length);
             int[] refresh_pixels = null;
+
             if (bitmapPieceTable.byte_length >= drawable.bitmap.getAllocationByteCount() * 4) {
-                //System.out.println("passed the view width");
                 refresh_pixels = Convert.bytesToInts(
                         bitmapPieceTable.find((long) (bitmapPieceTable.byte_length - (graph_pos * bitmap.getWidth() * 4)), (long) (graph_pos * bitmap.getWidth() * 4)));
             }
+
             else if(bitmapPieceTable.byte_length <= drawable.bitmap.getAllocationByteCount() * 4){
-                System.out.println("not passed the view width");
-                graph_pos = bitmapPieceTable.byte_length / (bitmap.getWidth()  * 4);
+                graph_pos = bitmapPieceTable.byte_length / (bitmap.getWidth()  * 4.0f);
                 refresh_pixels = Convert.bytesToInts(bitmapPieceTable.getByteSequence());
             }
-            System.out.println("refresh_pixels length="+refresh_pixels.length);
             this.bitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(),
                     Bitmap.Config.ALPHA_8);
-            this.canvas = new Canvas(bitmap);
             this.bitmap.setPixels(refresh_pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), (int) graph_pos);
+            this.canvas = new Canvas(bitmap);
             count = audioPieceTable.byte_length;
             try {
                 file_length = (int) hendrix.length();
@@ -378,9 +384,8 @@ public class GraphLogic extends View {
         private long waveformColumnHeight;
         private int[] selection;
         private float x1;
-        private float x2;
         private long t1;
-        private long t2;
+
         private void beEditableGraph(Canvas canvas) {
             if(editable_bitmap == null){
                 refreshEditable();
@@ -398,38 +403,37 @@ public class GraphLogic extends View {
                         canvas.drawLine(view_height / 2, T2, 0, T2, y_coordinate_axis);
                     }
                 }
+
                 else if (bitmapPieceTable.byte_length <= drawable.bitmap.getAllocationByteCount() * 4){
                     canvas.drawBitmap(editable_bitmap, 0, 0, paint);
+                    scrollTo(0,0);
+                    columnScreenRenderPosition = 0;
                     if (T2_onScreen || T1_onScreen) {
                         canvas.drawLine(view_height / 2, T1, 0, T1, y_coordinate_axis);
                         canvas.drawLine(view_height / 2, T2, 0, T2, y_coordinate_axis);
                     }
                 }
             }
+
         }
-        //TODO use find operation to implement render based on user locality.
+
         public void refreshEditable() {
+
             int width = drawable.bitmap.getWidth();
             int height = bitmapPieceTable.byte_length / (width * 4);
-            System.out.println("width="+width+" height="+height+" byteLength="+bitmapPieceTable.byte_length+" pixel density="+pixel_density);
 
             if (height != 0) {
                 byte[] sequence = bitmapPieceTable.getByteSequence();
-                System.out.println("sequence length = "+ sequence.length);
                 int[] refresh = Convert.bytesToInts(sequence);
                 editable_bitmap = Bitmap.createBitmap(refresh,
                         width, height, Bitmap.Config.ALPHA_8);
             }
-            //else{
-            //    editable_bitmap.recycle();
-
         }
 
         private void action_down(float x, float y) {
             x1 = x;
             t1=System.nanoTime();
             if(!graphState && y <= view_height / 2){
-                //System.out.println("down");
                 selected_bitmap = null;
                 if (!T1_onScreen) {
                     T1 = columnScreenRenderPosition + x;
@@ -443,6 +447,7 @@ public class GraphLogic extends View {
                 }
             }
         }
+
         private void action_up(float x, float y) {
             float touchPosition = Math.abs(columnScreenStartPosition + x);
             float lowerSelectionBarPosition = Math.abs(columnStart +20);
@@ -450,7 +455,7 @@ public class GraphLogic extends View {
             if(selected_bitmap==null & touchPosition>=lowerSelectionBarPosition & touchPosition <= upperSelectionBarPosition & y<=view_height/2) {
                 allocateSelection();
             }
-            else if(selected_bitmap!=null ){//&& !T1_onScreen & !T2_onScreen) {
+            else if(selected_bitmap!=null ){
                 if(y <= view_height / 2){
                     writeSelection();
                     drawable.refreshDrawable();
@@ -461,36 +466,37 @@ public class GraphLogic extends View {
                 }
             }
         }
+
         private void action_move(float x, float y) {
             if(selected_bitmap==null) {
                     if (y <= view_height / 2) {
+
                         if (T1 - (columnScreenRenderPosition + x) <= 20 & (columnScreenRenderPosition + x) >= T2 + 20
                                 & columnScreenRenderPosition +x<=graph_pos) {
                             T1 = columnScreenRenderPosition + x;
                             columnStop = columnScreenStartPosition + x;
                         }
                         if ((columnScreenRenderPosition + x) - T2 <= 20 & (columnScreenRenderPosition + x) <= T1 - 20
-                                & columnScreenRenderPosition +x<=graph_pos) {
+                                & columnScreenRenderPosition + x<=graph_pos) {
                             T2 = columnScreenRenderPosition + x;
                             columnStart = columnScreenStartPosition + x;
                         }
                     }
                     else if (y>=view_height/2){
-                        x2=x;
-                        t2=System.nanoTime();
-                        double speed = Math.abs(((x2-x1)/((t2-t1)/1E+9)));
+
+                        long t2 = System.nanoTime();
+                        double speed = Math.abs(((x -x1)/((t2 -t1)/1E+9)));
                         float norm = drawable.cut_off;
                         int sensitivity = (int) (speed/norm)!=0 ? (int) (speed/norm) : 1;
                         double exponential = Math.pow(pixel_density,sensitivity);
-                        if(x1>x2 & columnScreenRenderPosition != (drawable.cut_off - waveformColumnHeight)
+                        if(x1> x & columnScreenRenderPosition != (drawable.cut_off - waveformColumnHeight)
                                 & columnScreenRenderPosition - exponential>=(drawable.cut_off- waveformColumnHeight)){
                             columnScreenRenderPosition -= exponential;
                             columnScreenStartPosition -= exponential;
-                        }else if(x2>x1 & columnScreenRenderPosition !=0 & columnScreenRenderPosition +exponential<=0){
+                        }else if(x >x1 & columnScreenRenderPosition !=0 & columnScreenRenderPosition +exponential<=0){
                             columnScreenRenderPosition += exponential;
                             columnScreenStartPosition += exponential;
                         }
-                        //System.out.println("columnScreenRenderPosition="+columnScreenRenderPosition+" columnScreenStartPosition"+columnScreenStartPosition);
                         scrollTo((int) columnScreenRenderPosition, 0);
                     }
             }
@@ -502,8 +508,7 @@ public class GraphLogic extends View {
             }
         }
         private void allocateSelection(){
-            // TODO  java.lang.IllegalArgumentException: y + height must be <= bitmap.height() -> "selected_bitmap = Bitmap.createBitmap..."
-            // TODO  java.lang.IllegalArgumentException: y + height must be <= bitmap.height() -> "editable_bitmap.getPixels..."
+
             try {
                 int selection_length = (int) Math.abs(T1-T2);
                 selection = new int[(int) (editable_bitmap.getWidth()*selection_length)];
@@ -511,8 +516,9 @@ public class GraphLogic extends View {
                 selected_bitmap = Bitmap.createBitmap(selection, editable_bitmap.getWidth(), selection_length, Bitmap.Config.ALPHA_8);
                 select_pos_x= -view_height/2;
                 select_pos_y= T2;
-            } catch (IllegalArgumentException e){ }
+            } catch (IllegalArgumentException ignored){ }
         }
+
         private void writeSelection(){
             byte[] audioByteSelection = audioPieceTable.find(points.audio_start, points.audio_length);
             byte[] bitmapByteSelection = Convert.intsToBytes(selection);
@@ -529,6 +535,7 @@ public class GraphLogic extends View {
             editable_bitmap = null;
             selected_bitmap = null;
         }
+
         private void removeSelection() {
             bitmapPieceTable.remove(points.bitmap_start,selection.length*4);
             audioPieceTable.remove(points.audio_start,points.audio_length);

@@ -45,13 +45,8 @@ public class Edits implements Serializable {
             switch(currentEdit.editType)
             {
                 case "addition":
-                    /*
-                    try {
-                        removeStack.setLength(0);
-                        removeStack.seek(0);
-                        removeStack.write(sequence.find(currentEdit.offset,currentEdit.length,buffer,originalBuffer));
-                    } catch (IOException ex) { }
-                    */
+                    currentEdit.offset = (currentEdit.offset==0) ? sequence.unit : currentEdit.offset;
+                    currentEdit.length = (currentEdit.length==sequence.byte_length) ? currentEdit.length-sequence.unit: currentEdit.length;
                     sequence.remove(currentEdit.offset,currentEdit.length);
                     break;
                 case "remove":
@@ -68,13 +63,21 @@ public class Edits implements Serializable {
         return sequence;
     }
 
-    public PieceTable redo(PieceTable sequence, RandomAccessFile buffer){
-        System.out.println("redoIndex="+redoIndex);
+    public PieceTable redo(PieceTable sequence, RandomAccessFile buffer, RandomAccessFile originalBuffer){
         printRedo();
         if(redoIndex>=0){
             currentRedo = redoStack.get(redoIndex);
             switch(currentRedo.editType){
                 case "addition":
+                    if (currentRedo.in_added){
+                        try {
+                            byte[] bytes = new byte[(int) originalBuffer.length()];
+                            originalBuffer.seek(0);
+                            originalBuffer.read(bytes);
+                            buffer.seek(buffer.length());
+                            buffer.write(bytes);
+                        }catch(IOException ignored){ }
+                    }
                     sequence.add(currentRedo.length,currentRedo.offset,buffer);
                     break;
                 case "remove":

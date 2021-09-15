@@ -1,13 +1,17 @@
 package com.example.voicemodulation.controls;
 import android.app.Activity;
 import android.content.Context;
+import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.Pair;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.Nullable;
 import com.example.voicemodulation.MainActivity;
 import com.example.voicemodulation.R;
@@ -21,8 +25,8 @@ import com.example.voicemodulation.util.FileUtil;
 import java.util.LinkedList;
 
 public class ModulateControls extends LinearLayout{
+    private FrameLayout info;
     private Structure pieceTable;
-    private SeekBar seek;
     private AudioDisplay display;
     private ImageButton play;
     private LinkedList<Controller> controllers;
@@ -32,11 +36,9 @@ public class ModulateControls extends LinearLayout{
     private  String[] quantity_type;
     private Project project;
     private Modulation.modulation method;
-    private int gravity;
     private String name;
     private int[] progress;
     private Pair<Integer,Integer> position;
-    public boolean stopped;
 
     public ModulateControls(Context context) {
         super(context);
@@ -51,8 +53,8 @@ public class ModulateControls extends LinearLayout{
 
     public ModulateControls(Context context, String[] title, int[] maxes, double[] scale,
                             String[] quantity_type, Project creation, Modulation.modulation modulation,
-                            int gravity, String name, int[] progress, ImageButton play,
-                            LinearLayout seek_n_load, Structure pieceTable){
+                            String name, int[] progress, ImageButton play,
+                            FrameLayout info){
         super(context);
         this.title=title;
         this.maxes=maxes;
@@ -60,19 +62,15 @@ public class ModulateControls extends LinearLayout{
         this.quantity_type=quantity_type;
         this.project =creation;
         this.method=modulation;
-        this.gravity=gravity;
         this.name=name;
         this.progress=progress;
         this.play = play;
-        this.display = seek_n_load.findViewById(R.id.audio_display);
-        this.seek = seek_n_load.findViewById(R.id.seek);
-        this.pieceTable = pieceTable;
+        this.info = info;
+        this.display = info.findViewById(R.id.audio_display);
+        //this.pieceTable = pieceTable;
         init(context,null);
     }
-    //TODO we keep running into this problem.
-    // see now we want to have variable control over not only numerical types but also operation types such as +,-,/,*
-    // because these are different types we cannot use a LinkedList, Pair, HashMap, etc
-    // we can create an object
+
     public LinkedList<Double> getModulateParameters(){
         LinkedList<Double> parameters = new LinkedList<>();
         for (int i = 0; i <title.length ; i++) {
@@ -95,13 +93,15 @@ public class ModulateControls extends LinearLayout{
                 @Override
                 public void run() {
                     position = MainActivity.getSelectionPoints();
-                    method.modulate(getModulateParameters(), project, position, pieceTable);
-                    FileUtil.writeModulation(project,pieceTable,position);
+                    method.modulate(getModulateParameters(), project, position, MainActivity.audioPieceTable,null);
+                    FileUtil.writeModulation(project,MainActivity.audioPieceTable,position);
                 }
             };
             thread.start();
-            return false;
+            Toast.makeText(getContext(), "Effect written to Disk", Toast.LENGTH_SHORT).show();
+            return true;
         });
+
         play.setOnClickListener(v -> {
             Thread thread = new Thread() {
                 private RecordLogic recordLogic;
@@ -113,19 +113,24 @@ public class ModulateControls extends LinearLayout{
                     recordLogic.setPieceTable(null);
                     //recordLogic.setFileData(creation, creation.projectPaths.modulation);
                     recordLogic.setFileData(project.audioData, project.paths.modulation);
-                    method.modulate(getModulateParameters(), project, position, pieceTable);
+                    method.modulate(getModulateParameters(), project, position, MainActivity.audioPieceTable,null);
                     while (!Thread.currentThread().isInterrupted()) {
                         ((Activity) context).runOnUiThread(() -> {
-                            seek.setVisibility(View.GONE);
                             display.setVisibility(View.VISIBLE);
+                            info.findViewById(R.id.memory).setVisibility(View.GONE);
+                            info.findViewById(R.id.time).setVisibility(View.GONE);
+                            info.findViewById(R.id.freq).setVisibility(View.GONE);
 
-                            MainActivity.setDisplayStream(pieceTable.byte_length, project.paths.modulation, true, 0, Short.MAX_VALUE * 2 + 1);
+                            MainActivity.setDisplayStream(MainActivity.audioPieceTable.byte_length, project.paths.modulation, true, 0, Short.MAX_VALUE * 2 + 1);
                         });
                         recordLogic.play_recording(0, position.second - position.first);
                         ((Activity) context).runOnUiThread(() -> {
-                            MainActivity.setDisplayStream(pieceTable.byte_length, project.paths.modulation, false, 0, Short.MAX_VALUE * 2 + 1);
+                            MainActivity.setDisplayStream(MainActivity.audioPieceTable.byte_length, project.paths.modulation, false, 0, Short.MAX_VALUE * 2 + 1);
                             display.setVisibility(View.GONE);
-                            seek.setVisibility(View.VISIBLE);
+                            info.findViewById(R.id.memory).setVisibility(View.VISIBLE);
+                            info.findViewById(R.id.time).setVisibility(View.VISIBLE);
+                            info.findViewById(R.id.freq).setVisibility(View.VISIBLE);
+
                         });
                         break;
                     }

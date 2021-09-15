@@ -1,7 +1,6 @@
 package com.example.voicemodulation.util;
 
 import android.content.Context;
-import android.support.v4.app.INotificationSideChannel;
 import android.util.Pair;
 
 import com.example.voicemodulation.audio.AudioConnect;
@@ -12,9 +11,9 @@ import com.example.voicemodulation.structures.Structure;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class FileUtil {
 
@@ -55,13 +54,6 @@ public class FileUtil {
         return projectPaths;
     }
     public static void writeModulation(Project project,Structure structure, Pair<Integer,Integer> bytePoints){
-        /*
-            TODO saving modulations to master file
-                1.) perform the modulation on a selected span
-                2.) a.) retrieve the modulated audio data from project.paths.modulation
-                    b.) retrieve the bitmap data from the selected span
-                3.) write the output of (a) and (b) to their respective locations using project.paths.
-         */
 
         AudioConnect.IO_RAF audioConnect = new AudioConnect.IO_RAF(project.paths.audio);
         RandomAccessFile audioFile = audioConnect.getWriteObject();
@@ -82,7 +74,6 @@ public class FileUtil {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     private static byte[] read(RandomAccessFile modulationFile) {
@@ -95,5 +86,32 @@ public class FileUtil {
             e.printStackTrace();
         }
         return modulatedBytes;
+    }
+
+
+    public static String formatTime(long pTime) {
+        final long min = pTime/60;
+        final long sec = pTime-(min*60);
+        final String strMin = placeZeroIfNeed((int) min);
+        final String strSec = placeZeroIfNeed((int) sec);
+        return String.format("%s:%s",strMin,strSec);
+    }
+    private static String placeZeroIfNeed(int number) {
+        return (number >=10)? Integer.toString(number):String.format("0%s",Integer.toString(number));
+    }
+
+    public static String formatMemory(long numBytes) {
+        String formatted = "";
+        NumberFormat format = NumberFormat.getInstance();
+        format.setGroupingUsed(true);
+        String commaNum =format.format(numBytes);
+        if (numBytes / 1E6 < 1) {
+            int kB = (int) (numBytes / 1E3);
+            formatted = kB + " kB" + " (" + commaNum + " bytes)";
+        } else if (numBytes / 1E6 > 1) {
+            int mB = (int) (numBytes / 1E6);
+            formatted = mB + " mB" + " (" + commaNum + " bytes)";
+        }
+        return formatted;
     }
 }

@@ -4,21 +4,24 @@ import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.media.projection.MediaProjectionManager;
+import android.media.AudioFormat;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Pair;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.PopupMenu;
-import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.room.Room;
@@ -43,58 +46,46 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-// TODO USER CONTROLLED VARIABILITY (support for N languages and N finger sizes)
-//  (1) consider the case when the user has a finger size above or below 50dp
-//  if we were to allow the user to vary the view sizes based on the upper and lower human finger diameters
-//  then the calculations used by GraphLogic would all vary with this finger size selection
-//  also  consider the case when the user would like to resize the waveform
-//  if we change the true column height
-//  then the calculations used by GraphLogic will have to be modified,
-//  this is unfavorable.
-//  a solution is to maintain a constant column height and use canvas.scale(x,y) in a way that is proportional to the finger selection and or resize.
-//  (2) consider the case when the user would like to resize the true column height for better memory performance on their device
-//  let column height = x
-//  lower <= x <= upper
-//  where lower and upper are dependent on the finger size selection
-//  (3) language
-
-//TODO UI IMPROVEMENTS
-//  (1) find a way to remove the boxes around the vector images for each modulation and make them look more professional
-//  (2) I would like modulation selection to be interactive. By this I mean the vector image should resize and shake providing some noticeable feedback
-//  (3) Piggyback off of (2) make it optional and default for all user actions to be interactive to add support for disabled
-
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
+
+
+    private double nyquist = 0;
+
+    private String[] phaser_titles; //= new String[]{getString(R.string.freq), getString(R.string.carrier_amp), getString(R.string.modulator_amp), getString(R.string.title_theta)};
+    private String[] phaser_quantities; //= new String[]{getString(R.string.hz), getString(R.string.amp), getString(R.string.amp), getString(R.string.theta)};
+    private final int[] phaser_progress = new int[]{1, 10, 10, 0};
+    private final int[] phaser_maxes = new int[]{20, 10, 10, 10};
+    private String[] flanger_titles; //= new String[]{getString(R.string.delay), getString(R.string.amplitude), getString(R.string.wet), getString(R.string.freq)};
+    private String[] flanger_quantities; //= new String[]{getString(R.string.s), getString(R.string.amp), " '", getString(R.string.hz)};
+    private final int[] flanger_maxes = new int[]{10, 20, 10, 20};
+    private final double[] flanger_scales = new double[]{.01, 1, 1, 1};
+    private final int[] flanger_progress = new int[]{5, 8, 4, 1};
+
+    private String[] echo_titles; //= new String[]{getString(R.string.delay)};
+    private final int[] record_control_ranges = new int[]{10, 10};
+    private final int[] record_control_scales = new int[]{4800, 4800};
+    private final int[] record_control_progresses = new int[]{10, 10};
+    /*
     private final String[] record_control_titles = new String[]{"Playback Rate", "Sample Rate", "Format", "Channels", "Encoding"};
-    private final String[] phaser_titles = new String[]{"Frequency", "Carrier Amp", "Modulator Amp", "Theta"};
     private final String[] record_control_quantities = new String[]{"Hz", "Hz", null, null, null};
-    private final String[] phaser_quantities = new String[]{"Hz", "Amp", "Amp", "θ"};
-    private final String[] flanger_titles = new String[]{"Min", "Max", "Frequency"};
-    private final String[] echo_titles = new String[]{"Signals", "Delay"};
     private final int[] record_control_ranges = new int[]{10, 10, 2, 1, 1};
     private final int[] record_control_scales = new int[]{4800, 4800, 1, 1, 1};
     private final int[] record_control_progresses = new int[]{10, 10, 2, 0, 1};
-    private final int[] phaser_progress = new int[]{1, 10, 10, 0};
-    private final int[] flanger_progress = new int[]{8, 4, 1};
-    private final int record_gravity = Gravity.NO_GRAVITY;
+     */
     private ImageButton play_button, stop_button,
             record_button, pause_button;
     private TextView time;
     private static AudioDisplay display;
     private static GraphLogic graph;
-    private Boolean file_state = true;
-    private double nyquist = 0;
-    private final String record_control_title = "Record Controls";
     private HorizontalScrollView modulations;
-    private FrameLayout record_controls;
-    private LinearLayout seek_n_loader;
+    private FrameLayout projectInfo;
     private HorizontalScrollView scrollView;
-    private SeekBar the_seeker;
     private RecordControls controls;
     private RecordLogic record;
     private AudioData audioData;
-    private static Structure audioPieceTable;
+    public static Structure audioPieceTable;
     private Structure bitmapPieceTable;
 
     int PERMISSION_ALL = 1;
@@ -102,14 +93,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Manifest.permission.READ_EXTERNAL_STORAGE,
             android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.RECORD_AUDIO};
-    //private Paths projectPaths;
     private Paths projectPaths;
     private static ArrayList<Thread> threadList;
-    private MediaProjectionManager mProjectionManager;
     private boolean storagePermission;
     private boolean recordPermission;
     private ProjectDao userDao;
-    private Project project;
+    private Project newProject;
+    private TextView memory;
+    private TextView frequency;
+    private View v;
+    private boolean recordingState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,10 +112,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         graph = findViewById(R.id.display);
         threadList = new ArrayList<>();
 
+        echo_titles = new String[]{getString(R.string.delay)};
+        String[] record_control_titles = new String[]{getString(R.string.playback_rate), getString(R.string.sample_rate)};
+        String[] record_control_quantities = new String[]{getString(R.string.hz), getString(R.string.hz)};
+        flanger_titles = new String[]{getString(R.string.delay), getString(R.string.amplitude), getString(R.string.wet), getString(R.string.freq)};
+        flanger_quantities = new String[]{getString(R.string.s), getString(R.string.amp), " '", getString(R.string.hz)};
+        phaser_titles = new String[]{getString(R.string.freq), getString(R.string.carrier_amp), getString(R.string.modulator_amp), getString(R.string.title_theta)};
+        phaser_quantities = new String[]{getString(R.string.hz), getString(R.string.amp), getString(R.string.amp), getString(R.string.theta)};
+
+        /*
+         use sharedPreferences to store
+         1.) the last project they were working on
+         2.) the directory they wish to export wav file too
+         */
+
         sharedPref = getPreferences(Context.MODE_PRIVATE);
         editor = sharedPref.edit();
 
-        record_controls = findViewById(R.id.record_controls);
+        FrameLayout record_controls = findViewById(R.id.record_controls);
         record_button = findViewById(R.id.start_recording);
         play_button = findViewById(R.id.play_recording);
         pause_button = findViewById(R.id.pause_recording);
@@ -133,38 +140,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         pause_button.setVisibility(View.INVISIBLE);
 
         time = findViewById(R.id.time);
-        seek_n_loader = findViewById(R.id.seek_n_load);
-        scrollView = findViewById(R.id.fuckFragments);
+        memory = findViewById(R.id.memory);
+        frequency = findViewById(R.id.freq);
+
+        projectInfo = findViewById(R.id.info);
+        scrollView = findViewById(R.id.viewHolder);
         display = findViewById(R.id.audio_display);
         modulations = findViewById(R.id.modulations);
+
+        int record_gravity = Gravity.NO_GRAVITY;
+        String record_control_title = getString(R.string.record_controls);
+
         controls = new RecordControls(this, record_control_titles, record_control_ranges,
                 record_control_scales, record_control_quantities,
                 record_gravity, record_control_title, record_control_progresses,
-                record_controls, graph, seek_n_loader, modulations);
+                record_controls, graph, projectInfo, modulations);
+        //scrollView.addView(controls);
 
-        scrollView.addView(controls);
-        the_seeker = findViewById(R.id.seek);
 
         AppDatabase db = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "database-name").allowMainThreadQueries().build();
         userDao = db.projectDao();
 
-        the_seeker.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                //time.setText(String.format("%.2f", (double) progress * 2 / audioProject.getSampleRate()));
-                time.setText(String.format("%.2f", (double) progress * 2 / audioData.sample_rate));
-            }
+        stop_button.setOnLongClickListener(v -> {
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                //pos_select =the_seeker.getProgress()*2*(audioProject.getSampleRate()/1000);
-            }
+            LayoutInflater layoutInflater = LayoutInflater.from(MainActivity.this);
+            View view = layoutInflater.inflate(R.layout.name_project, null);
+            AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+            alert.setView(view);
+            final EditText dialog = (EditText) view.findViewById(R.id.userInputDialog);
+            alert.setCancelable(false).setPositiveButton("Save", (dialogBox, id) -> {
+                userDao.updateProjectName(dialog.getText().toString(), newProject);
+                Export.format(newProject, audioPieceTable,Environment.getExternalStorageDirectory()+"/"+Environment.DIRECTORY_MUSIC+"/"+dialog.getText().toString());
+                Toast.makeText(this,"Project saved to music folder",Toast.LENGTH_SHORT).show();;
+            }).setNegativeButton("Cancel", (dialogBox, id) -> dialogBox.cancel());
+            AlertDialog alertDialogAndroid = alert.create();
+            alertDialogAndroid.show();
+            return false;
         });
+        initializeProjectData();
+        modulations.setVisibility(View.VISIBLE);
+        Modulation.flanger flanger = new Modulation.flanger();
+        ModulateControls flanger_view = new ModulateControls(this, flanger_titles, flanger_maxes, flanger_scales,
+                flanger_quantities, newProject, flanger,
+                getString(R.string.flanger_sine_title), flanger_progress, play_button, projectInfo);
+        scrollView.addView(flanger_view);
     }
 
     public static void setDisplayStream(int buffsize, String file, boolean state, int length, int range) {
@@ -173,19 +193,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public static Pair<Integer, Integer> getSelectionPoints() {
-        if (graph.points!=null){
+        if (graph.points != null) {
             return new Pair<>(graph.points.audio_start, graph.points.audio_stop);
         }
         return new Pair<>(0, audioPieceTable.byte_length);
     }
-
-    /*
-    public static BytePoints getSelectionPoints() {
-        return graph.getPoints();
-    }
-
-     */
-
 
     public static void addThread(Thread thread) {
         threadList.add(thread);
@@ -193,256 +205,255 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        if(hasPermissions(this,PERMISSIONS)) {
-            if(projectPaths==null){
-                initializeProject();
+        this.v = v;
+        int vId = v.getId();
+        if (hasPermissions(this, PERMISSIONS)) {
+            if (projectPaths == null) {
+                initializeProjectStructures();
             }
-            switch (v.getId()) {
-                case R.id.backwards:
-                    scrollView.removeAllViews();
-                    Modulation.backwards backwards = new Modulation.backwards();
-                    Modulation.modulation Backwards = backwards::modulate;
-                    String[] backwards_titles = new String[]{"Volume"};
-                    int[] backwards_maxes = new int[]{10};
-                    ModulateControls backwards_view = new ModulateControls(this, backwards_titles, backwards_maxes, new double[]{.1},
-                            new String[]{"Volume"}, project, Backwards, Gravity.CENTER,
-                            "Backwards Effect", new int[]{10}, play_button, seek_n_loader, audioPieceTable);
-                    scrollView.addView(backwards_view);
-                    break;
-                case R.id.echo:
-                    scrollView.removeAllViews();
-                    Modulation.echo echo = new Modulation.echo();
-                    Modulation.modulation Echo = echo::modulate;
-                    int[] echo_maxes = new int[]{10, 10};
-                    ModulateControls echo_view = new ModulateControls(this, echo_titles, echo_maxes, new double[]{1, 1},
-                            new String[]{"S", "D"}, project, Echo, Gravity.CENTER,
-                            "Echo Effect", new int[]{5, 6}, play_button, seek_n_loader, audioPieceTable);
-                    scrollView.addView(echo_view);
-                    break;
-                case R.id.quantize:
-                    scrollView.removeAllViews();
-                    Modulation.quantized quantized = new Modulation.quantized();
-                    Modulation.modulation Quantized = quantized::modulate;
-                    //TODO rename robotic shit
-                    String[] robotic_titles = new String[]{"Quantize", "Amplitude"};
-                    int[] robotic_maxes = new int[]{10, 10};
-                    ModulateControls robotic = new ModulateControls(this, robotic_titles, robotic_maxes, new double[]{1000, .1},
-                            new String[]{"C", "Amp"}, project, Quantized, Gravity.CENTER,
-                            "Quantize Audio Sample", new int[]{5, 10}, play_button, seek_n_loader, audioPieceTable);
-                    scrollView.addView(robotic);
-                    break;
-                case R.id.phaser:
-                    scrollView.removeAllViews();
-                    Modulation.phaser phaser = new Modulation.phaser();
-                    Modulation.modulation Phaser = phaser::modulate;
-                    int[] phaser_maxes = new int[]{20, 10, 10, 20};
-                    ModulateControls phaser_view = new ModulateControls(this, phaser_titles, phaser_maxes, new double[]{nyquist, .1, .1, 0}, //.1 * Math.PI
-                            phaser_quantities, project, Phaser, Gravity.NO_GRAVITY,
-                            "Phaser with Sine Wave", phaser_progress, play_button, seek_n_loader, audioPieceTable);
-                    scrollView.addView(phaser_view);
-                    break;
-                case R.id.phaser_triangle:
-                    scrollView.removeAllViews();
-                    Modulation.phaserTriangle phaserTriangle = new Modulation.phaserTriangle();
-                    Modulation.modulation PhaserTriangle = phaserTriangle::modulate;
-                    int[] alien_maxes = new int[]{20, 10, 10, 10};
-                    ModulateControls phaser_triangle_view = new ModulateControls(this, phaser_titles, alien_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
-                            phaser_quantities, project, PhaserTriangle, Gravity.NO_GRAVITY,
-                            "Phaser with Triangle Wave", phaser_progress, play_button, seek_n_loader, audioPieceTable);
-                    scrollView.addView(phaser_triangle_view);
-                    break;
-                case R.id.phaser_square:
-                    scrollView.removeAllViews();
-                    Modulation.phaserSquare phaserSquare = new Modulation.phaserSquare();
-                    Modulation.modulation PhaserSquare = phaserSquare::modulate;
-                    //PhaserSquare.
-                    int[] square_maxes = new int[]{20, 10, 10, 10};
-                    ModulateControls phaser_square_view = new ModulateControls(this, phaser_titles, square_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
-                            phaser_quantities, project, PhaserSquare, Gravity.NO_GRAVITY,
-                            "Phaser with Square Wave", phaser_progress, play_button, seek_n_loader, audioPieceTable);
-                    scrollView.addView(phaser_square_view);
-                    break;
-                case R.id.phaser_saw:
-                    scrollView.removeAllViews();
-                    Modulation.phaserSaw phaserSaw = new Modulation.phaserSaw();
-                    Modulation.modulation PhaserSaw = phaserSaw::modulate;
-                    int[] saw_maxes = new int[]{20, 10, 10, 10};
-                    ModulateControls phaser_saw_view = new ModulateControls(this, phaser_titles, saw_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
-                            phaser_quantities, project, PhaserSaw, Gravity.NO_GRAVITY,
-                            "Phaser with Saw Wave", phaser_progress, play_button, seek_n_loader, audioPieceTable);
-                    scrollView.addView(phaser_saw_view);
-                    break;
-                case R.id.flanger:
-                    scrollView.removeAllViews();
-                    Modulation.flanger flanger = new Modulation.flanger();
-                    Modulation.modulation Flanger = flanger::modulate;
-                    int[] flanger_maxes = new int[]{10, 10, 20};
-                    ModulateControls flanger_view = new ModulateControls(this, flanger_titles, flanger_maxes, new double[]{10, 10, nyquist},
-                            new String[]{"∧", "∨", "Hz"}, project, Flanger, Gravity.NO_GRAVITY,
-                            "Flanger with Sine Wave", flanger_progress, play_button, seek_n_loader, audioPieceTable);
-                    scrollView.addView(flanger_view);
-                    break;
-                case R.id.flanger_triangle:
-                    scrollView.removeAllViews();
-                    Modulation.flangerTriangle flangerTriangle = new Modulation.flangerTriangle();
-                    Modulation.modulation FlangerTriangle = flangerTriangle::modulate;
-                    int[] flanger_triangle_maxes = new int[]{10, 10, 20};
-                    ModulateControls flanger_triangle_view = new ModulateControls(this, flanger_titles, flanger_triangle_maxes, new double[]{10, 10, nyquist},
-                            new String[]{"∧", "∨", "Hz"}, project, FlangerTriangle, Gravity.NO_GRAVITY,
-                            "Flanger with Triangle Wave", flanger_progress, play_button, seek_n_loader, audioPieceTable);
-                    scrollView.addView(flanger_triangle_view);
-                    break;
-                case R.id.flanger_square:
-                    scrollView.removeAllViews();
-                    Modulation.flangerSquare flangerSquare = new Modulation.flangerSquare();
-                    Modulation.modulation FlangerSquare = flangerSquare::modulate;
-                    int[] flanger_square_maxes = new int[]{10, 10, 20};
-                    ModulateControls flanger_square_view = new ModulateControls(this, flanger_titles, flanger_square_maxes, new double[]{10, 10, nyquist},
-                            new String[]{"∧", "∨", "Hz"}, project, FlangerSquare, Gravity.NO_GRAVITY,
-                            "Flanger with Square Wave", flanger_progress, play_button, seek_n_loader, audioPieceTable);
-                    scrollView.addView(flanger_square_view);
-                    break;
-                case R.id.low_pass:
-                    scrollView.removeAllViews();
-                    Modulation.lowPass lowPass = new Modulation.lowPass();
-                    Modulation.modulation LowPass = lowPass::modulate;
-                    ModulateControls low_pass_view = new ModulateControls(this, new String[]{"Smoothing"}, new int[]{10}, new double[]{20},
-                            new String[]{" "}, project, LowPass, Gravity.CENTER,
-                            "Low Pass Filter", flanger_progress, play_button, seek_n_loader, audioPieceTable);
-                    scrollView.addView(low_pass_view);
-                    break;
-                case R.id.volume:
-                    scrollView.removeAllViews();
-                    Modulation.amplitude amp = new Modulation.amplitude();
-                    Modulation.modulation Amp = amp::modulate;
-                    ModulateControls amp_view = new ModulateControls(this, new String[]{"Volume"}, new int[]{20}, new double[]{5},
-                            new String[]{" "}, project, Amp, Gravity.CENTER,
-                            "Amplitude", flanger_progress, play_button, seek_n_loader, audioPieceTable);
-                    scrollView.addView(amp_view);
-                    break;
-                case R.id.start_recording:
-
-                    if (project.audioData==null){
-                        project.audioData = controls.getCreationData();
-                        audioData = project.audioData;
-                        userDao.insertProject(project);
-                        System.out.println("a project must have been inserted which means somehow project.audioData==null");
-                    }
-                    project.audioData = project.audioData !=null ? project.audioData : controls.getCreationData();
-                    audioData = project.audioData;
-
-                    nyquist = (audioData.sample_rate / 2) / 20;
-                    record = new RecordLogic();
-                    the_seeker.setVisibility(View.GONE);
-                    time.setVisibility(View.GONE);
-                    display.setVisibility(View.VISIBLE);
-                    display.setEncoding(Short.MAX_VALUE * 2 + 1);
-                    if (audioPieceTable.byte_length == 0) {
-                        record.setFileObject(audioData, projectPaths.audio_original);
-                        display.setGraphState(true, record.buffer_size, projectPaths.audio_original, 1);
+            if (vId == R.id.undo) {
+                if (!recordingState) {
+                    if (audioPieceTable.undo() & bitmapPieceTable.undo()) {
+                        Toast.makeText(this, getString(R.string.undo_pressed), Toast.LENGTH_SHORT).show();
                     } else {
-                        record.setFileObject(audioData, projectPaths.audio);
-                        display.setGraphState(true, record.buffer_size, projectPaths.audio, 1);
+                        Toast.makeText(this, getString(R.string.nothing_to_undo), Toast.LENGTH_SHORT).show();
                     }
-
-                    file_state = false;
-                    record.setFileData(project.audioData, project.paths.modulation);
-                    record.setRecordingState(false);
-                    record.startRecording();
-                    userDao.insertBufferSize(project,record.buffer_size);
-                    graph.setGraphState(record.buffer_size, true);
-                    record_button.setVisibility(View.INVISIBLE);
-                    pause_button.setVisibility(View.VISIBLE);
-                    break;
-
-                case R.id.pause_recording:
-                    long length = audioPieceTable.byte_length;
-                    record.setRecordingState(true);
-                    graph.setGraphState(record.buffer_size, false);
-                    //graph.setTables(bitmapPieceTable,audioPieceTable);
-                    //bitmapPieceTable.printPieces();
-                    //bitmapPieceTable.printEditStack();
-                    display.setEncoding(Short.MAX_VALUE * 2 + 1);
-                    //display.setGraphState(false, record.buffer_size, projectPaths.audio_original, 1);
-                    display.setGraphState(false, record.buffer_size, projectPaths.audio, 1);
-
-                    graph.catchUp(false);
-                    display.setVisibility(View.GONE);
-                    int max = (int) (length / 2 / audioData.sample_rate * 1000);
-                    time.setVisibility(View.VISIBLE);
-                    the_seeker.setMax(max);
-                    the_seeker.setProgress(max);
-                    modulations.setVisibility(View.VISIBLE);
-                    the_seeker.setVisibility(View.VISIBLE);
-                    play_button.setVisibility(View.VISIBLE);
-                    stop_button.setVisibility(View.VISIBLE);
-                    pause_button.setVisibility(View.INVISIBLE);
-                    record_button.setVisibility(View.VISIBLE);
-                    break;
-                case R.id.play_recording:
-                    record.setPieceTable(audioPieceTable.getMostRecent());
-                    new Thread(() -> {
-                        Pair<Integer, Integer> points;
-                        try {
-                            points = getSelectionPoints();
-                            record.play_recording(points.first,points.second);
-                        } catch (NullPointerException e) {
-                            record.play_recording(0, audioPieceTable.byte_length);
-                        }
-                    }).start();
-                    break;
-                case R.id.stop_recording:
-                    for (Thread thread : threadList) {
-                        if (thread.isAlive()) {
-                            thread.interrupt();
-                        }
+                    graph.populateProject();
+                }
+            } else if (vId == R.id.redo) {
+                if (!recordingState) {
+                    if (audioPieceTable.redo() & bitmapPieceTable.redo()) {
+                        Toast.makeText(this, getString(R.string.redo_pressed), Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, getString(R.string.nothing_to_redo), Toast.LENGTH_SHORT).show();
                     }
-                    Export.format(project, audioPieceTable);
-                    break;
-                case R.id.projects:
-                    displayProjectList(v);
-                    break;
-
-                case R.id.undo:
-                    System.out.println("undo pressed");
-
-                    audioPieceTable.undo();
-                    bitmapPieceTable.undo();
-
-                    System.out.println("bitmap edit stack");
-                    bitmapPieceTable.printEditStack();
-                    System.out.println("bitmap pieces");
-                    bitmapPieceTable.printPieces();
-
                     graph.populateProject();
-                    break;
-                case R.id.redo:
-                    System.out.println("redo pressed");
-
-                    audioPieceTable.redo();
-                    bitmapPieceTable.redo();
-
-                    System.out.println("bitmap edit stack");
-                    bitmapPieceTable.printEditStack();
-                    System.out.println("bitmap pieces");
-                    bitmapPieceTable.printPieces();
-
-                    graph.populateProject();
-
-                    break;
-
-
-
+                }
             }
+            else if (vId == R.id.backwards) {
+                scrollView.removeAllViews();
+                Modulation.backwards backwards = new Modulation.backwards();
+                String[] backwards_titles = new String[]{getString(R.string.volume)};
+                int[] backwards_maxes = new int[]{10};
+                ModulateControls backwards_view = new ModulateControls(this, backwards_titles, backwards_maxes, new double[]{.1},
+                        new String[]{getString(R.string.volume)}, newProject, backwards,
+                        getString(R.string.backwards_title), new int[]{10}, play_button, projectInfo);
+                scrollView.addView(backwards_view);
+            } else if (vId == R.id.echo) {
+                scrollView.removeAllViews();
+                Modulation.echo echo = new Modulation.echo();
+                int[] echo_maxes = new int[]{20};
+                ModulateControls echo_view = new ModulateControls(this, echo_titles, echo_maxes, new double[]{.02},
+                        new String[]{getString(R.string.s)}, newProject, echo,
+                        getString(R.string.echo_title), new int[]{2}, play_button, projectInfo);
+                scrollView.addView(echo_view);
+            } else if (vId == R.id.quantize) {
+                scrollView.removeAllViews();
+                Modulation.quantized quantized = new Modulation.quantized();
+                String[] quantized_titles = new String[]{getString(R.string.quantize), getString(R.string.amplitude)};
+                int[] quantized_maxes = new int[]{10, 10};
+                ModulateControls quantize_view = new ModulateControls(this, quantized_titles, quantized_maxes, new double[]{1000, .1},
+                        new String[]{"C", "Amp"}, newProject, quantized,
+                        getString(R.string.quantize_title), new int[]{5, 10}, play_button, projectInfo);
+                scrollView.addView(quantize_view);
+            } else if (vId == R.id.phaser) {
+                scrollView.removeAllViews();
+                Modulation.phaser phaser = new Modulation.phaser();
+                ModulateControls phaser_view = new ModulateControls(this, phaser_titles, phaser_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI}, // was 0 idk why
+                        phaser_quantities, newProject, phaser,
+                        getString(R.string.phaser_sine_title), phaser_progress, play_button, projectInfo);
+                scrollView.addView(phaser_view);
+            } else if (vId == R.id.phaser_triangle) {
+                scrollView.removeAllViews();
+                Modulation.modulation PhaserTriangle = new Modulation.phaserTriangle();
+                ModulateControls phaser_triangle_view = new ModulateControls(this, phaser_titles, phaser_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
+                        phaser_quantities, newProject, PhaserTriangle,
+                        getString(R.string.phaser_triangle_title), phaser_progress, play_button, projectInfo);
+                scrollView.addView(phaser_triangle_view);
+            } else if (vId == R.id.phaser_square) {
+                scrollView.removeAllViews();
+                Modulation.phaserSquare phaserSquare = new Modulation.phaserSquare();
+                ModulateControls phaser_square_view = new ModulateControls(this, phaser_titles, phaser_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
+                        phaser_quantities, newProject, phaserSquare,
+                        getString(R.string.phaser_square_title), phaser_progress, play_button, projectInfo);
+                scrollView.addView(phaser_square_view);
+            } else if (vId == R.id.phaser_saw) {
+                scrollView.removeAllViews();
+                Modulation.phaserSaw phaserSaw = new Modulation.phaserSaw();
+                ModulateControls phaser_saw_view = new ModulateControls(this, phaser_titles, phaser_maxes, new double[]{nyquist, .1, .1, .1 * Math.PI},
+                        phaser_quantities, newProject, phaserSaw,
+                        getString(R.string.phasor_saw_title), phaser_progress, play_button, projectInfo);
+                scrollView.addView(phaser_saw_view);
+            } else if (vId == R.id.flanger) {
+                scrollView.removeAllViews();
+                Modulation.flanger flanger = new Modulation.flanger();
+                ModulateControls flanger_view = new ModulateControls(this, flanger_titles, flanger_maxes, flanger_scales,
+                        flanger_quantities, newProject, flanger,
+                        getString(R.string.flanger_sine_title), flanger_progress, play_button, projectInfo);
+                scrollView.addView(flanger_view);
+            } else if (vId == R.id.flanger_triangle) {
+                scrollView.removeAllViews();
+                Modulation.flangerTriangle flangerTriangle = new Modulation.flangerTriangle();
+                ModulateControls flanger_triangle_view = new ModulateControls(this, flanger_titles, flanger_maxes, flanger_scales,
+                        flanger_quantities, newProject, flangerTriangle,
+                        getString(R.string.flanger_triangle_title), flanger_progress, play_button, projectInfo);
+                scrollView.addView(flanger_triangle_view);
+            } else if (vId == R.id.flanger_square) {
+                scrollView.removeAllViews();
+                Modulation.flangerSquare flangerSquare = new Modulation.flangerSquare();
+                ModulateControls flanger_square_view = new ModulateControls(this, flanger_titles, flanger_maxes, flanger_scales,
+                        flanger_quantities, newProject, flangerSquare,
+                        getString(R.string.flanger_square_title), flanger_progress, play_button, projectInfo);
+                scrollView.addView(flanger_square_view);
+            } else if (vId == R.id.flanger_saw) {
+                scrollView.removeAllViews();
+                Modulation.flangerSaw flangerSaw = new Modulation.flangerSaw();
+                ModulateControls flanger_saw_view = new ModulateControls(this, flanger_titles, flanger_maxes, flanger_scales,
+                        flanger_quantities, newProject, flangerSaw,
+                        getString(R.string.flanger_saw_title), flanger_progress, play_button, projectInfo);
+                scrollView.addView(flanger_saw_view);
+            } else if (vId == R.id.low_pass) {
+                scrollView.removeAllViews();
+                Modulation.lowPass lowPass = new Modulation.lowPass();
+                ModulateControls low_pass_view = new ModulateControls(this, new String[]{getString(R.string.smoothing)}, new int[]{10}, new double[]{20},
+                        new String[]{" "}, newProject, lowPass,
+                        getString(R.string.low_pass_title), flanger_progress, play_button, projectInfo);
+                scrollView.addView(low_pass_view);
+            } else if (vId == R.id.volume) {
+                scrollView.removeAllViews();
+                Modulation.amplitude amp = new Modulation.amplitude();
+                ModulateControls amp_view = new ModulateControls(this, new String[]{getString(R.string.volume)}, new int[]{10}, new double[]{1},
+                        new String[]{" "}, newProject, amp,
+                        getString(R.string.amplitude), flanger_progress, play_button, projectInfo);
+                scrollView.addView(amp_view);
+            } else if (vId == R.id.robot) {
+                scrollView.removeAllViews();
+                Modulation.robot robot = new Modulation.robot();
+                String[] robotic_titles = new String[]{getString(R.string.robotness)};
+                int[] robotic_maxes = new int[]{20};
+                ModulateControls robotic = new ModulateControls(this, robotic_titles, robotic_maxes, new double[]{.1},
+                        new String[]{" "}, newProject, robot,
+                        getString(R.string.robot_title), new int[]{1}, play_button, projectInfo);
+                scrollView.addView(robotic);
+            } else if (vId == R.id.start_recording) {
+                if (newProject.audioData == null) {
+                    newProject.audioData = controls.getCreationData();
+                    audioData = newProject.audioData;
+                    userDao.insertProject(newProject);
+                }
 
-        }else if(!recordPermission | !storagePermission){
+                newProject.audioData = newProject.audioData != null ? newProject.audioData : controls.getCreationData();
+                audioData = newProject.audioData;
+
+                //nyquist = (audioData.sample_rate / 2.0) / 20;
+                /*
+                AudioConnect.IO_RAF funky = new AudioConnect.IO_RAF(projectPaths.audio_original);
+                RandomAccessFile sanity_check = funky.getWriteObject();
+                try {
+                    System.out.println("no way this will also be zero " + sanity_check.length());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                 */
+                //record = new RecordLogic();
+
+                time.setVisibility(View.GONE);
+                memory.setVisibility(View.GONE);
+                frequency.setVisibility(View.GONE);
+                display.setVisibility(View.VISIBLE);
+                display.setEncoding(Short.MAX_VALUE * 2 + 1);
+
+                if (audioPieceTable.byte_length == 0) {
+                    System.out.println("the length is 0 so we will write an original");
+                    record.setFileObject(audioData, projectPaths.audio_original);
+                    display.setGraphState(true, record.buffer_size, projectPaths.audio_original, 1);
+                } else {
+                    if (audioPieceTable.hasEdits()) {
+                        System.out.println("imported a project with only an original piece");
+                        graph.setProjectPaths(newProject.paths);
+                    }
+                    System.out.println("the length is not zero so we will write an addition");
+                    record.setFileObject(audioData, projectPaths.audio);
+                    display.setGraphState(true, record.buffer_size, projectPaths.audio, 1);
+                }
+                record.setFileData(newProject.audioData, newProject.paths.modulation);
+                record.isPaused(false);
+                record.startRecording();
+                recordingState = true;
+                userDao.insertBufferSize(newProject, record.buffer_size);
+                graph.setGraphState(record.buffer_size, true);
+                record_button.setVisibility(View.INVISIBLE);
+                pause_button.setVisibility(View.VISIBLE);
+            } else if (vId == R.id.pause_recording) {
+                record.isPaused(true);
+                recordingState = false;
+                graph.setGraphState(record.buffer_size, false);
+
+                long length = audioPieceTable.byte_length;
+
+                audioPieceTable.setUnit(2);  // short is two bytes
+                bitmapPieceTable.setUnit(4); // int is four bytes
+
+                display.setEncoding(Short.MAX_VALUE * 2 + 1);
+                display.setGraphState(false, record.buffer_size, projectPaths.audio, 1);
+                graph.catchUp(false);
+                display.setVisibility(View.GONE);
+                long max = (long) (length / 2.0 / audioData.sample_rate);
+
+                time.setVisibility(View.VISIBLE);
+                memory.setVisibility(View.VISIBLE);
+                frequency.setVisibility(View.VISIBLE);
+                frequency.setText(audioData.sample_rate + " Hz");
+                memory.setText(FileUtil.formatMemory(length));
+                time.setText(FileUtil.formatTime(max));
+                play_button.setVisibility(View.VISIBLE);
+                stop_button.setVisibility(View.VISIBLE);
+                pause_button.setVisibility(View.INVISIBLE);
+                record_button.setVisibility(View.VISIBLE);
+                modulations.setVisibility(View.VISIBLE);
+
+            } else if (vId == R.id.play_recording) {
+                record.setPieceTable(audioPieceTable.getMostRecent());
+                new Thread(() -> {
+                    Pair<Integer, Integer> points;
+                    try {
+                        points = getSelectionPoints();
+                        record.play_recording(points.first, points.second);
+                    } catch (NullPointerException e) {
+                        record.play_recording(0, audioPieceTable.byte_length);
+                    }
+                }).start();
+            } else if (vId == R.id.stop_recording) {
+                for (Thread thread : threadList) {
+                    if (thread.isAlive()) {
+                        thread.interrupt();
+                    }
+                }
+            } else if (vId == R.id.projects) {
+                displayProjectList(v);
+            }
+        } else if (!recordPermission | !storagePermission) {
             getPermissions();
         }
     }
 
-    private void initializeProject() {
+    private void initializeProjectData() {
+        newProject = new Project();
+        newProject.audioData = new AudioData();
+        newProject.audioData.sample_rate = 44100;
+        newProject.audioData.playback_rate = 44100;
+        newProject.audioData.format = ".wav";
+        newProject.audioData.num_channels_in = AudioFormat.CHANNEL_IN_MONO;
+        newProject.audioData.num_channels_out = AudioFormat.CHANNEL_OUT_MONO;
+        newProject.audioData.bit_depth = AudioFormat.ENCODING_PCM_16BIT;
+        audioData = newProject.audioData;
+        nyquist = (audioData.sample_rate / 2.0) / 20;
+    }
+
+    private void initializeProjectStructures() {
         projectPaths = FileUtil.createNewProjectPaths(this,
-                new ArrayList<String>(){{add("bitmap");
+                new ArrayList<String>() {{
+                    add("bitmap");
                     add("bitmap_piece_table");
                     add("audio_piece_table");
                     add("original_audio_piece");
@@ -452,71 +463,85 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     add("bitmap_edits_stack");
                     add("audio_edits_stack");
                     add("bitmap_remove_stack");
-                    add("audio_remove_stack");}});
-
-
+                    add("audio_remove_stack");
+                }});
+        newProject.paths = projectPaths;
+        //newProject.project_name = "AutoSave " + System.nanoTime();
+        newProject.project_name = "AutoSave " + userDao.getUid();
         bitmapPieceTable = new Structure(projectPaths.bitmap_table, projectPaths.bitmap,
-                projectPaths.bitmap_original,projectPaths.bitmap_edits,projectPaths.bitmap_remove_stack);
+                projectPaths.bitmap_original, projectPaths.bitmap_edits, projectPaths.bitmap_remove_stack);
         audioPieceTable = new Structure(projectPaths.audio_table, projectPaths.audio,
-                projectPaths.audio_original,projectPaths.audio_edits,projectPaths.audio_remove_stack);
-
+                projectPaths.audio_original, projectPaths.audio_edits, projectPaths.audio_remove_stack);
         record = new RecordLogic();
         graph.setTables(bitmapPieceTable, audioPieceTable);
-        //graph.setProjectPaths(projectPaths);
         graph.setOriginalPaths(projectPaths);
-        project = new Project();
-        project.paths = projectPaths;
-        project.project_name = "Big Money "+ project.paths.uniqueDir;
+        record.setFileObject(audioData, projectPaths.audio_original);
+        record.setFileData(newProject.audioData, newProject.paths.modulation);
+        record.setPieceTable(audioPieceTable);
+        userDao.insertProject(newProject);
+
     }
+
     private void displayProjectList(View view) {
-        PopupMenu popupMenu = new PopupMenu(view.getContext(),view);
-        List<String> title_list = userDao.getProjectNames();
-        if(title_list!=null) {
-            for (CharSequence title : title_list) {
-                popupMenu.getMenu().add(title).setOnMenuItemClickListener(item -> {
-                    project = userDao.getProjectFromName((String) title);
-                    audioData = project.audioData;
-                    projectPaths = project.paths;
+        if (!recordingState) {
+            PopupMenu popupMenu = new PopupMenu(view.getContext(), view);
+            List<String> title_list = userDao.getProjectNames();
+            if (title_list != null) {
+                for (CharSequence title : title_list) {
+                    popupMenu.getMenu().add(title).setOnMenuItemClickListener(item -> {
+                        Project project = userDao.getProjectFromName((String) title);
+                        if (project.uid != newProject.uid) {
+                            newProject = project;
+                            audioData = newProject.audioData;
+                            projectPaths = newProject.paths;
 
-                    bitmapPieceTable = new Structure(projectPaths.bitmap_table, projectPaths.bitmap,
-                            projectPaths.bitmap_original,projectPaths.bitmap_edits,projectPaths.bitmap_remove_stack);
-                    audioPieceTable = new Structure(projectPaths.audio_table, projectPaths.audio,
-                            projectPaths.audio_original,projectPaths.audio_edits,projectPaths.audio_remove_stack);
+                            bitmapPieceTable = new Structure(projectPaths.bitmap_table, projectPaths.bitmap,
+                                    projectPaths.bitmap_original, projectPaths.bitmap_edits, projectPaths.bitmap_remove_stack);
+                            audioPieceTable = new Structure(projectPaths.audio_table, projectPaths.audio,
+                                    projectPaths.audio_original, projectPaths.audio_edits, projectPaths.audio_remove_stack);
 
-                    record = new RecordLogic();
-                    nyquist = (audioData.sample_rate / 2) / 20;
-                    record.setFileData(project.audioData, project.paths.modulation);
-                    record.setPieceTable(audioPieceTable);
+                            record = new RecordLogic();
+                            nyquist = (audioData.sample_rate / 2.0) / 20;
+                            record.setFileData(newProject.audioData, newProject.paths.modulation);
+                            record.setPieceTable(audioPieceTable);
 
-                    graph = findViewById(R.id.display);
-                    graph.setTables(bitmapPieceTable, audioPieceTable);
-                    graph.setProjectPaths(project.paths);
-                    graph.buffer_size = project.audioData.buffer_size;
-                    graph.populateProject();
+                            graph = findViewById(R.id.display);
+                            graph.setTables(bitmapPieceTable, audioPieceTable);
+                            if (audioPieceTable.hasEdits()) {
+                                graph.setOriginalPaths(newProject.paths);
+                            } else {
+                                graph.setProjectPaths(newProject.paths);
+                            }
+                            graph.buffer_size = newProject.audioData.buffer_size;
+                            graph.populateProject();
 
-                    int max = audioPieceTable.byte_length / 2 / audioData.sample_rate * 1000;
-                    time.setVisibility(View.VISIBLE);
-                    the_seeker.setMax(max);
-                    the_seeker.setProgress(max);
-                    modulations.setVisibility(View.VISIBLE);
-                    the_seeker.setVisibility(View.VISIBLE);
-                    play_button.setVisibility(View.VISIBLE);
-                    stop_button.setVisibility(View.VISIBLE);
-                    record_button.setVisibility(View.VISIBLE);
-                    return false;
-                });
+                            int max = audioPieceTable.byte_length / 2 / audioData.sample_rate * 1000;
+                            time.setVisibility(View.VISIBLE);
+                            memory.setVisibility(View.VISIBLE);
+                            frequency.setVisibility(View.VISIBLE);
+                            modulations.setVisibility(View.VISIBLE);
+                            play_button.setVisibility(View.VISIBLE);
+                            stop_button.setVisibility(View.VISIBLE);
+                            record_button.setVisibility(View.VISIBLE);
+                        }else{
+                            Toast.makeText(this, getString(R.string.already_open),Toast.LENGTH_SHORT).show();
+                        }
+                        return false;
+                    });
+                }
             }
+            MenuInflater inflater = popupMenu.getMenuInflater();
+            inflater.inflate(R.menu.menu_main, popupMenu.getMenu());
+            popupMenu.show();
         }
-        MenuInflater inflater = popupMenu.getMenuInflater();
-        inflater.inflate(R.menu.menu_main, popupMenu.getMenu());
-        popupMenu.show();
     }
 
-    public void getPermissions(){
-        if(!hasPermissions(this, PERMISSIONS)) {
+    public void getPermissions() {
+        if (!hasPermissions(this, PERMISSIONS)) {
             requestPermissions(PERMISSIONS, PERMISSION_ALL);
         }
     }
+
     public static boolean hasPermissions(Context context, String... permissions) {
         if (context != null && permissions != null) {
             for (String permission : permissions) {
@@ -527,294 +552,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         return true;
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode,permissions,grantResults);
-        if(grantResults.length>0) {
-            if(grantResults[0]==-1){
-                storagePermission=false;
-            }else if(grantResults[0]==0){
-                storagePermission=true;
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (grantResults.length > 0) {
+            if (grantResults[0] == -1) {
+                storagePermission = false;
+            } else if (grantResults[0] == 0) {
+                storagePermission = true;
             }
-            if(grantResults[2]==-1){
-                recordPermission=false;
-            }else if(grantResults[2]==0){
-                recordPermission=true;
-            }
-        }
-    }
-
-    /*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        List<String> title_list = userDao.getProjectNames();
-        if(title_list!=null) {
-            for (CharSequence title : title_list) {
-                menu.add(title).setOnMenuItemClickListener(item -> {
-                    project = userDao.getProjectFromName((String) title);
-                    audioData = project.audioData;
-                    projectPaths = project.paths;
-
-                    bitmapPieceTable = new PieceTable(projectPaths.bitmap_table, projectPaths.bitmap, projectPaths.bitmap_original);
-                    pieceTable = new PieceTable(projectPaths.audio_table, projectPaths.audio, projectPaths.audio_original);
-
-                    record = new RecordLogic();
-                    nyquist = (audioData.sample_rate / 2) / 20;
-                    record.setFileData(project.audioData, project.paths.modulation);
-                    record.setPieceTable(pieceTable);
-
-                    graph = findViewById(R.id.display);
-                    graph.setTables(bitmapPieceTable, pieceTable);
-                    graph.setProjectPaths(project.paths);
-                    graph.buffer_size = project.audioData.buffer_size;
-                    graph.populateProject();
-
-                    int max = pieceTable.byte_length / 2 / audioData.sample_rate * 1000;
-                    time.setVisibility(View.VISIBLE);
-                    the_seeker.setMax(max);
-                    the_seeker.setProgress(max);
-                    modulations.setVisibility(View.VISIBLE);
-                    the_seeker.setVisibility(View.VISIBLE);
-                    play_button.setVisibility(View.VISIBLE);
-                    stop_button.setVisibility(View.VISIBLE);
-                    record_button.setVisibility(View.VISIBLE);
-                    return false;
-                });
+            if (grantResults[2] == -1) {
+                recordPermission = false;
+            } else if (grantResults[2] == 0) {
+                recordPermission = true;
             }
         }
-        return true;
-    }
-
-     */
-    /*
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.update:
-                //boolean permission = hasPermissions(this, PERMISSIONS);
-                //if(permission) {
-                getUserDirectorySelection();
-                //}
-                return true;
+        if (recordPermission & storagePermission) {
+            v.callOnClick();
         }
-        return super.onOptionsItemSelected(item);
     }
-
-     */
-    public void getUserDirectorySelection(){
-        /*
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP & !selected){
-            Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-            i.putExtra("android.content.extra.SHOW_ADVANCED", true);
-            i.putExtra("android.content.extra.FANCY", true);
-            i.putExtra("android.content.extra.SHOW_FILESIZE", true);
-            startActivityForResult(Intent.createChooser(i, "Choose directory"), 9999);
-            editor.putBoolean("selected", true);
-            editor.apply();
-        }
-        */
-    }
-
-
 }
-
-    /*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.update:
-                boolean permission = hasPermissions(this, PERMISSIONS);
-                if(permission) {
-                    getUserDirectorySelection(false);
-                }
-                return true;
-            case R.id.delete:
-                Toast.makeText(getApplicationContext(), "delete", Toast.LENGTH_SHORT).show();
-                return true;
-            default:
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-
-    public boolean hasPermissions(Context context, String... permissions) {
-        if (context != null && permissions != null) {
-            for (String permission : permissions) {
-                if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    public void getUserDirectorySelection(boolean selected){
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP & !selected){
-            Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-            i.putExtra("android.content.extra.SHOW_ADVANCED", true);
-            i.putExtra("android.content.extra.FANCY", true);
-            i.putExtra("android.content.extra.SHOW_FILESIZE", true);
-            startActivityForResult(Intent.createChooser(i, "Choose directory"), 9999);
-            editor.putBoolean("selected", true);
-            editor.apply();
-        }
-    }
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        switch(requestCode) {
-            case 9999:
-                if (data!=null) {
-                    Uri uri = data.getData();
-                    Uri docUri = DocumentsContract.buildDocumentUriUsingTree(uri,
-                            DocumentsContract.getTreeDocumentId(uri));
-                    String path = getPath(this, docUri);
-                    editor.putString("directory", path);
-                    editor.apply();
-                }
-                break;
-            default:
-                break;
-        }
-    }
-    @TargetApi(Build.VERSION_CODES.KITKAT)
-    public static String getPath(final Context context, final Uri uri) {
-        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
-        if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
-            if (isExternalStorageDocument(uri)) {
-                final String docId = DocumentsContract.getDocumentId(uri);
-                final String[] split = docId.split(":");
-                final String type = split[0];
-                if ("primary".equalsIgnoreCase(type)) {
-                    return Environment.getExternalStorageDirectory() + "/" + split[1];
-                }
-            }
-            else if (isDownloadsDocument(uri)) {
-                final String id = DocumentsContract.getDocumentId(uri);
-                final Uri contentUri = ContentUris.withAppendedId(
-                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
-                return getDataColumn(context, contentUri, null, null);
-            }
-            else if (isMediaDocument(uri)) {
-                final String docId = DocumentsContract.getDocumentId(uri);
-                final String[] split = docId.split(":");
-                final String type = split[0];
-                Uri contentUri = null;
-                if ("image".equals(type)) {
-                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-                } else if ("video".equals(type)) {
-                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
-                } else if ("audio".equals(type)) {
-                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-                }
-                final String selection = "_id=?";
-                final String[] selectionArgs = new String[] {
-                        split[1]
-                };
-                return getDataColumn(context, contentUri, selection, selectionArgs);
-            }
-        }
-        else if ("content".equalsIgnoreCase(uri.getScheme())) {
-            if (isGooglePhotosUri(uri))
-                return uri.getLastPathSegment();
-            return getDataColumn(context, uri, null, null);
-        }
-        else if ("file".equalsIgnoreCase(uri.getScheme())) {
-            return uri.getPath();
-        }
-        return null;
-    }
-
-    public static String getDataColumn(Context context, Uri uri, String selection,
-                                       String[] selectionArgs) {
-
-        Cursor cursor = null;
-        final String column = "_data";
-        final String[] projection = {
-                column
-        };
-
-        try {
-            cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
-                    null);
-            if (cursor != null && cursor.moveToFirst()) {
-                final int index = cursor.getColumnIndexOrThrow(column);
-                return cursor.getString(index);
-            }
-        } finally {
-            if (cursor != null)
-                cursor.close();
-        }
-        return null;
-    }
-    public static boolean isExternalStorageDocument(Uri uri) {
-        return "com.android.externalstorage.documents".equals(uri.getAuthority());
-    }
-    public static boolean isDownloadsDocument(Uri uri) {
-        return "com.android.providers.downloads.documents".equals(uri.getAuthority());
-    }
-    public static boolean isMediaDocument(Uri uri) {
-        return "com.android.providers.media.documents".equals(uri.getAuthority());
-    }
-    public static boolean isGooglePhotosUri(Uri uri) {
-        return "com.google.android.apps.photos.content".equals(uri.getAuthority());
-    }
-
-     */
-/*
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.start_recording:
-                boolean permission = hasPermissions(this, PERMISSIONS);
-                boolean selected = sharedPref.getBoolean("selected",false);
-                if (!permission) {
-                    ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
-                }
-                else if(permission){
-                    if (!selected) { getUserDirectorySelection(selected);}
-                    else if(selected) {
-                            //if (!file_state){ int file_pos = global_seek.getProgress()*creation.getSampleRate();}
-                            String directory = sharedPref.getString("directory", getFilesDir().toString());
-                            int file_index = sharedPref.getInt("index", 1);
-                            editor.putInt("index", file_index += 1);
-                            editor.apply();
-                            //SELECTED_FILE_NAME = directory + "/Recording " + file_index + formatSeeker(format.getProgress());;
-                            Toast.makeText(MainActivity.this, "Now Recording",
-                                    Toast.LENGTH_SHORT).show();
-                            SELECTED_SAMPLE_RATE = sample_rate.getProgress() * seeker_multiplier;
-                            encodingSeeker(encoding.getProgress());
-                            channelSeeker(num_channels.getProgress());
-                            SELECTED_PLAYBACK_RATE = playback_rate.getProgress() * seeker_multiplier;
-                            creation = new AudioFile(SELECTED_SAMPLE_RATE, SELECTED_PLAYBACK_RATE,
-                                    SELECTED_AUDIO_ENCODING, SELECTED_CHANNELS, formatSeeker(format.getProgress()));
-                            formatSeeker(format.getProgress());
-                            creation.setFilePath(creation.getNewRecordFile());
-                            record.setFileObject(creation, file_state);
-                            //TODO fix this bullshit right here
-                            record.setRecordingState(false);
-                            record.startRecording();
-                            graph.setGraphState(true,record.buffer_size);
-                            //graph.setGraphState(true,silentBob);
-                            //displayFragment();
-                            //graph.setGraphState(true, silentBob);
-                            play_button.setVisibility(View.VISIBLE);
-                            stop_button.setVisibility(View.VISIBLE);
-                            record_button.setVisibility(View.INVISIBLE);
-                            pause_button.setVisibility(View.VISIBLE);
-                            num_channels.setEnabled(false);
-                            format.setEnabled(false);
-                            encoding.setEnabled(false);
-                        }}
-                break;
- */
-

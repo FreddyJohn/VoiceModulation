@@ -8,13 +8,14 @@ import java.nio.ByteBuffer;
 public class Format {
     public static class wav implements Runnable{
         private final Project project;
-        private Structure audioPieceTable;
-        public wav(Project _data, Structure audioPieceTable) {
+        private final String path;
+        private final Structure audioPieceTable;
+        public wav(Project _data, Structure audioPieceTable, String path) {
             this.project =_data;
             this.audioPieceTable = audioPieceTable;
+            this.path= path;
         }
         @Override
-        //TODO implement extra padding bytes so we can insert the header there overwriting instead of using bytebuffer and getting out of memory errors.
         public void run() {
             byte[] raw_data = audioPieceTable.getByteSequence();
             long total_bytes = raw_data.length;
@@ -29,9 +30,10 @@ public class Format {
             buff.put(wav_header);
             buff.put(raw_data);
             byte[] formatted_file = buff.array();
+            System.out.println("byte length = " + formatted_file.length);
             AudioConnect.IO_F con = new AudioConnect.IO_F();
-            //FileOutputStream out = con.setFileOutputStream(data.getFilePath().replace(".pcm",".wav"));
-            FileOutputStream out = con.setFileOutputStream(project.paths.audio.replace(".pcm",".wav"));
+            //FileOutputStream out = con.setFileOutputStream(project.paths.audio.replace(".pcm",".wav"));
+            FileOutputStream out = con.setFileOutputStream(path+".wav");
             con.closeFileOutputStream(out,formatted_file);
         }
     }

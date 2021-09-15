@@ -2,7 +2,7 @@ package com.example.voicemodulation.structures.stack;
 
 public class Ring {
     private final int length;
-    private short[] buf;
+    private final short[] buf;
     private int pos;
     private int head;
 
@@ -19,11 +19,10 @@ public class Ring {
         this.buf[tail] = s;
     }
 
-    public short dequeue(){
+    public void dequeue(){
         this.pos -= 1;
         short s = this.buf[this.head];
         this.head = (this.head+1) % this.length;
-        return s;
     }
 
     public short loopback(int n){
@@ -31,7 +30,4 @@ public class Ring {
         return this.buf[i];
     }
 
-    public boolean is_empty(){
-        return pos ==0;
-    }
 }

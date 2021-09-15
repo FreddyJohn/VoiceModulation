@@ -82,31 +82,41 @@
         android:layout_width="match_parent"
         android:layout_height="300dp"
         android:layout_marginBottom="20dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:defaultFocusHighlightEnabled="false"
+        android:focusable="false"
+        android:focusedByDefault="false"/>
 
-    <LinearLayout
-        android:id="@+id/seek_n_load"
+    <FrameLayout
+        android:id="@+id/info"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_gravity="center"
-        android:orientation="vertical">
+        android:layout_height="50dp">
+
+        <TextView
+            android:id="@+id/memory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|right|center_horizontal"
+            android:layout_marginRight="25dp"
+            android:textColor="#FFFFFF"
+            android:visibility="invisible" />
+
+        <TextView
+            android:id="@+id/freq"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginRight="25dp"
+            android:textColor="#FFFFFF"
+            android:visibility="invisible" />
 
         <TextView
             android:id="@+id/time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center"
+            android:layout_gravity="center|left"
+            android:layout_marginLeft="50dp"
             android:textColor="#FFFFFF"
-            android:visibility="invisible" />
-
-        <SeekBar
-            android:id="@+id/seek"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:progressTint="#4B4B4B"
-            android:thumb="@drawable/seekbar_thumb"
             android:visibility="invisible" />
 
         <com.example.voicemodulation.graph.AudioDisplay
@@ -116,7 +126,7 @@
             android:layout_marginBottom="10dp"
             android:visibility="gone" />
 
-    </LinearLayout>
+    </FrameLayout>
 
 
     <LinearLayout
@@ -143,7 +153,7 @@
                 android:textColor="#FFFFFF"></TextView>
 
             <HorizontalScrollView
-                android:id="@+id/fuckFragments"
+                android:id="@+id/viewHolder"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center">
@@ -196,6 +206,14 @@
 
                 <ImageButton
                     android:id="@+id/quantize"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:onClick="onClick"
+                    app:srcCompat="@drawable/ic_block" />
+
+                <ImageButton
+                    android:id="@+id/robot"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_weight="1"
@@ -253,6 +271,13 @@
                     android:layout_height="50dp"
                     android:onClick="onClick"
                     app:srcCompat="@drawable/ic_flangersquare" />
+
+                <ImageButton
+                    android:id="@+id/flanger_saw"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:onClick="onClick"
+                    app:srcCompat="@drawable/ic_flangersaw" />
 
             </LinearLayout>
         </HorizontalScrollView>

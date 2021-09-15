@@ -2,7 +2,6 @@ package com.example.voicemodulation.database.project;
 
 import androidx.room.Embedded;
 import androidx.room.Entity;
-import androidx.room.OnConflictStrategy;
 import androidx.room.PrimaryKey;
 
 @Entity
@@ -16,8 +15,6 @@ public class Project {
 
     @Embedded
     public Paths paths;
-
-
 
 }
 

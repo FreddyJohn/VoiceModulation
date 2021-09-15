@@ -88,19 +88,20 @@ public class AudioConnect {
             } catch (FileNotFoundException e) {
                  e.printStackTrace();
             }
-                return out; }
-        public void closeFileOutputStream(FileOutputStream out, byte[] data) {
-        try {
-            out.write(data, 0, data.length);
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+                return out;
         }
-    }
+        public void closeFileOutputStream(FileOutputStream out, byte[] data) {
+            try {
+                out.write(data, 0, data.length);
+                out.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
     public static class Data{
         public static short[] getShorts(String filePath){
-            byte[] bytes =getBytes(filePath);
+            byte[] bytes = getBytes(filePath);
             short[] shorts = Convert.bytesToShorts(bytes);
             return shorts;
         }
@@ -112,8 +113,6 @@ public class AudioConnect {
                 in = new FileInputStream(file);
                 in.read(track);
                 in.close();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -134,9 +133,7 @@ public class AudioConnect {
             byte[] buffer = new byte[Math.abs((length * n) - chunk_size)];
             try {
                 file.read(buffer);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (IndexOutOfBoundsException e) {
+            } catch (IOException | IndexOutOfBoundsException e) {
                 e.printStackTrace();
             }
             return buffer;

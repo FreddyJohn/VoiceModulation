@@ -13,7 +13,6 @@ public class Persist<T> {
     private T t;
     private RandomAccessFile outputFile;
 
-
     public void setOutputFile(String file){
         try {
             outputFile = new RandomAccessFile(file,"rw");

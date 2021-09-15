@@ -11,6 +11,7 @@ public class PieceTable implements Serializable{
     public int byte_length;
     public ArrayList<Piece> pieces;
     public long position;
+    public int unit;
     public PieceTable(){
         pieces = new ArrayList<>();
     }
@@ -20,16 +21,12 @@ public class PieceTable implements Serializable{
             System.out.println(piece.in_added+","+piece.length+","+piece.offset);
         }
     }
-    public long get_length(RandomAccessFile f){
-        long length=0;
-        try {
-            length= f.length();
-        } catch (IOException ex) {
-            Logger.getLogger(PieceTable.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return length;
+
+    public void setUnit(int unit){
+        this.unit = unit;
     }
-    private ArrayList filter(ArrayList<Piece> pieces) {
+
+    private ArrayList<Piece> filter(ArrayList<Piece> pieces) {
         ArrayList<Piece> filtered = new ArrayList<>();
         for (int i = 0, piecesSize = pieces.size(); i < piecesSize; i++) {
             Piece piece = pieces.get(i);
@@ -40,7 +37,7 @@ public class PieceTable implements Serializable{
         return filtered;
     }
 
-    private ArrayList splice(int start, int count, ArrayList<Piece> items) {
+    private ArrayList<Piece> splice(int start, int count, ArrayList<Piece> items) {
         ArrayList<Piece> list = new ArrayList<>();
         for (int i = 0; i < start; i++) {
             list.add(pieces.get(i));
@@ -78,6 +75,7 @@ public class PieceTable implements Serializable{
         }
 
         Pair pair = get_pieces_and_offset(index);
+
         int piece_index = (int) pair.first;
         long piece_offset= (long) pair.second;
         Piece curr_piece = pieces.get(piece_index);

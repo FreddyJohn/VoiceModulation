@@ -73,6 +73,11 @@ public class Generate {
         }
         return y;
     }
+    public static double saw_t(double t)
+    {
+        double y =-((2*1)/Math.PI) * Math.atan(1/Math.tan((2*Math.PI*t)/1));
+        return y;
+    }
     public static double[] square(int a, double f,double theta, int samples, int fps)
     {
         double[] y = new double[samples];
