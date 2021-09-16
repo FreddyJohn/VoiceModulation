@@ -8,7 +8,10 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import com.example.voicemodulation.R;
+
+import java.util.Locale;
 
 public class Controller extends LinearLayout {
     private TextView status;
@@ -32,57 +35,34 @@ public class Controller extends LinearLayout {
         title = new TextView(context);
         title.setTextAppearance(R.style.StaticSeekBarTitle);
         title.setTypeface(Typeface.DEFAULT_BOLD);
-        title.setText("title");
+        title.setText(getContext().getString(R.string.default_title));
         status = new TextView(context);
         status.setTextAppearance(R.style.DynamicSeekBarTitle);
         status.setTypeface(Typeface.DEFAULT_BOLD);
-        status.setText("status");
+        status.setText(getContext().getString(R.string.default_status));
         addView(title);
         addView(param);
         addView(status);
         setGravity(Gravity.CENTER);
         setOrientation(LinearLayout.VERTICAL);
-        Drawable b = context.getDrawable(R.drawable.seekbar_border);
-        setBackground(b);
+        Drawable background = ContextCompat.getDrawable(context,R.drawable.seekbar_border);
+        setBackground(background);
         param.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            if (param.getProgress()!=0) {
-                String quantity =String.format("%.2f",param.getProgress()*scale);
-                //TODO all record controls have types associated with their seek bar controller so this conditional is usuless
-                if (type != null) {
-                    status.setText(quantity + type);
-                }
+            String quantity = String.format(Locale.getDefault(),"%.2f",param.getProgress()*scale);
+            if (type != null) {
+                String unitQuantity = quantity + type;
+                status.setText(unitQuantity);
             }
-            if (!zeroCase) {
-                status.setText(quantityToType.quanToType(param.getProgress()));
-                //status.setText(quantity);
-            }
-            //TODO if less than scale for when we eventually implement fine and more sensitive scroll
-            //  based on user touch feedback
-            // if controller uses 0
-            /*
-            if (param.getProgress()==0)
-            {
-                String quantity =String.format("%.2f",scale);
-                if (type != null) {
-                    status.setText(scale + type);
-                } else {
-                    status.setText(quantity);
-                }
-            }
-
-             */
         }
 
         @Override
         public void onStartTrackingTouch(SeekBar seekBar) {
-
         }
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
-
         }
     });
 }
@@ -95,17 +75,6 @@ public class Controller extends LinearLayout {
     public int getProgress()
     {
         return param.getProgress();
-    }
-    public void setSeekBarEnabled(boolean enabled)
-    {
-        //param.setActivated(false);
-    }
-    public void setTypeSwitch(ControlCases.seekers runnable){
-        this.quantityToType = runnable;
-        //(variable) -> switch statement
-    }
-    public void setZeroCase(Boolean _zeroCase){
-        this.zeroCase = _zeroCase;
     }
 
     @Override

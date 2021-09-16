@@ -115,11 +115,12 @@ public class GraphLogic extends View {
             setMeasuredDimension(width, height);
         }
     }
-    public void setDimensions(int width, int height) {
-        this.isImported=true;
-        this.view_width = width;
-        this.view_height = height;
-    }
+
+    //public void setDimensions(int width, int height) {
+    //    this.isImported=true;
+    //    this.view_width = width;
+    //    this.view_height = height;
+    //}
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -144,6 +145,8 @@ public class GraphLogic extends View {
         drawable.cut_off = (view_width - pixel_density * (10 + columns_to_write));
         graph_pos = Math.max(graph_pos, drawable.cut_off);
         drawable.refreshDrawable();
+        T1_onScreen = false;
+        T2_onScreen = false;
         editable = null;
         graphState = false;
         invalidate();
@@ -165,7 +168,6 @@ public class GraphLogic extends View {
                 graph_pos = (int) (view_width - pixel_density * (10 + columns_to_write)) + pixel_density;
             }
         }   */
-
         this.graphState = b;
     }
 
@@ -190,6 +192,7 @@ public class GraphLogic extends View {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
             if (audioPieceTable.byte_length == 0) {
                 audioPieceTable.add_original(audio_file_length);
                 bitmapPieceTable.add_original(bitmap_file_length);

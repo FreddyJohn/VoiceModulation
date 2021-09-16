@@ -188,12 +188,27 @@
                     app:srcCompat="@drawable/ic_amp" />
 
                 <ImageButton
+                    android:id="@+id/phaser"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:onClick="onClick"
+                    app:srcCompat="@drawable/ic_phasersine" />
+
+                <ImageButton
                     android:id="@+id/low_pass"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_weight="1"
                     android:onClick="onClick"
                     app:srcCompat="@drawable/ic_lowpass" />
+
+                <ImageButton
+                    android:id="@+id/phaser_triangle"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:onClick="onClick"
+                    app:srcCompat="@drawable/ic_phasertriangle" />
 
                 <ImageButton
                     android:id="@+id/backwards"
@@ -205,51 +220,20 @@
                     app:srcCompat="@drawable/ic_backwards" />
 
                 <ImageButton
-                    android:id="@+id/echo"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:onClick="onClick"
-                    android:scaleType="centerCrop"
-                    app:srcCompat="@drawable/ic_echo" />
-
-                <ImageButton
-                    android:id="@+id/quantize"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_weight="1"
-                    android:onClick="onClick"
-                    app:srcCompat="@drawable/ic_block" />
-
-                <ImageButton
-                    android:id="@+id/robot"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_weight="1"
-                    android:onClick="onClick"
-                    app:srcCompat="@drawable/ic_robot" />
-
-                <ImageButton
-                    android:id="@+id/phaser"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:onClick="onClick"
-                    app:srcCompat="@drawable/ic_phasersine" />
-
-                <ImageButton
-                    android:id="@+id/phaser_triangle"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_weight="1"
-                    android:onClick="onClick"
-                    app:srcCompat="@drawable/ic_phasertriangle" />
-
-                <ImageButton
                     android:id="@+id/phaser_square"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_weight="1"
                     android:onClick="onClick"
                     app:srcCompat="@drawable/ic_phasersquare" />
+
+                <ImageButton
+                    android:id="@+id/echo"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:onClick="onClick"
+                    android:scaleType="centerCrop"
+                    app:srcCompat="@drawable/ic_echo" />
 
                 <ImageButton
                     android:id="@+id/phaser_saw"
@@ -260,11 +244,27 @@
                     app:srcCompat="@drawable/ic_phasersawtooth" />
 
                 <ImageButton
+                    android:id="@+id/quantize"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:onClick="onClick"
+                    app:srcCompat="@drawable/ic_block" />
+
+                <ImageButton
                     android:id="@+id/flanger"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:onClick="onClick"
                     app:srcCompat="@drawable/flangersine" />
+
+                <ImageButton
+                    android:id="@+id/robot"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:onClick="onClick"
+                    app:srcCompat="@drawable/ic_robot" />
 
                 <ImageButton
                     android:id="@+id/flanger_triangle"

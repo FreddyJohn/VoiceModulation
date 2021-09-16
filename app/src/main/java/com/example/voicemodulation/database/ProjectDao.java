@@ -30,6 +30,8 @@ import java.util.List;
         @Query("UPDATE Project SET project_name=:new_name WHERE uid=:uid")
         abstract void _updateProjectName(String new_name,int uid);
 
+        @Query("DELETE FROM Project WHERE project_name=:name")
+        abstract void _deleteProject(String name);
 
         @Query("UPDATE Project SET buffer_size=:buffer_size WHERE project_name=:project_name")
         abstract void _updateBufferSize(String project_name,int buffer_size);
@@ -53,6 +55,12 @@ import java.util.List;
         public void updateProjectName(String name, Project project){
             _updateProjectName(name, project.uid);
         }
+
+        public void deleteProject(String name){
+            _deleteProject(name);
+        }
+
+
 
         public int getUid(){
             return _getUid();

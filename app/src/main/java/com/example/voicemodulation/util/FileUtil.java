@@ -65,6 +65,7 @@ public class FileUtil {
         structure.remove(bytePoints.first,bytePoints.second-bytePoints.first);
         write(bytes,audioFile);
         structure.add(bytePoints.second-bytePoints.first,bytePoints.first);
+
     }
 
     private static void write(byte[] read, RandomAccessFile audioFile) {

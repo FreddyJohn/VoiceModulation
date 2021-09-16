@@ -2,6 +2,7 @@ package com.example.voicemodulation;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.AudioFormat;
@@ -118,7 +119,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
         decorView.setSystemUiVisibility(uiOptions);
 
-
         graph = findViewById(R.id.display);
 
         threadList = new ArrayList<>();
@@ -162,16 +162,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
          */
         //scrollView.addView(controls);
 
-
         AppDatabase db = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "database-name").allowMainThreadQueries().build();
         userDao = db.projectDao();
         newProject = new Project();
         newProject.audioData = new AudioData();
-        graph.requestLayout();
-        graph.postInvalidate();
-        newProject.audioData.width = (int) graph.view_width;
-        newProject.audioData.height = (int) graph.view_height;
+        //graph.requestLayout();
+        //graph.postInvalidate();
+        //newProject.audioData.width = (int) graph.view_width;
+        //newProject.audioData.height = (int) graph.view_height;
         System.out.println("in on create width="+graph.view_width+" height="+graph.view_height);
         System.out.println("in on create width="+graph.getMeasuredWidth()+" height="+graph.getMeasuredHeight());
 
@@ -184,7 +183,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             alert.setView(view);
             final EditText dialog = (EditText) view.findViewById(R.id.userInputDialog);
             alert.setCancelable(false).setPositiveButton(getString(R.string.export), (dialogBox, id) -> {
-                userDao.updateProjectName(dialog.getText().toString(), newProject);
                 Export.format(newProject, audioPieceTable,Environment.getExternalStorageDirectory()+"/"+Environment.DIRECTORY_MUSIC+"/"+dialog.getText().toString());
                 Toast.makeText(this,"Project saved to music folder",Toast.LENGTH_SHORT).show();
                 stop_button.setVisibility(View.VISIBLE);
@@ -432,10 +430,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 memory.setText(FileUtil.formatMemory(length));
                 time.setText(FileUtil.formatTime(max));
                 play_button.setVisibility(View.VISIBLE);
-
                 stop_button.setVisibility(View.VISIBLE);
-                //stop_button
-
                 pause_button.setVisibility(View.INVISIBLE);
                 record_button.setVisibility(View.VISIBLE);
                 modulations.setVisibility(View.VISIBLE);
@@ -459,6 +454,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             } else if (vId == R.id.projects) {
                 displayProjectList(v);
+            } else if (vId == R.id.save){
+                LayoutInflater layoutInflater = LayoutInflater.from(MainActivity.this);
+                View view = layoutInflater.inflate(R.layout.name_project, null);
+                AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+                alert.setView(view);
+                final EditText dialog = (EditText) view.findViewById(R.id.userInputDialog);
+                alert.setCancelable(false).setPositiveButton(R.string.save, (dialogBox, id) -> {
+                    userDao.updateProjectName(dialog.getText().toString(), newProject);
+                }).setNegativeButton(getString(R.string.cancel), (dialogBox, id) ->{
+                    dialogBox.cancel();
+                });
+                AlertDialog alertDialogAndroid = alert.create();
+                alertDialogAndroid.show();
             }
         } else if (!recordPermission | !storagePermission) {
             getPermissions();
@@ -569,19 +577,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return false;
         });
         savedProject.add(getString(R.string.delete)).setOnMenuItemClickListener(item -> {
-            //if(requestToDelete){
-            //    userDao.deleteProject((String)title);
-            //}
-                        /*TODO
-                        popup.areYouSure?
-                        userDao.deleteProject();
 
-                         */
+            DialogInterface.OnClickListener dialogClickListener = (dialog, which) -> {
+                switch (which){
+                    case DialogInterface.BUTTON_POSITIVE:
+                        userDao.deleteProject((String)savedProject.getItem().getTitle());
+                        break;
 
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        dialog.cancel();
+                        break;
+                }
+            };
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Are you sure?").setPositiveButton(R.string.yes, dialogClickListener)
+                    .setNegativeButton(R.string.no, dialogClickListener).show();
             return false;
         });
         savedProject.add(getString(R.string.rename)).setOnMenuItemClickListener(item -> {
-
+            LayoutInflater layoutInflater = LayoutInflater.from(MainActivity.this);
+            View view = layoutInflater.inflate(R.layout.name_project, null);
+            AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+            alert.setView(view);
+            final EditText dialog = (EditText) view.findViewById(R.id.userInputDialog);
+            alert.setCancelable(false).setPositiveButton(R.string.rename, (dialogBox, id) -> {
+                userDao.updateProjectName(dialog.getText().toString(), newProject);
+            }).setNegativeButton(getString(R.string.cancel), (dialogBox, id) ->{
+                dialogBox.cancel();
+            });
+            AlertDialog alertDialogAndroid = alert.create();
+            alertDialogAndroid.show();
             return false;
         });
     }

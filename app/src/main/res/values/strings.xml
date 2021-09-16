@@ -50,7 +50,12 @@
     <string name="already_open">This project is already open</string>
     <string name="open">Open</string>
     <string name="delete">Delete</string>
-    <string name="rename">Rename</string>
     <string name="cancel">Cancel</string>
     <string name="export">Export</string>
+    <string name="default_title">title</string>
+    <string name="default_status">status</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="save">Save</string>
+    <string name="rename">Rename</string>
 </resources>
