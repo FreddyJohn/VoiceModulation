@@ -8,7 +8,8 @@ public class AudioData {
     public int num_channels_in;
     public int num_channels_out;
     public int buffer_size;
-    public int max;
+    public int height;
+    public int width;
 
 }
 

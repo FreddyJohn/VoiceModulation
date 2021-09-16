@@ -21,7 +21,7 @@
             android:id="@+id/undo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="start|center_vertical"
+            android:layout_gravity="center_vertical"
             android:background="?android:selectableItemBackgroundBorderless"
             android:contentDescription="@null"
             android:onClick="onClick"
@@ -32,7 +32,7 @@
             android:id="@+id/redo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="start|center_vertical"
+            android:layout_gravity="center_vertical"
             android:background="?android:selectableItemBackgroundBorderless"
             android:contentDescription="@null"
             android:onClick="onClick"
@@ -42,15 +42,22 @@
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginRight="25dp"
+            android:layout_gravity="center"
             android:layout_weight="1"
-            android:gravity="right|center_horizontal"
+            android:gravity="center"
             android:text="@string/app_name"
             android:textColor="@color/white"
-            android:textSize="@dimen/text_large"
-            android:textStyle="bold" />
-
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:autoSizeMaxTextSize="24sp"
+            app:autoSizeMinTextSize="20sp"
+            app:autoSizeStepGranularity="1sp" />
+        <ImageButton
+            android:id="@+id/save"
+            android:layout_width="49dp"
+            android:layout_height="@dimen/bottom_pnl_small_btn_size"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_baseline_save_alt_24"/>
         <ImageButton
             android:id="@+id/projects"
             android:layout_width="49dp"
@@ -150,6 +157,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:text="@string/record_title"
+                android:textStyle="bold"
                 android:textColor="#FFFFFF"></TextView>
 
             <HorizontalScrollView
@@ -299,6 +307,19 @@
                 android:background="@drawable/stop_icon"
                 android:contentDescription="TODO"
                 android:onClick="onClick" />
+
+            <ImageButton
+                android:id="@+id/export"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+
+                android:layout_gravity="center|left"
+                android:layout_marginStart="50dp"
+                android:layout_marginLeft="50dp"
+                android:background="@drawable/export"
+                android:contentDescription="TODO"
+                android:onClick="onClick"
+                android:visibility="invisible"/>
 
             <ImageButton
                 android:id="@+id/start_recording"

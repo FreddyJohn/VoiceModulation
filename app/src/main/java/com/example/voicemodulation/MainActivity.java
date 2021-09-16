@@ -11,7 +11,11 @@ import android.util.Pair;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
+import android.view.SubMenu;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
@@ -29,7 +33,6 @@ import androidx.room.Room;
 import com.example.voicemodulation.audio.Export;
 import com.example.voicemodulation.audio.RecordLogic;
 import com.example.voicemodulation.controls.ModulateControls;
-import com.example.voicemodulation.controls.RecordControls;
 import com.example.voicemodulation.database.AppDatabase;
 import com.example.voicemodulation.database.ProjectDao;
 import com.example.voicemodulation.database.project.AudioData;
@@ -82,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private HorizontalScrollView modulations;
     private FrameLayout projectInfo;
     private HorizontalScrollView scrollView;
-    private RecordControls controls;
+    //private RecordControls controls;
     private RecordLogic record;
     private AudioData audioData;
     public static Structure audioPieceTable;
@@ -103,37 +106,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView frequency;
     private View v;
     private boolean recordingState;
+    private ImageButton export_button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        View decorView = getWindow().getDecorView();
+        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+        decorView.setSystemUiVisibility(uiOptions);
+
 
         graph = findViewById(R.id.display);
+
         threadList = new ArrayList<>();
 
         echo_titles = new String[]{getString(R.string.delay)};
-        String[] record_control_titles = new String[]{getString(R.string.playback_rate), getString(R.string.sample_rate)};
-        String[] record_control_quantities = new String[]{getString(R.string.hz), getString(R.string.hz)};
+        //String[] record_control_titles = new String[]{getString(R.string.playback_rate), getString(R.string.sample_rate)};
+        //String[] record_control_quantities = new String[]{getString(R.string.hz), getString(R.string.hz)};
         flanger_titles = new String[]{getString(R.string.delay), getString(R.string.amplitude), getString(R.string.wet), getString(R.string.freq)};
         flanger_quantities = new String[]{getString(R.string.s), getString(R.string.amp), " '", getString(R.string.hz)};
         phaser_titles = new String[]{getString(R.string.freq), getString(R.string.carrier_amp), getString(R.string.modulator_amp), getString(R.string.title_theta)};
         phaser_quantities = new String[]{getString(R.string.hz), getString(R.string.amp), getString(R.string.amp), getString(R.string.theta)};
 
-        /*
-         use sharedPreferences to store
-         1.) the last project they were working on
-         2.) the directory they wish to export wav file too
-         */
-
-        sharedPref = getPreferences(Context.MODE_PRIVATE);
-        editor = sharedPref.edit();
-
-        FrameLayout record_controls = findViewById(R.id.record_controls);
+        //FrameLayout record_controls = findViewById(R.id.record_controls);
         record_button = findViewById(R.id.start_recording);
         play_button = findViewById(R.id.play_recording);
         pause_button = findViewById(R.id.pause_recording);
         stop_button = findViewById(R.id.stop_recording);
+        export_button = findViewById(R.id.export);
 
         play_button.setVisibility(View.INVISIBLE);
         stop_button.setVisibility(View.INVISIBLE);
@@ -148,32 +151,49 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         display = findViewById(R.id.audio_display);
         modulations = findViewById(R.id.modulations);
 
-        int record_gravity = Gravity.NO_GRAVITY;
-        String record_control_title = getString(R.string.record_controls);
-
+        //int record_gravity = Gravity.NO_GRAVITY;
+        //String record_control_title = getString(R.string.record_controls);
+        /*
         controls = new RecordControls(this, record_control_titles, record_control_ranges,
                 record_control_scales, record_control_quantities,
                 record_gravity, record_control_title, record_control_progresses,
                 record_controls, graph, projectInfo, modulations);
+
+         */
         //scrollView.addView(controls);
 
 
         AppDatabase db = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "database-name").allowMainThreadQueries().build();
         userDao = db.projectDao();
+        newProject = new Project();
+        newProject.audioData = new AudioData();
+        graph.requestLayout();
+        graph.postInvalidate();
+        newProject.audioData.width = (int) graph.view_width;
+        newProject.audioData.height = (int) graph.view_height;
+        System.out.println("in on create width="+graph.view_width+" height="+graph.view_height);
+        System.out.println("in on create width="+graph.getMeasuredWidth()+" height="+graph.getMeasuredHeight());
 
         stop_button.setOnLongClickListener(v -> {
-
+            stop_button.setVisibility(View.INVISIBLE);
+            export_button.setVisibility(View.VISIBLE);
             LayoutInflater layoutInflater = LayoutInflater.from(MainActivity.this);
             View view = layoutInflater.inflate(R.layout.name_project, null);
             AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
             alert.setView(view);
             final EditText dialog = (EditText) view.findViewById(R.id.userInputDialog);
-            alert.setCancelable(false).setPositiveButton("Save", (dialogBox, id) -> {
+            alert.setCancelable(false).setPositiveButton(getString(R.string.export), (dialogBox, id) -> {
                 userDao.updateProjectName(dialog.getText().toString(), newProject);
                 Export.format(newProject, audioPieceTable,Environment.getExternalStorageDirectory()+"/"+Environment.DIRECTORY_MUSIC+"/"+dialog.getText().toString());
-                Toast.makeText(this,"Project saved to music folder",Toast.LENGTH_SHORT).show();;
-            }).setNegativeButton("Cancel", (dialogBox, id) -> dialogBox.cancel());
+                Toast.makeText(this,"Project saved to music folder",Toast.LENGTH_SHORT).show();
+                stop_button.setVisibility(View.VISIBLE);
+                export_button.setVisibility(View.INVISIBLE);
+            }).setNegativeButton(getString(R.string.cancel), (dialogBox, id) ->{
+                stop_button.setVisibility(View.VISIBLE);
+                export_button.setVisibility(View.INVISIBLE);
+                dialogBox.cancel();
+                });
             AlertDialog alertDialogAndroid = alert.create();
             alertDialogAndroid.show();
             return false;
@@ -336,14 +356,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         getString(R.string.robot_title), new int[]{1}, play_button, projectInfo);
                 scrollView.addView(robotic);
             } else if (vId == R.id.start_recording) {
+                /*
                 if (newProject.audioData == null) {
                     newProject.audioData = controls.getCreationData();
                     audioData = newProject.audioData;
                     userDao.insertProject(newProject);
                 }
-
                 newProject.audioData = newProject.audioData != null ? newProject.audioData : controls.getCreationData();
                 audioData = newProject.audioData;
+                 */
 
                 //nyquist = (audioData.sample_rate / 2.0) / 20;
                 /*
@@ -382,8 +403,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 recordingState = true;
                 userDao.insertBufferSize(newProject, record.buffer_size);
                 graph.setGraphState(record.buffer_size, true);
+                //userDao.updateColumnWidth((int) graph.view_height,newProject.uid );
                 record_button.setVisibility(View.INVISIBLE);
                 pause_button.setVisibility(View.VISIBLE);
+                stop_button.setVisibility(View.INVISIBLE);
+                play_button.setVisibility(View.INVISIBLE);
             } else if (vId == R.id.pause_recording) {
                 record.isPaused(true);
                 recordingState = false;
@@ -400,6 +424,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 display.setVisibility(View.GONE);
                 long max = (long) (length / 2.0 / audioData.sample_rate);
 
+
                 time.setVisibility(View.VISIBLE);
                 memory.setVisibility(View.VISIBLE);
                 frequency.setVisibility(View.VISIBLE);
@@ -407,7 +432,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 memory.setText(FileUtil.formatMemory(length));
                 time.setText(FileUtil.formatTime(max));
                 play_button.setVisibility(View.VISIBLE);
+
                 stop_button.setVisibility(View.VISIBLE);
+                //stop_button
+
                 pause_button.setVisibility(View.INVISIBLE);
                 record_button.setVisibility(View.VISIBLE);
                 modulations.setVisibility(View.VISIBLE);
@@ -438,8 +466,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initializeProjectData() {
-        newProject = new Project();
-        newProject.audioData = new AudioData();
+        //newProject = new Project();
         newProject.audioData.sample_rate = 44100;
         newProject.audioData.playback_rate = 44100;
         newProject.audioData.format = ".wav";
@@ -466,7 +493,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     add("audio_remove_stack");
                 }});
         newProject.paths = projectPaths;
-        //newProject.project_name = "AutoSave " + System.nanoTime();
         newProject.project_name = "AutoSave " + userDao.getUid();
         bitmapPieceTable = new Structure(projectPaths.bitmap_table, projectPaths.bitmap,
                 projectPaths.bitmap_original, projectPaths.bitmap_edits, projectPaths.bitmap_remove_stack);
@@ -478,6 +504,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         record.setFileObject(audioData, projectPaths.audio_original);
         record.setFileData(newProject.audioData, newProject.paths.modulation);
         record.setPieceTable(audioPieceTable);
+        //newProject.audioData.width = (int) graph.view_width;
+        //newProject.audioData.height = (int)graph.view_height;
+        System.out.println("view width="+graph.view_width+" view height="+graph.view_height);
         userDao.insertProject(newProject);
 
     }
@@ -488,52 +517,73 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             List<String> title_list = userDao.getProjectNames();
             if (title_list != null) {
                 for (CharSequence title : title_list) {
-                    popupMenu.getMenu().add(title).setOnMenuItemClickListener(item -> {
-                        Project project = userDao.getProjectFromName((String) title);
-                        if (project.uid != newProject.uid) {
-                            newProject = project;
-                            audioData = newProject.audioData;
-                            projectPaths = newProject.paths;
-
-                            bitmapPieceTable = new Structure(projectPaths.bitmap_table, projectPaths.bitmap,
-                                    projectPaths.bitmap_original, projectPaths.bitmap_edits, projectPaths.bitmap_remove_stack);
-                            audioPieceTable = new Structure(projectPaths.audio_table, projectPaths.audio,
-                                    projectPaths.audio_original, projectPaths.audio_edits, projectPaths.audio_remove_stack);
-
-                            record = new RecordLogic();
-                            nyquist = (audioData.sample_rate / 2.0) / 20;
-                            record.setFileData(newProject.audioData, newProject.paths.modulation);
-                            record.setPieceTable(audioPieceTable);
-
-                            graph = findViewById(R.id.display);
-                            graph.setTables(bitmapPieceTable, audioPieceTable);
-                            if (audioPieceTable.hasEdits()) {
-                                graph.setOriginalPaths(newProject.paths);
-                            } else {
-                                graph.setProjectPaths(newProject.paths);
-                            }
-                            graph.buffer_size = newProject.audioData.buffer_size;
-                            graph.populateProject();
-
-                            int max = audioPieceTable.byte_length / 2 / audioData.sample_rate * 1000;
-                            time.setVisibility(View.VISIBLE);
-                            memory.setVisibility(View.VISIBLE);
-                            frequency.setVisibility(View.VISIBLE);
-                            modulations.setVisibility(View.VISIBLE);
-                            play_button.setVisibility(View.VISIBLE);
-                            stop_button.setVisibility(View.VISIBLE);
-                            record_button.setVisibility(View.VISIBLE);
-                        }else{
-                            Toast.makeText(this, getString(R.string.already_open),Toast.LENGTH_SHORT).show();
-                        }
-                        return false;
-                    });
+                    SubMenu savedProject = popupMenu.getMenu().addSubMenu(title);
+                    addListeners(savedProject,title);
                 }
             }
             MenuInflater inflater = popupMenu.getMenuInflater();
             inflater.inflate(R.menu.menu_main, popupMenu.getMenu());
             popupMenu.show();
         }
+    }
+
+    private void addListeners(SubMenu savedProject, CharSequence title) {
+        savedProject.add(getString(R.string.open)).setOnMenuItemClickListener(item -> {
+            Project project = userDao.getProjectFromName((String) title);
+            if (project.uid != newProject.uid) {
+                newProject = project;
+                audioData = newProject.audioData;
+                projectPaths = newProject.paths;
+
+                bitmapPieceTable = new Structure(projectPaths.bitmap_table, projectPaths.bitmap,
+                        projectPaths.bitmap_original, projectPaths.bitmap_edits, projectPaths.bitmap_remove_stack);
+                audioPieceTable = new Structure(projectPaths.audio_table, projectPaths.audio,
+                        projectPaths.audio_original, projectPaths.audio_edits, projectPaths.audio_remove_stack);
+
+                record = new RecordLogic();
+                nyquist = (audioData.sample_rate / 2.0) / 20;
+                record.setFileData(newProject.audioData, newProject.paths.modulation);
+                record.setPieceTable(audioPieceTable);
+
+                graph = findViewById(R.id.display);
+                graph.setTables(bitmapPieceTable, audioPieceTable);
+                //graph.setDimensions(newProject.audioData.width,newProject.audioData.height);
+                if (audioPieceTable.hasEdits()) {
+                    graph.setOriginalPaths(newProject.paths);
+                } else {
+                    graph.setProjectPaths(newProject.paths);
+                }
+                graph.buffer_size = newProject.audioData.buffer_size;
+                graph.populateProject();
+                int max = audioPieceTable.byte_length / 2 / audioData.sample_rate * 1000;
+                time.setVisibility(View.VISIBLE);
+                memory.setVisibility(View.VISIBLE);
+                frequency.setVisibility(View.VISIBLE);
+                modulations.setVisibility(View.VISIBLE);
+                play_button.setVisibility(View.VISIBLE);
+                stop_button.setVisibility(View.VISIBLE);
+                record_button.setVisibility(View.VISIBLE);
+            }else{
+                Toast.makeText(this, getString(R.string.already_open),Toast.LENGTH_SHORT).show();
+            }
+            return false;
+        });
+        savedProject.add(getString(R.string.delete)).setOnMenuItemClickListener(item -> {
+            //if(requestToDelete){
+            //    userDao.deleteProject((String)title);
+            //}
+                        /*TODO
+                        popup.areYouSure?
+                        userDao.deleteProject();
+
+                         */
+
+            return false;
+        });
+        savedProject.add(getString(R.string.rename)).setOnMenuItemClickListener(item -> {
+
+            return false;
+        });
     }
 
     public void getPermissions() {

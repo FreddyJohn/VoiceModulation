@@ -30,6 +30,7 @@ import java.util.List;
         @Query("UPDATE Project SET project_name=:new_name WHERE uid=:uid")
         abstract void _updateProjectName(String new_name,int uid);
 
+
         @Query("UPDATE Project SET buffer_size=:buffer_size WHERE project_name=:project_name")
         abstract void _updateBufferSize(String project_name,int buffer_size);
 

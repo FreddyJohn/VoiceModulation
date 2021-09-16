@@ -1,5 +1,6 @@
 package com.example.voicemodulation.controls;
 import android.content.Context;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -30,9 +31,11 @@ public class Controller extends LinearLayout {
         param = new ControlBar(context,null);
         title = new TextView(context);
         title.setTextAppearance(R.style.StaticSeekBarTitle);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setText("title");
         status = new TextView(context);
         status.setTextAppearance(R.style.DynamicSeekBarTitle);
+        status.setTypeface(Typeface.DEFAULT_BOLD);
         status.setText("status");
         addView(title);
         addView(param);

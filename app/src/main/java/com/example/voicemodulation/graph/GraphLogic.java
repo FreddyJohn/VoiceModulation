@@ -49,6 +49,7 @@ public class GraphLogic extends View {
     private float columnScreenStartPosition;
     private float columnStop;
     private float columnStart;
+    private boolean isImported;
 
     public GraphLogic(Context context) {
         super(context);
@@ -108,9 +109,16 @@ public class GraphLogic extends View {
     @Override
     protected void onMeasure(int width, int height) {
         super.onMeasure(width, height);
-        this.view_width = MeasureSpec.getSize(width);
-        this.view_height = MeasureSpec.getSize(height);
-        setMeasuredDimension(width, height);
+        if(!isImported) {
+            this.view_width = MeasureSpec.getSize(width);
+            this.view_height = MeasureSpec.getSize(height);
+            setMeasuredDimension(width, height);
+        }
+    }
+    public void setDimensions(int width, int height) {
+        this.isImported=true;
+        this.view_width = width;
+        this.view_height = height;
     }
 
     @Override
@@ -168,8 +176,6 @@ public class GraphLogic extends View {
         scrollTo(0,0);
         try {
             file_length = hendrix.length();
-            System.out.println("this is also somehow impossibly stupidly 0 " + file_length );
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -180,7 +186,6 @@ public class GraphLogic extends View {
             int bitmap_file_length = 0;
             try{
                 audio_file_length = (int) hendrix.length();
-                System.out.println("this is also somehow impossibly stupidly 0 " + audio_file_length);
                 bitmap_file_length = (int) camus.length();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -256,6 +261,7 @@ public class GraphLogic extends View {
         this.file_length = length;
         return buffer;
     }
+
 
     public class BytePoints {
         public int audio_start;

@@ -25,7 +25,7 @@
     <string name="title_theta">Theta</string>
     <string name="s">s</string>
     <string name="record_controls">Record Controls</string>
-    <string name="flanger_sine_title"><b>Flanger with Sine Wave</b></string>
+    <string name="flanger_sine_title">Flanger with Sine Wave</string>
     <string name="volume">Volume</string>
     <string name="backwards_title">Backwards Effect</string>
     <string name="echo_title">Echo Effect</string>
@@ -48,4 +48,9 @@
     <string name="redo_pressed">Redo pressed</string>
     <string name="nothing_to_redo">Nothing to redo</string>
     <string name="already_open">This project is already open</string>
+    <string name="open">Open</string>
+    <string name="delete">Delete</string>
+    <string name="rename">Rename</string>
+    <string name="cancel">Cancel</string>
+    <string name="export">Export</string>
 </resources>

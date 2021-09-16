@@ -121,11 +121,9 @@ public class Structure {
             return true;
         }
         return false;
-
     }
-
     public boolean redo(){
-        if(edits!=null && edits.redoIndex!=1) {
+        if(edits!=null && edits.redoIndex!=-1) {
             pieceTable = pieceTablePersist.deserialize();
             edits = editsPersist.deserialize();
             pieceTable = edits.redo(pieceTable, editsBuffer, originalBuffer);
