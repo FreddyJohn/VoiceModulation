@@ -152,8 +152,7 @@ public class GraphLogic extends View {
          */
         if(bitmapPieceTable.byte_length!=0) {
             drawable.refreshDrawable();
-        }else{
-            drawable = null;
+        }else{ drawable = null;
            graph_pos =0;
         }
 
@@ -186,6 +185,8 @@ public class GraphLogic extends View {
     public void setGraphState(int buffer_size, boolean state) {
         this.buffer_size = buffer_size;
         this.graphState = state;
+        T1_onScreen = false;
+        T2_onScreen = false;
         editable = null;
         scrollTo(0,0);
         try {
@@ -412,7 +413,10 @@ public class GraphLogic extends View {
                 refreshEditable();
                 bitmapPieceTable = bitmapPieceTable.getMostRecent();
                 waveformColumnHeight = (bitmapPieceTable.byte_length / (drawable.bitmap.getWidth() * 4));
+                //columnScreenStartPosition  = bitmapPieceTable.byte_length >= drawable.bitmap.getAllocationByteCount() * 4 ? waveformColumnHeight - drawable.cut_off + (selection!=null ? selection.length / pixel_density * editable_bitmap.getWidth() : 0 ) : 0;
                 columnScreenStartPosition = bitmapPieceTable.byte_length >= drawable.bitmap.getAllocationByteCount() * 4 ? waveformColumnHeight - drawable.cut_off : 0;
+                columnScreenRenderPosition = 0;
+                //scrollTo((int) (0-(selection!=null ? selection.length / pixel_density * editable_bitmap.getWidth() : 0 )),0);
             }
             if (editable.selected_bitmap != null) {
                 canvas.drawBitmap(editable.selected_bitmap, select_pos_x, select_pos_y, paint);
@@ -455,7 +459,7 @@ public class GraphLogic extends View {
         private void action_down(float x, float y) {
             x1 = x;
             t1=System.nanoTime();
-            if(!graphState & y <= view_height / 2 & x<=graph_pos){
+            if(!graphState & y <= view_height / 2){
                 selected_bitmap = null;
                 if (!T1_onScreen) {
                     T1 = columnScreenRenderPosition + x;
@@ -556,13 +560,19 @@ public class GraphLogic extends View {
             audioPieceTable.add(points.audio_length,points.audio_insert);
             editable_bitmap = null;
             selected_bitmap = null;
+            T1=0;
+            T2=0;
+            //scrollTo((int) (columnScreenRenderPosition+(bitmapByteSelection.length/(drawable.bitmap.getWidth()))*4),0);
         }
-
         private void removeSelection() {
             bitmapPieceTable.remove(points.bitmap_start,selection.length*4);
             audioPieceTable.remove(points.audio_start,points.audio_length);
             editable_bitmap = null;
             selected_bitmap = null;
+            T1=0;
+            T2=0;
+            //scrollTo((int) (columnScreenRenderPosition+(selection.length/(drawable.bitmap.getWidth()))*pixel_density),0);
+
         }
     }
 }
