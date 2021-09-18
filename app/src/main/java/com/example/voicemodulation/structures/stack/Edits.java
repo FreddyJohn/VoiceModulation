@@ -53,6 +53,7 @@ public class Edits implements Serializable {
                     handleRemove(currentEdit,buffer,removeStack);
                     sequence.add(currentEdit.length,currentEdit.offset,buffer);
                     break;
+
             }
             redoStack.add(currentEdit);
             redoIndex+=1;
@@ -83,6 +84,7 @@ public class Edits implements Serializable {
                 case "remove":
                     sequence.remove(currentRedo.offset, currentRedo.length);
                     break;
+
             }
             push(currentRedo);
             redoStack.remove(redoIndex);

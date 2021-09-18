@@ -86,7 +86,7 @@ public class Structure {
 
     public void remove(long index, long length) {
         index = (index==0) ? unit : index;
-        length = (length==pieceTable.byte_length) ? length-2: length;
+        length = (length==pieceTable.byte_length) ? length-unit: length;
         edits.emptyEdits();
         try {
             removeStack.setLength(0);
@@ -107,14 +107,15 @@ public class Structure {
 
     public Structure getMostRecent(){
         pieceTable = pieceTablePersist.deserialize();
+        byte_length = pieceTable.byte_length;
         return this;
     }
-
     public boolean undo(){
         if (edits!=null && edits.editIndex!=-1) {
             pieceTable = pieceTablePersist.deserialize();
             edits = editsPersist.deserialize();
-            pieceTable = edits.undo(pieceTable, editsBuffer, removeStack, originalBuffer);
+            pieceTable = edits.undo(pieceTable, editsBuffer,originalBuffer, removeStack);
+            //pieceTable = edits.undo(pieceTable, editsBuffer, removeStack, originalBuffer);
             byte_length = pieceTable.byte_length;
             pieceTablePersist.serialize(pieceTable);
             editsPersist.serialize(edits);
@@ -143,8 +144,14 @@ public class Structure {
         edits.printRedo();
     }
 
-    public boolean hasEdits(){
-        return pieceTable.pieces.size() <= 1;
+    public boolean isEmpty(){
+        boolean result;
+        if (pieceTable != null) {
+            result = pieceTable.pieces.size() <= 1;
+        }else {
+            result = true;
+        }
+        return result;
     }
 }
 

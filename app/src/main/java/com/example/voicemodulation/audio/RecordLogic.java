@@ -21,7 +21,7 @@ public class RecordLogic {
     private boolean isPaused = false;
     public int buffer_size;
     public long record_size;
-    private AudioData file_data;
+    private AudioData audioData;
     private String file_path;
     private Structure pieceTable;
     private AudioTrack at;
@@ -33,15 +33,17 @@ public class RecordLogic {
     }
     public void setFileData(AudioData file, String path)
     {
-        this.file_data = file;
+        this.audioData = file;
         this.file_path = path;
     }
-    public void setFileObject(AudioData creation, String path) {
-        this.file_data = creation;
+    public void setFileObject(AudioData audioData, String path) {
+        this.audioData = audioData;
         //this.file_path = creation.getFilePath();
         //this.file_path=creation.projectPaths.audio;
         this.file_path = path;
         this.ioRAF = new AudioConnect.IO_RAF(file_path);
+        this.buffer_size = AudioRecord.getMinBufferSize(
+                this.audioData.sample_rate, this.audioData.num_channels_in, this.audioData.bit_depth);
         this.out = ioRAF.getWriteObject();
     }
     public void isPaused(boolean state) {
@@ -61,16 +63,16 @@ public class RecordLogic {
                 file_data.getSampleRate(), file_data.getNumChannelsIn(),
                 file_data.getBitDepth(), bufferSize);
          */
-        int bufferSize = AudioRecord.getMinBufferSize(
-                file_data.sample_rate, file_data.num_channels_in, file_data.bit_depth);
-        this.buffer_size = bufferSize;
+        //int bufferSize = AudioRecord.getMinBufferSize(
+        //       file_data.sample_rate, file_data.num_channels_in, file_data.bit_depth);
+       // this.buffer_size = bufferSize;
         //System.out.println("buffer size as calculated in RecordLogic = "+bufferSize);
         recorder = new AudioRecord(AUDIO_SOURCE,
-                file_data.sample_rate, file_data.num_channels_in,
-                file_data.bit_depth, bufferSize);
+                audioData.sample_rate, audioData.num_channels_in,
+                audioData.bit_depth, this.buffer_size);
         recorder.startRecording();
         isRecording = true;
-        recordingThread = new Thread(() -> writeAudioDataToFile(), "AudioRecorder Thread");
+        recordingThread = new Thread(this::writeAudioDataToFile, "AudioRecorder Thread");
         recordingThread.setPriority(10);
         recordingThread.start();
     }
@@ -125,10 +127,10 @@ public class RecordLogic {
             //System.out.println(file_data.playback_rate+","+file_data.num_channels_out+","+file_data.bit_depth);
 
             int intSize = android.media.AudioTrack.getMinBufferSize(
-                    file_data.playback_rate, file_data.num_channels_out, file_data.bit_depth);
+                    audioData.playback_rate, audioData.num_channels_out, audioData.bit_depth);
             at = new AudioTrack(
-                    AudioManager.STREAM_MUSIC, file_data.playback_rate, file_data.num_channels_out,
-                    file_data.bit_depth, intSize, AudioTrack.MODE_STREAM);
+                    AudioManager.STREAM_MUSIC, audioData.playback_rate, audioData.num_channels_out,
+                    audioData.bit_depth, intSize, AudioTrack.MODE_STREAM);
             if (at != null) {
                 at.play();
                 at.write(byteData, 0, byteData.length);

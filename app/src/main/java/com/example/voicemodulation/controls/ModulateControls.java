@@ -1,14 +1,12 @@
 package com.example.voicemodulation.controls;
 import android.app.Activity;
 import android.content.Context;
-import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.Pair;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,7 +50,7 @@ public class ModulateControls extends LinearLayout{
 
 
     public ModulateControls(Context context, String[] title, int[] maxes, double[] scale,
-                            String[] quantity_type, Project creation, Modulation.modulation modulation,
+                            String[] quantity_type, Modulation.modulation modulation,
                             String name, int[] progress, ImageButton play,
                             FrameLayout info){
         super(context);
@@ -60,7 +58,7 @@ public class ModulateControls extends LinearLayout{
         this.maxes=maxes;
         this.scale=scale;
         this.quantity_type=quantity_type;
-        this.project =creation;
+        this.project = MainActivity.newProject;
         this.method=modulation;
         this.name=name;
         this.progress=progress;
@@ -93,8 +91,8 @@ public class ModulateControls extends LinearLayout{
                 @Override
                 public void run() {
                     position = MainActivity.getSelectionPoints();
-                    method.modulate(getModulateParameters(), project, position, MainActivity.audioPieceTable,null);
-                    FileUtil.writeModulation(project,MainActivity.audioPieceTable,position);
+                    method.modulate(getModulateParameters(), MainActivity.newProject, position, MainActivity.audioPieceTable,null);
+                    FileUtil.writeModulation(MainActivity.newProject,MainActivity.audioPieceTable,position);
                 }
             };
             thread.start();
@@ -109,23 +107,23 @@ public class ModulateControls extends LinearLayout{
                 public void run() {
                     recordLogic = new RecordLogic();
                     position = MainActivity.getSelectionPoints();
+                    int length = MainActivity.getLength();
                     //position = new Pair<>(bytePoints.audio_start,bytePoints.audio_stop);
                     recordLogic.setPieceTable(null);
                     //recordLogic.setFileData(creation, creation.projectPaths.modulation);
-                    recordLogic.setFileData(project.audioData, project.paths.modulation);
-                    method.modulate(getModulateParameters(), project, position, MainActivity.audioPieceTable,null);
+                    recordLogic.setFileData(MainActivity.newProject.audioData, MainActivity.newProject.paths.modulation);
+                    method.modulate(getModulateParameters(), MainActivity.newProject, position, MainActivity.audioPieceTable,null);
                     while (!Thread.currentThread().isInterrupted()) {
                         ((Activity) context).runOnUiThread(() -> {
                             display.setVisibility(View.VISIBLE);
                             info.findViewById(R.id.memory).setVisibility(View.GONE);
                             info.findViewById(R.id.time).setVisibility(View.GONE);
                             info.findViewById(R.id.freq).setVisibility(View.GONE);
-
-                            MainActivity.setDisplayStream(MainActivity.audioPieceTable.byte_length, project.paths.modulation, true, 0, Short.MAX_VALUE * 2 + 1);
+                            MainActivity.setDisplayStream(length, MainActivity.newProject.paths.modulation, true, Short.MAX_VALUE * 2 + 1,0);
                         });
                         recordLogic.play_recording(0, position.second - position.first);
                         ((Activity) context).runOnUiThread(() -> {
-                            MainActivity.setDisplayStream(MainActivity.audioPieceTable.byte_length, project.paths.modulation, false, 0, Short.MAX_VALUE * 2 + 1);
+                            MainActivity.setDisplayStream(length, MainActivity.newProject.paths.modulation, false, Short.MAX_VALUE * 2 + 1,0);
                             display.setVisibility(View.GONE);
                             info.findViewById(R.id.memory).setVisibility(View.VISIBLE);
                             info.findViewById(R.id.time).setVisibility(View.VISIBLE);

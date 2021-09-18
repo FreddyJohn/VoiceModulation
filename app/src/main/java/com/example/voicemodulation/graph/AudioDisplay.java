@@ -20,16 +20,13 @@ import java.util.LinkedList;
 
 
 public class AudioDisplay extends View {
-    private float pixel_density;
     private Paint paint;
     private float view_height;
     private float view_width;
     private boolean graphState = false;
     private DataInputStream jane;
     private int bufferSize;
-    private LinkedList<Short> data;
     private int graph_pos=0;
-    private double iter=.1;
     private int dynamicRange;
 
     public AudioDisplay(Context context) {
@@ -51,10 +48,9 @@ public class AudioDisplay extends View {
     {
         LinearLayout.LayoutParams view_params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
         view_params.gravity = Gravity.CENTER;
-        data = new LinkedList<>();
         paint = new Paint();
         paint.setColor(Color.RED);
-        pixel_density = Convert.numberToDp(context,1);
+        float pixel_density = Convert.numberToDp(context, 1);
         paint.setDither(true);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(pixel_density);
@@ -71,11 +67,8 @@ public class AudioDisplay extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (graphState & dynamicRange==Short.MAX_VALUE*2+1) {
+        if (graphState) {
             startGraphing(canvas);
-        }
-        if(graphState & dynamicRange==Byte.MAX_VALUE*2+1){
-            startGraphingBytes(canvas);
         }
     }
     @Override
@@ -93,7 +86,7 @@ public class AudioDisplay extends View {
         }
     }
     public void setEncoding(int _dynamicRange){this.dynamicRange=_dynamicRange;}
-    public void setGraphState(boolean state, int buffer_size,String in_file,int n) {
+    public void setGraphState(boolean state, int buffer_size, String in_file,int n) {
         this.graphState=state;
         this.bufferSize=buffer_size;
         //System.out.println("Buffer size: "+buffer_size);
@@ -117,7 +110,7 @@ public class AudioDisplay extends View {
                 }
                 break;
         }
-        invalidate(); }
+        invalidate();}
     public void startGraphing(Canvas canvas) {
         byte[] buffer = new byte[bufferSize];
         short[] chunk = new short[bufferSize*2];
@@ -126,27 +119,11 @@ public class AudioDisplay extends View {
             chunk = Convert.bytesToShorts(buffer);
         } catch (IOException e) {
             e.printStackTrace();
-            //System.out.println("FAILED TO READ BUFFER");
         }
-        for(int i=0; i<chunk.length; i++) {
+        for (short value : chunk) {
+            double iter = .1;
             graph_pos += iter;
-            //canvas.drawLine(graph_pos, view_height / 2, graph_pos, (view_height / 2) - chunk[i] * (view_height / dynamicRange), paint);
-            canvas.drawPoint(graph_pos, (view_height / 2) - chunk[i] * (view_height / dynamicRange), paint);
-            canvas.translate(+1, 0);
-        }
-        invalidate();
-    }
-    public void startGraphingBytes(Canvas canvas) {
-        byte[] buffer = new byte[bufferSize];
-        try {
-            jane.read(buffer);
-        } catch (IOException e) {
-            e.printStackTrace();
-            //System.out.println("FAILED TO READ BUFFER");
-        }
-        for(int i=0; i<buffer.length; i++) {
-            graph_pos += iter;
-            canvas.drawLine(graph_pos, view_height / 2, graph_pos, (view_height / 2) - buffer[i], paint);
+            canvas.drawPoint(graph_pos, (view_height / 2) - value * (view_height / dynamicRange), paint);
             canvas.translate(+1, 0);
         }
         invalidate();

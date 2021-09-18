@@ -88,31 +88,20 @@ public class FileUtil {
         }
         return modulatedBytes;
     }
-
-
-    public static String formatTime(long pTime) {
-        final long min = pTime/60;
-        final long sec = pTime-(min*60);
-        final String strMin = placeZeroIfNeed((int) min);
-        final String strSec = placeZeroIfNeed((int) sec);
-        return String.format("%s:%s",strMin,strSec);
-    }
-    private static String placeZeroIfNeed(int number) {
-        return (number >=10)? Integer.toString(number):String.format("0%s",Integer.toString(number));
-    }
-
-    public static String formatMemory(long numBytes) {
-        String formatted = "";
-        NumberFormat format = NumberFormat.getInstance();
-        format.setGroupingUsed(true);
-        String commaNum =format.format(numBytes);
-        if (numBytes / 1E6 < 1) {
-            int kB = (int) (numBytes / 1E3);
-            formatted = kB + " kB" + " (" + commaNum + " bytes)";
-        } else if (numBytes / 1E6 > 1) {
-            int mB = (int) (numBytes / 1E6);
-            formatted = mB + " mB" + " (" + commaNum + " bytes)";
+    public static boolean deleteDir(File dir) {
+        if (dir.isDirectory()) {
+            String[] children = dir.list();
+            for (String child : children) {
+                boolean success = deleteDir(new File(dir, child));
+                if (!success) {
+                    return false;
+                }
+            }
         }
-        return formatted;
+
+        // The directory is now empty so delete it
+        return dir.delete();
     }
+
 }
+

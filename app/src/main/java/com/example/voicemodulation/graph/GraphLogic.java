@@ -47,8 +47,8 @@ public class GraphLogic extends View {
     private int record_session_length;
     private int bitmap_session_length;
     private float columnScreenStartPosition;
-    private float columnStop;
-    private float columnStart;
+    public float columnStop;
+    public float columnStart;
     private boolean isImported;
 
     public GraphLogic(Context context) {
@@ -144,7 +144,19 @@ public class GraphLogic extends View {
         drawable = new Drawable((int) view_height/2, (int)view_width);
         drawable.cut_off = (view_width - pixel_density * (10 + columns_to_write));
         graph_pos = Math.max(graph_pos, drawable.cut_off);
-        drawable.refreshDrawable();
+        /*
+         when we delete the current project
+         importing an empty project
+
+         refresh drawable gives us this same error so extract the solution and write a conditional here for these two cases
+         */
+        if(bitmapPieceTable.byte_length!=0) {
+            drawable.refreshDrawable();
+        }else{
+            drawable = null;
+           graph_pos =0;
+        }
+
         T1_onScreen = false;
         T2_onScreen = false;
         editable = null;
@@ -311,7 +323,7 @@ public class GraphLogic extends View {
             this.pixels = new int[bitmap.getAllocationByteCount()];
             this.column = new int[(int) (pixel_density * bitmap.getWidth())];
             this.pixelsMinusColumns = new int[bitmap.getAllocationByteCount() / 4];
-            this.column_bytes = new byte[(int) (pixel_density * bitmap.getWidth()) * 4];
+            this.column_bytes = new byte[(int) (pixel_density * bitmap.getWidth()) * 4]; 
         }
 
         private void doGraphing(Canvas _canvas) {
@@ -398,6 +410,7 @@ public class GraphLogic extends View {
         private void beEditableGraph(Canvas canvas) {
             if(editable_bitmap == null){
                 refreshEditable();
+                bitmapPieceTable = bitmapPieceTable.getMostRecent();
                 waveformColumnHeight = (bitmapPieceTable.byte_length / (drawable.bitmap.getWidth() * 4));
                 columnScreenStartPosition = bitmapPieceTable.byte_length >= drawable.bitmap.getAllocationByteCount() * 4 ? waveformColumnHeight - drawable.cut_off : 0;
             }
@@ -442,7 +455,7 @@ public class GraphLogic extends View {
         private void action_down(float x, float y) {
             x1 = x;
             t1=System.nanoTime();
-            if(!graphState && y <= view_height / 2){
+            if(!graphState & y <= view_height / 2 & x<=graph_pos){
                 selected_bitmap = null;
                 if (!T1_onScreen) {
                     T1 = columnScreenRenderPosition + x;
