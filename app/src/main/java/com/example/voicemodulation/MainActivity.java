@@ -345,7 +345,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else if (vId == R.id.volume) {
                 scrollView.removeAllViews();
                 Modulation.amplitude amp = new Modulation.amplitude();
-                ModulateControls amp_view = new ModulateControls(this, new String[]{getString(R.string.volume)}, new int[]{10}, new double[]{1},
+                ModulateControls amp_view = new ModulateControls(this, new String[]{getString(R.string.volume)}, new int[]{10}, new double[]{.1},
                         new String[]{" "}, amp,
                         getString(R.string.amplitude), flanger_progress, play_button, projectInfo);
                 scrollView.addView(amp_view);
@@ -540,7 +540,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //newProject.audioData.height = (int)graph.view_height;
         System.out.println("view width="+graph.view_width+" view height="+graph.view_height);
         userDao.insertProject(newProject);
-
     }
 
     private void displayProjectList(View view) {
@@ -585,8 +584,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } else {
                     graph.setProjectPaths(newProject.paths);
                 }
-                GraphLogic.T1 =0;
-                GraphLogic.T2 =0;
+                GraphLogic.T1 = 0;
+                GraphLogic.T2 = 0;
                 graph.buffer_size = newProject.audioData.buffer_size;
                 graph.populateProject();
                 int max = audioPieceTable.byte_length / 2 / audioData.sample_rate * 1000;

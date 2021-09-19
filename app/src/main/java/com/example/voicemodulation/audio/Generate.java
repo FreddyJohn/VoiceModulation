@@ -100,18 +100,7 @@ public class Generate {
         }
         return y;
     }
-    public static double getNormalizationCoefficient(short[] data){
-        double max=1;
-        for (int counter = 1; counter < data.length; counter++)
-        {
-            int sample = Math.abs(data[counter]);
-            if (sample > Math.abs(max))
-            {
-                max = sample;
-            }
-        }
-        return (max/65535)/1.7;
-    }
+
     public static double getAbsoluteMax(double[] data){
         double max=0;
         for (int counter = 1; counter < data.length; counter++)

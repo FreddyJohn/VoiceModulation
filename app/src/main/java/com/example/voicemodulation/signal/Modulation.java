@@ -1,6 +1,5 @@
 package com.example.voicemodulation.signal;
 import android.util.Pair;
-
 import com.example.voicemodulation.audio.AudioConnect;
 import com.example.voicemodulation.database.project.Project;
 import com.example.voicemodulation.audio.Generate;
@@ -8,8 +7,6 @@ import com.example.voicemodulation.structures.Structure;
 import com.example.voicemodulation.structures.stack.Ring;
 import com.example.voicemodulation.util.Convert;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.LinkedList;
 
 public class Modulation {
@@ -308,28 +305,15 @@ public class Modulation {
         public void modulate(LinkedList<Double> _params, Project data, Pair<Integer,Integer> position, Structure pieceTable, String in) {
             double amplitude = _params.get(0);
             short[] carrier_wave = readFromFile(position,pieceTable,in);
-            double[] result = new double[carrier_wave.length];
+            double max = Generate.getAbsoluteMax(carrier_wave);
+            double norm = 32767.0/max;
             for (int i = 0; i < carrier_wave.length; i++) {
-                result[i]= amplitude*carrier_wave[i];
-            }
-            double norm = 32767.0/Generate.getAbsoluteMax(result);
-            for (int i = 0; i < carrier_wave.length; i++) {
-                carrier_wave[i]= (short) (norm*result[i]);
+                carrier_wave[i]= (short) ((amplitude*norm)*carrier_wave[i]);
             }
             writeToFile(carrier_wave,data);
         }
     }
-    public static class speed implements modulation{
-        @Override
-        public void modulate(LinkedList<Double> _params, Project data, Pair<Integer, Integer> position, Structure pieceTable, String in) {
-            double speed = _params.get(0);
-            short[] carrier_wave = readFromFile(position,pieceTable,null);
-            double[] index = Generate.linspace(speed,carrier_wave.length,carrier_wave.length);
-            for (int i = 0; i < carrier_wave.length; i++) {
-                carrier_wave[i] = carrier_wave[(int) index[i]];
-            }
-        }
-    }
+
     public static class robot implements modulation{
         @Override
         public void modulate(LinkedList<Double> _params, Project data, Pair<Integer, Integer> position, Structure pieceTable, String in) {

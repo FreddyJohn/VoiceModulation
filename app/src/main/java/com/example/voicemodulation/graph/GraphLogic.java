@@ -516,7 +516,7 @@ public class GraphLogic extends View {
                         int sensitivity = (int) (speed/norm)!=0 ? (int) (speed/norm) : 1;
                         double exponential = Math.pow(pixel_density,sensitivity);
                         if(x1> x & columnScreenRenderPosition != (drawable.cut_off - waveformColumnHeight)
-                                & columnScreenRenderPosition - exponential>=(drawable.cut_off- waveformColumnHeight)){
+                                & columnScreenRenderPosition - exponential>=(drawable.cut_off - waveformColumnHeight)){
                             columnScreenRenderPosition -= exponential;
                             columnScreenStartPosition -= exponential;
                         }else if(x >x1 & columnScreenRenderPosition !=0 & columnScreenRenderPosition +exponential<=0){
@@ -560,8 +560,8 @@ public class GraphLogic extends View {
             audioPieceTable.add(points.audio_length,points.audio_insert);
             editable_bitmap = null;
             selected_bitmap = null;
-            T1=0;
-            T2=0;
+          //  T1=0;
+           // T2=0;
             //scrollTo((int) (columnScreenRenderPosition+(bitmapByteSelection.length/(drawable.bitmap.getWidth()))*4),0);
         }
         private void removeSelection() {
@@ -569,8 +569,8 @@ public class GraphLogic extends View {
             audioPieceTable.remove(points.audio_start,points.audio_length);
             editable_bitmap = null;
             selected_bitmap = null;
-            T1=0;
-            T2=0;
+           // T1=0;
+           // T2=0;
             //scrollTo((int) (columnScreenRenderPosition+(selection.length/(drawable.bitmap.getWidth()))*pixel_density),0);
 
         }
