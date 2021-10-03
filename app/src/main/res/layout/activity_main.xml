@@ -85,7 +85,7 @@
     -->
 
 
-    <com.example.voicemodulation.graph.GraphLogic
+    <com.adams.voicemodulation.graph.GraphLogic
         android:id="@+id/display"
         android:layout_width="match_parent"
         android:layout_height="300dp"
@@ -127,7 +127,7 @@
             android:textColor="#FFFFFF"
             android:visibility="invisible" />
 
-        <com.example.voicemodulation.graph.AudioDisplay
+        <com.adams.voicemodulation.graph.AudioDisplay
             android:id="@+id/audio_display"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
