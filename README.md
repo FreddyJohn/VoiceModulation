@@ -8,7 +8,3 @@
   <li>edit operations, add/delete</li>
 </ol>
 
-<img src="https://qwertyuikmnbvcdrt67890126987mngf.s3.us-west-2.amazonaws.com/app_example.png"
-     alt="HTML image alt text"
-     title="Optional image title"
-/>
