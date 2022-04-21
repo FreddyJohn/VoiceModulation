@@ -29,3 +29,17 @@
 
 <p>If we did not write it this way then we would need a view for each additional modulation. Writting it this way allows us to take advantage functional programming and treat the modulations as if they were variables and reuse the ModulateControls view as seen here.</p>
 <img width="547" alt="functional" src="https://user-images.githubusercontent.com/39596344/164352163-80ac3ec1-2d6f-4264-b882-c952b87490ea.png">
+
+<h2>Features/Improvements</h2>
+<ol>
+  <li>Many more time domain modulations</li>
+  <li>frequency domain operations such as pitch shifting</li>
+  <li>After modulations are written to Project the changes should propegate to the waveform held in GraphLogic</li>
+  <li>Improvements to core PieceTable data structure</li>
+  <li>Better interface for managing projects</li>
+  <li>real time effects</li>
+  <li>Improvements to GraphLogic Memory</li>
+  <li>Multi track projects</li>
+  <li>Supporting more file formats</li>
+  <li>Anything you would like to add!</li>
+</ol>
