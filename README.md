@@ -3,9 +3,9 @@
 <h2>Features</h2>
 <ol>
   <li>14 time domain variable parameter modulations</li>
-  <li>undo/redo</li>
+  <li>dynamic set operations: find/add/delete</li>
   <li>project save</li>
-  <li>dynamic set operations, find/add/delete</li>
+  <li>undo/redo</li>
 </ol>
 
 <h2>Screenshot of VoiceModuation</h2>
