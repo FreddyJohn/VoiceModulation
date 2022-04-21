@@ -21,14 +21,14 @@
 <p><a href="https://github.com/FreddyJohn/VoiceModulation/blob/master/app/src/main/java/com/adams/voicemodulation/controls/ModulateControls.java"/>To write this modulation to the Project we override the onLongClickListener for the play button inside ModulateControls like so</a></p>
 <img width="618" alt="modulate_write_listener" src="https://user-images.githubusercontent.com/39596344/164351644-94fd3dfc-7bfe-4f96-958e-d6aa76987a7e.png">
 
-<p><a href="https://github.com/FreddyJohn/VoiceModulation/blob/master/app/src/main/java/com/adams/voicemodulation/signal/Modulation.java"/>Finally, inside of of the Modulation class there is numerous modulations that implement the effect interface</a></p>
+<p><a href="https://github.com/FreddyJohn/VoiceModulation/blob/master/app/src/main/java/com/adams/voicemodulation/signal/Modulation.java"/>Finally, inside of of the Modulation class there is numerous modulations that implement the effect interface and override it's modulate method</a></p>
 <img width="393" alt="modulation_interface" src="https://user-images.githubusercontent.com/39596344/164351845-66a82f3e-e023-43cc-8565-92c972b61ff4.png">
 
 <p><a href="https://github.com/FreddyJohn/VoiceModulation/blob/master/app/src/main/java/com/adams/voicemodulation/signal/Modulation.java"/>Since we selected Phaser, the Phaser modulation will be called inside of the Modulations class and written to a temporary memory space so that the modulation can either be played or written to the Project</a></p>
 <img width="634" alt="phaser_modulation" src="https://user-images.githubusercontent.com/39596344/164352420-9e3a830c-29f2-45f7-abe4-a92569ed29c1.png">
 
 <h3>Why are the Modulations implemented this way?</h3>
-<p>If we did not write it this way then we would need a new view for each additional modulation. Writting it this way allows us to take advantage of functional programming and treat the modulations as if they were variables and reuse the ModulateControls class. This makes it exretemely simple for anyone to add a new effect. All you must do is create a new modulation by implementing the effect interface inside the Modulation class. Then create a new conditional inside of MainAcitivity where you pass your modulation and its arbitrary number parameters to ModulateControls where each parameter can be adjusted by the user</p>
+<p>If we did not write it this way then we would need a new view for each additional modulation. Writting it this way allows us to take advantage of functional programming and treat the modulations as if they were variables and reuse the UI code for modulations using the ModulateControls class. This makes it exretemely simple for anyone to add a new effect. All you must do is create a new modulation by implementing the effect interface and overriding the modulate method inside of the Modulation class. Then create a new conditional inside of MainAcitivity where you pass your new modulation and its arbitrary number parameters to ModulateControls where each parameter can be adjusted by the user</p>
 
 <h2>Future Features & Improvements</h2>
 <ol>
