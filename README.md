@@ -13,7 +13,7 @@
 
 <h3>How are modulations implemented?</h3>
 
-<p>if the user grants the application permission then when you select a modulation then it's given conditional inside MainActivity will be met and the moduation parameters will render to the screen by reusing the ModulateControls class</p>
+<p><a "https://github.com/FreddyJohn/VoiceModulation/blob/master/app/src/main/java/com/adams/voicemodulation/MainActivity.java"/>if the user grants the application permission then when you select a modulation then it's given conditional inside MainActivity will be met and the moduation parameters will render to the screen by reusing the ModulateControls class</p>
 <img width="720" alt="selected_mod_condition" src="https://user-images.githubusercontent.com/39596344/164350340-345aaa07-2064-458b-a05f-66c0230f77b3.png">
 
 <p>Now, in order to hear the selected modulation with your given parameters we override the onClickListener for the play button inside ModulateControls like so</p>
