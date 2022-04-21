@@ -27,14 +27,14 @@
 <p><a href="https://github.com/FreddyJohn/VoiceModulation/blob/master/app/src/main/java/com/adams/voicemodulation/signal/Modulation.java"/>Since we selected Phasor, the Phasor modulation we be called inside of the Modulations class and written to a temporary memory space so that the modulation can either be played or written to the Project</a></p>
 <img width="634" alt="phaser_modulation" src="https://user-images.githubusercontent.com/39596344/164352420-9e3a830c-29f2-45f7-abe4-a92569ed29c1.png">
 
-<p><a href="https://github.com/FreddyJohn/VoiceModulation/blob/master/app/src/main/java/com/adams/voicemodulation/controls/ModulateControls.java"/>If we did not write it this way then we would need a view for each additional modulation. Writting it this way allows us to take advantage functional programming and treat the modulations as if they were variables and reuse the ModulateControls view as seen here</a></p>
-<img width="547" alt="functional" src="https://user-images.githubusercontent.com/39596344/164352163-80ac3ec1-2d6f-4264-b882-c952b87490ea.png">
+<h3>Why are the Modulations implemented this way?</h3>
+<p>If we did not write it this way then we would need a view for each additional modulation. Writting it this way allows us to take advantage functional programming and treat the modulations as if they were variables and reuse the ModulateControls. This makes it exretemely simple for anyone to add a new effect. All you must do is create a new modulation by implementing the effect interface inside the Modulation class. Then create a new conditionl inside of MainAcitivity where you pass your modulation and its selected parameters to ModulateControls</p>
 
 <h2>Features/Improvements</h2>
 <ol>
   <li>Many more time domain modulations</li>
   <li>frequency domain operations such as pitch shifting</li>
-  <li>After modulations are written to Project the changes should propegate to the waveform held in GraphLogic</li>
+  <li>After modulations are written to Project the changes should propagate to the waveform held in GraphLogic</li>
   <li>Improvements to core PieceTable data structure</li>
   <li>Better interface for managing projects</li>
   <li>real time effects</li>
