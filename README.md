@@ -8,3 +8,4 @@
   <li>edit operations, add/delete</li>
 </ol>
 
+<img width="278" alt="app_example" src="https://user-images.githubusercontent.com/39596344/164349760-768b1181-a61b-403d-92e8-bf84fde1a917.png">
