@@ -8,7 +8,7 @@
   <li>undo/redo</li>
 </ol>
 
-<h2>Screenshot of VoiceModuation</h2>
+<h2>Screenshot of VoiceModulation</h2>
 <img width="278" alt="app_example" src="https://user-images.githubusercontent.com/39596344/164349760-768b1181-a61b-403d-92e8-bf84fde1a917.png">
 
 <h3>How can I contribute/How are modulations implemented?</h3>
