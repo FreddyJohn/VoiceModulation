@@ -21,7 +21,7 @@
 <p>To write this modulation to the Project we override the onLongClickListener for the play button inside ModulateControls like so</p>
 <img width="618" alt="modulate_write_listener" src="https://user-images.githubusercontent.com/39596344/164351644-94fd3dfc-7bfe-4f96-958e-d6aa76987a7e.png">
 
-<p>Finally, inside of of the Modulation class there is numerous modulation classes that implement the effect interfac</p>
+<p>Finally, inside of of the Modulation class there is numerous modulations that implement the effect interface</p>
 <img width="393" alt="modulation_interface" src="https://user-images.githubusercontent.com/39596344/164351845-66a82f3e-e023-43cc-8565-92c972b61ff4.png">
 
 <p>Since we selected Phasor, the Phasor modulation we be called inside of the Modulations class and written to a temporary memory space so that the modulation can either be played or written to the Project</p>
