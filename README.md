@@ -19,4 +19,13 @@
 <img width="689" alt="modulate_listener" src="https://user-images.githubusercontent.com/39596344/164351043-127604f1-5b11-4efd-beb5-6e385663ac06.png">
 
 <p>To write this modulation to the Project we override the onLongClickListener for the play button inside ModulateControls like so</p>
-<img width="630" alt="modulate_write_listener" src="https://user-images.githubusercontent.com/39596344/164351530-14dcbe46-974e-4830-9bfe-f3c216694ffa.png">
+<img width="618" alt="modulate_write_listener" src="https://user-images.githubusercontent.com/39596344/164351644-94fd3dfc-7bfe-4f96-958e-d6aa76987a7e.png">
+
+<p>Finally, inside of of the Modulation class there is numerous modulation classes that implement the effect interfac</p>
+<img width="393" alt="modulation_interface" src="https://user-images.githubusercontent.com/39596344/164351845-66a82f3e-e023-43cc-8565-92c972b61ff4.png">
+
+<p>Since we selected Phasor, the Phasor modulation we be called inside of the Modulations class and written to a temporary memory space so that the modulation can either be played or written to the Project</p>
+<img width="634" alt="phaser_modulation" src="https://user-images.githubusercontent.com/39596344/164352420-9e3a830c-29f2-45f7-abe4-a92569ed29c1.png">
+
+<p>If we did not write it this way then we would need a view for each additional modulation. Writting it this way allows us to take advantage functional programming and treat the modulations as if they were variables and reuse the ModulateControls view as seen here.</p>
+<img width="547" alt="functional" src="https://user-images.githubusercontent.com/39596344/164352163-80ac3ec1-2d6f-4264-b882-c952b87490ea.png">
