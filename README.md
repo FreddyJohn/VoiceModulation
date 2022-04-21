@@ -10,3 +10,6 @@
 
 <h2>Screenshot of VoiceModuation</h2>
 <img width="278" alt="app_example" src="https://user-images.githubusercontent.com/39596344/164349760-768b1181-a61b-403d-92e8-bf84fde1a917.png">
+
+<h3>How are modulations implemented?</h3>
+<img width="720" alt="selected_mod_condition" src="https://user-images.githubusercontent.com/39596344/164350340-345aaa07-2064-458b-a05f-66c0230f77b3.png">
