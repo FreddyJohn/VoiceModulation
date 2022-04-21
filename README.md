@@ -41,5 +41,6 @@
   <li>Improvements to GraphLogic Memory</li>
   <li>Multi track projects</li>
   <li>Supporting more file formats</li>
+  <li>writing it again in swift</li>
   <li>Anything you would like to add!</li>
 </ol>
