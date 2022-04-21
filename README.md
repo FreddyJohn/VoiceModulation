@@ -30,7 +30,7 @@
 <h3>Why are the Modulations implemented this way?</h3>
 <p>If we did not write it this way then we would need a view for each additional modulation. Writting it this way allows us to take advantage functional programming and treat the modulations as if they were variables and reuse the ModulateControls. This makes it exretemely simple for anyone to add a new effect. All you must do is create a new modulation by implementing the effect interface inside the Modulation class. Then create a new conditional inside of MainAcitivity where you pass your modulation and its selected parameters to ModulateControls</p>
 
-<h2>Features/Improvements</h2>
+<h2>New Features/Improvements</h2>
 <ol>
   <li>Many more time domain modulations</li>
   <li>frequency domain operations such as pitch shifting</li>
