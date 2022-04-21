@@ -5,7 +5,7 @@
   <li>14 time domain variable parameter modulations</li>
   <li>undo/redo</li>
   <li>project save</li>
-  <li>edit operations, add/delete</li>
+  <li>dynamic set operations, find/add/delete</li>
 </ol>
 
 <h2>Screenshot of VoiceModuation</h2>
