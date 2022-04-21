@@ -24,7 +24,7 @@
 <p><a href="https://github.com/FreddyJohn/VoiceModulation/blob/master/app/src/main/java/com/adams/voicemodulation/signal/Modulation.java"/>Finally, inside of of the Modulation class there is numerous modulations that implement the effect interface</a></p>
 <img width="393" alt="modulation_interface" src="https://user-images.githubusercontent.com/39596344/164351845-66a82f3e-e023-43cc-8565-92c972b61ff4.png">
 
-<p><a href="https://github.com/FreddyJohn/VoiceModulation/blob/master/app/src/main/java/com/adams/voicemodulation/signal/Modulation.java"/>Since we selected Phasor, the Phaser modulation will be called inside of the Modulations class and written to a temporary memory space so that the modulation can either be played or written to the Project</a></p>
+<p><a href="https://github.com/FreddyJohn/VoiceModulation/blob/master/app/src/main/java/com/adams/voicemodulation/signal/Modulation.java"/>Since we selected Phaser, the Phaser modulation will be called inside of the Modulations class and written to a temporary memory space so that the modulation can either be played or written to the Project</a></p>
 <img width="634" alt="phaser_modulation" src="https://user-images.githubusercontent.com/39596344/164352420-9e3a830c-29f2-45f7-abe4-a92569ed29c1.png">
 
 <h3>Why are the Modulations implemented this way?</h3>
