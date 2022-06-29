@@ -1,5 +1,5 @@
 <h1>VoiceModulation</h1>
-<p>This is a lightweight digital audio workstation for android created fully from scratch</p>
+<p>This is a lightweight digital audio workstation for android created fully from scratch, open source, and available for free on the Google Play Store.</p>
 <h2>Features</h2>
 <ol>
   <li>14 time domain variable parameter modulations</li>
